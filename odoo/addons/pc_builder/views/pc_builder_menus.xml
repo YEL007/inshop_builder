@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Root Menu ────────────────────────────────────────────────── -->
+    <menuitem id="menu_pc_builder_root"
+              name="PC Builder"
+              sequence="50"/>
+
+    <!-- ── Products sub-menu ────────────────────────────────────────── -->
+    <menuitem id="menu_pc_builder_products"
+              name="Products"
+              parent="menu_pc_builder_root"
+              sequence="10"/>
+
+    <menuitem id="menu_pc_products"
+              name="Components &amp; Peripherals"
+              parent="menu_pc_builder_products"
+              action="action_pc_products"
+              sequence="10"/>
+
+    <menuitem id="menu_pc_prebuilts"
+              name="Pre-built PCs"
+              parent="menu_pc_builder_products"
+              action="action_pc_prebuilts"
+              sequence="20"/>
+
+</odoo>

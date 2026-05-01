@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Product categories for PC Builder components -->
+    <record id="cat_pc_components" model="product.category">
+        <field name="name">PC Components</field>
+    </record>
+    <record id="cat_cpu" model="product.category">
+        <field name="name">CPU</field>
+        <field name="parent_id" ref="cat_pc_components"/>
+    </record>
+    <record id="cat_gpu" model="product.category">
+        <field name="name">GPU</field>
+        <field name="parent_id" ref="cat_pc_components"/>
+    </record>
+    <record id="cat_motherboard" model="product.category">
+        <field name="name">Motherboard</field>
+        <field name="parent_id" ref="cat_pc_components"/>
+    </record>
+    <record id="cat_ram" model="product.category">
+        <field name="name">RAM</field>
+        <field name="parent_id" ref="cat_pc_components"/>
+    </record>
+    <record id="cat_storage" model="product.category">
+        <field name="name">Storage</field>
+        <field name="parent_id" ref="cat_pc_components"/>
+    </record>
+    <record id="cat_psu" model="product.category">
+        <field name="name">PSU</field>
+        <field name="parent_id" ref="cat_pc_components"/>
+    </record>
+    <record id="cat_cooling" model="product.category">
+        <field name="name">Cooling</field>
+        <field name="parent_id" ref="cat_pc_components"/>
+    </record>
+    <record id="cat_case" model="product.category">
+        <field name="name">Case</field>
+        <field name="parent_id" ref="cat_pc_components"/>
+    </record>
+
+    <!-- Peripherals -->
+    <record id="cat_peripherals" model="product.category">
+        <field name="name">Peripherals</field>
+    </record>
+    <record id="cat_mouse" model="product.category">
+        <field name="name">Mouse</field>
+        <field name="parent_id" ref="cat_peripherals"/>
+    </record>
+    <record id="cat_keyboard" model="product.category">
+        <field name="name">Keyboard</field>
+        <field name="parent_id" ref="cat_peripherals"/>
+    </record>
+    <record id="cat_monitor" model="product.category">
+        <field name="name">Monitor</field>
+        <field name="parent_id" ref="cat_peripherals"/>
+    </record>
+    <record id="cat_headset" model="product.category">
+        <field name="name">Headset</field>
+        <field name="parent_id" ref="cat_peripherals"/>
+    </record>
+    <record id="cat_microphone" model="product.category">
+        <field name="name">Microphone</field>
+        <field name="parent_id" ref="cat_peripherals"/>
+    </record>
+    <record id="cat_webcam" model="product.category">
+        <field name="name">Webcam</field>
+        <field name="parent_id" ref="cat_peripherals"/>
+    </record>
+    <record id="cat_speaker" model="product.category">
+        <field name="name">Speaker</field>
+        <field name="parent_id" ref="cat_peripherals"/>
+    </record>
+    <record id="cat_usb" model="product.category">
+        <field name="name">USB Drive</field>
+        <field name="parent_id" ref="cat_peripherals"/>
+    </record>
+    <record id="cat_external_hdd" model="product.category">
+        <field name="name">External HDD</field>
+        <field name="parent_id" ref="cat_peripherals"/>
+    </record>
+    <record id="cat_network" model="product.category">
+        <field name="name">Network Card</field>
+        <field name="parent_id" ref="cat_peripherals"/>
+    </record>
+</odoo>

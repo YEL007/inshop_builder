@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pc_prebuilt_public,pc.prebuilt public read,model_pc_prebuilt,,1,0,0,0
+access_pc_prebuilt_manager,pc.prebuilt manager,model_pc_prebuilt,base.group_system,1,1,1,1
+access_pc_review_public,pc.review public read,model_pc_review,,1,0,0,0
+access_pc_review_portal,pc.review portal,model_pc_review,base.group_portal,1,1,1,0
+access_pc_review_user,pc.review user,model_pc_review,base.group_user,1,1,1,0
+access_pc_review_manager,pc.review manager,model_pc_review,base.group_system,1,1,1,1
+access_pc_product_image_public,pc.product.image public read,model_pc_product_image,,1,0,0,0
+access_pc_product_image_manager,pc.product.image manager,model_pc_product_image,base.group_system,1,1,1,1

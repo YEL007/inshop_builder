@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Pre-built List View ───────────────────────────────────────── -->
+    <record id="view_pc_prebuilt_tree" model="ir.ui.view">
+        <field name="name">pc.prebuilt.tree</field>
+        <field name="model">pc.prebuilt</field>
+        <field name="arch" type="xml">
+            <tree string="Pre-built PCs">
+                <field name="name"/>
+                <field name="tier"/>
+                <field name="price"/>
+                <field name="badge"/>
+                <field name="rating"/>
+                <field name="review_count"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ── Pre-built Form View ───────────────────────────────────────── -->
+    <record id="view_pc_prebuilt_form" model="ir.ui.view">
+        <field name="name">pc.prebuilt.form</field>
+        <field name="model">pc.prebuilt</field>
+        <field name="arch" type="xml">
+            <form string="Pre-built PC">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Configuration name"/></h1>
+                    </div>
+                    <group>
+                        <group string="General">
+                            <field name="tier" placeholder="Budget / Mid-Range / High-End / Flagship"/>
+                            <field name="badge" placeholder="Best Seller"/>
+                            <field name="tag_line" placeholder="Short marketing line"/>
+                            <field name="price"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Ratings">
+                            <field name="rating"/>
+                            <field name="review_count"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Components">
+                            <group>
+                                <group>
+                                    <field name="cpu" placeholder="Intel Core i9-14900K"/>
+                                    <field name="gpu" placeholder="NVIDIA RTX 4090"/>
+                                    <field name="ram" placeholder="32GB DDR5-6000"/>
+                                    <field name="storage" placeholder="2TB NVMe SSD"/>
+                                </group>
+                                <group>
+                                    <field name="psu" placeholder="850W 80+ Gold"/>
+                                    <field name="case" placeholder="Fractal Torrent"/>
+                                    <field name="cooling" placeholder="360mm AIO"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Use Cases">
+                            <group>
+                                <field name="gaming_perf" placeholder="1440p Ultra / 4K Gaming"/>
+                                <field name="workflow" placeholder="Video editing &amp; streaming"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Pre-built Search View ─────────────────────────────────────── -->
+    <record id="view_pc_prebuilt_search" model="ir.ui.view">
+        <field name="name">pc.prebuilt.search</field>
+        <field name="model">pc.prebuilt</field>
+        <field name="arch" type="xml">
+            <search string="Search Pre-builts">
+                <field name="name"/>
+                <field name="tier"/>
+                <separator/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Tier" name="group_tier" context="{'group_by': 'tier'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Pre-built Action ──────────────────────────────────────────── -->
+    <record id="action_pc_prebuilts" model="ir.actions.act_window">
+        <field name="name">Pre-built PCs</field>
+        <field name="res_model">pc.prebuilt</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_pc_prebuilt_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first pre-built configuration
+            </p>
+            <p>Pre-built PCs appear in the "Pre-built" section of the shop.</p>
+        </field>
+    </record>
+
+</odoo>

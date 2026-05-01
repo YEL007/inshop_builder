@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="pb_inshop_starter" model="pc.prebuilt">
+        <field name="name">InShop Starter</field>
+        <field name="price">799.0</field>
+        <field name="tier">Entry Level</field>
+        <field name="badge">ENTRY LEVEL</field>
+        <field name="tag_line">Perfect for everyday use and light gaming</field>
+        <field name="cpu">AMD Ryzen 5 9600X</field>
+        <field name="gpu">RTX 4070 XT</field>
+        <field name="ram">20GB DDR5-5800</field>
+        <field name="storage">1TB NVMe PCIe 4.0</field>
+        <field name="psu">650W 80+ Gold</field>
+        <field name="case">Fractal Design Pop Air</field>
+        <field name="cooling">Arctic Liquid Freezer II 240</field>
+        <field name="gaming_perf">1080p Gaming</field>
+        <field name="workflow">General computing</field>
+        <field name="rating">4.5</field>
+        <field name="review_count">234</field>
+    </record>
+
+    <record id="pb_inshop_pro" model="pc.prebuilt">
+        <field name="name">InShop Pro</field>
+        <field name="price">1599.0</field>
+        <field name="tier">Mid-Range</field>
+        <field name="badge">MOST POPULAR</field>
+        <field name="tag_line">The sweet spot for gaming and content creation</field>
+        <field name="cpu">AMD Ryzen 7 9800X3D</field>
+        <field name="gpu">RTX 5070 Ti</field>
+        <field name="ram">32GB DDR5-6400</field>
+        <field name="storage">2TB NVMe PCIe 4.0</field>
+        <field name="psu">850W 80+ Gold</field>
+        <field name="case">Lian Li O11 Dynamic</field>
+        <field name="cooling">Corsair H150i Elite 360mm</field>
+        <field name="gaming_perf">1440p Ultra</field>
+        <field name="workflow">Video editing &amp; streaming</field>
+        <field name="rating">4.8</field>
+        <field name="review_count">567</field>
+    </record>
+
+    <record id="pb_inshop_elite" model="pc.prebuilt">
+        <field name="name">InShop Elite</field>
+        <field name="price">2999.0</field>
+        <field name="tier">High-End</field>
+        <field name="badge">FLAGSHIP</field>
+        <field name="tag_line">Professional-grade performance for creators</field>
+        <field name="cpu">Intel Core Ultra 9 285K</field>
+        <field name="gpu">RTX 5080</field>
+        <field name="ram">64GB DDR5-6200</field>
+        <field name="storage">4TB NVMe PCIe 4.0</field>
+        <field name="psu">1000W 80+ Platinum</field>
+        <field name="case">Fractal Design Torrent RGB</field>
+        <field name="cooling">Custom 360mm AIO</field>
+        <field name="gaming_perf">4K Ultra</field>
+        <field name="workflow">3D rendering &amp; AI</field>
+        <field name="rating">4.9</field>
+        <field name="review_count">189</field>
+    </record>
+
+    <record id="pb_inshop_titan" model="pc.prebuilt">
+        <field name="name">InShop Titan</field>
+        <field name="price">4999.0</field>
+        <field name="tier">Extreme Performance</field>
+        <field name="badge">EXTREME PERFORMANCE</field>
+        <field name="tag_line">No compromises — the ultimate workstation beast</field>
+        <field name="cpu">AMD Ryzen 9 9950X</field>
+        <field name="gpu">RTX 5090</field>
+        <field name="ram">96GB DDR5-6800</field>
+        <field name="storage">4TB NVMe PCIe 5.0</field>
+        <field name="psu">1200W 80+ Titanium</field>
+        <field name="case">Lian Li O11 Dynamic EVO XL</field>
+        <field name="cooling">Custom 420mm AIO</field>
+        <field name="gaming_perf">8K Ready</field>
+        <field name="workflow">Professional Workstation</field>
+        <field name="rating">5.0</field>
+        <field name="review_count">89</field>
+    </record>
+
+</odoo>

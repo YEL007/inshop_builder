@@ -1,0 +1,20 @@
+{
+    'name': 'PC Builder',
+    'version': '17.0.1.0.0',
+    'summary': 'PC Builder e-commerce backend — products, pre-builts, REST API',
+    'author': 'InShop',
+    'category': 'eCommerce',
+    'depends': ['base', 'product', 'sale'],
+    'data': [
+        'security/ir.model.access.csv',
+        'data/pc_categories.xml',
+        'data/pc_products.xml',
+        'data/pc_prebuilts.xml',
+        'views/pc_product_views.xml',
+        'views/pc_prebuilt_views.xml',
+        'views/pc_builder_menus.xml',
+    ],
+    'installable': True,
+    'application': True,
+    'post_init_hook': 'post_init_hook',
+}

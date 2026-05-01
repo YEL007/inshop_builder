@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InShop Builder — Build Your Dream PC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:   #0e0e0e;
+      --dark:    #1a1a1a;
+      --panel:   #212121;
+      --metal:   #3c3c3c;
+      --metal2:  #2a2a2a;
+      --red:     #e8001d;
+      --red-dim: #a80015;
+      --red-glow:rgba(232,0,29,0.25);
+      --white:   #ffffff;
+      --offwhite:#d0d0d0;
+      --gray:    #707070;
+      --border-color:  rgba(232,0,29,0.2);
+      --border2: rgba(255,255,255,0.06);
+
+      --accent: var(--red);
+      --accent-bright: var(--red-dim);
+      --bg-base: var(--black);
+      --bg-surface: var(--black);
+      --border: var(--border-color);
+      --text: var(--white);
+      --text-muted: var(--gray);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-base);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      cursor: none;
+    }
+    body::after {
+      content:'';
+      position:fixed; inset:0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025;
+      pointer-events: none;
+      z-index: 200;
+    }
+    #root { min-height: 100vh; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #080808; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #383838; }
+    * { scrollbar-width: thin; scrollbar-color: #2a2a2a #080808; }
+    input, select, textarea, button { font-family: 'Space Grotesk', sans-serif; }
+    button:hover { opacity: 0.9; }
+    a { color: inherit; text-decoration: none; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    main > div { animation: fadeIn 0.25s ease; }
+    nav button:hover { color: var(--white) !important; background: var(--metal2) !important; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--red) !important;
+      outline: none;
+    }
+    [data-selector-card]:hover {
+      border-color: var(--red) !important;
+      background: var(--metal2) !important;
+    }
+    [data-step-card]:not([data-active]):hover {
+      border-color: var(--metal) !important;
+      background: var(--metal2) !important;
+    }
+    button:hover[data-action] {
+      color: var(--white) !important;
+      border-color: var(--metal) !important;
+    }
+    .cursor {
+      position: fixed;
+      width: 10px; height: 10px;
+      background: var(--red);
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width .15s, height .15s, opacity .15s;
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    }
+    .cursor-cross-h, .cursor-cross-v {
+      position: fixed;
+      background: rgba(232,0,29,0.4);
+      pointer-events: none;
+      z-index: 9997;
+      transform: translate(-50%, -50%);
+      transition: opacity .2s;
+    }
+    .cursor-cross-h { width: 24px; height: 1px; }
+    .cursor-cross-v { width: 1px; height: 24px; }
+  </style>
+  <script type="module" crossorigin src="/assets/index-B3UJilw7.js"></script>
+</head>
+<body>
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-cross-h" id="crossH"></div>
+  <div class="cursor-cross-v" id="crossV"></div>
+  <div id="root"></div>
+
+
+  <script>
+    const cursor = document.getElementById('cursor');
+    const crossH = document.getElementById('crossH');
+    const crossV = document.getElementById('crossV');
+
+    document.addEventListener('mousemove', e => {
+      const x = e.clientX, y = e.clientY;
+      cursor.style.left = x + 'px';
+      cursor.style.top  = y + 'px';
+      crossH.style.left = x + 'px';
+      crossH.style.top  = y + 'px';
+      crossV.style.left = x + 'px';
+      crossV.style.top  = y + 'px';
+    });
+
+    document.addEventListener('mouseover', e => {
+      const target = e.target.closest('button, a, [role="button"], input, select');
+      if(target){
+        cursor.style.width = '16px';
+        cursor.style.height = '16px';
+        crossH.style.width = '36px';
+        crossV.style.height = '36px';
+      }
+    });
+
+    document.addEventListener('mouseout', e => {
+      const target = e.target.closest('button, a, [role="button"], input, select');
+      if(target){
+        cursor.style.width = '10px';
+        cursor.style.height = '10px';
+        crossH.style.width = '24px';
+        crossV.style.height = '24px';
+      }
+    });
+  </script>
+</body>
+</html>

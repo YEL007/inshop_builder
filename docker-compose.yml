@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: pc_builder_db
+    environment:
+      POSTGRES_DB: odoo
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    image: odoo:17.0
+    container_name: pc_builder_odoo
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD: odoo_secret
+    volumes:
+      - ./odoo/config/odoo.conf:/etc/odoo/odoo.conf:ro
+      - ./odoo/addons:/mnt/extra-addons
+      - odoo_data:/var/lib/odoo
+    command: -- -d odoo -i base,pc_builder
+    networks:
+      - backend
+    restart: unless-stopped
+    # Port 8069 exposed only internally — Nginx is the public entry point
+    # expose:
+    #   - "8069"
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pc_builder_nginx
+    depends_on:
+      - odoo
+    ports:
+      - "8080:80"
+    networks:
+      - backend
+    restart: unless-stopped
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  odoo_data:

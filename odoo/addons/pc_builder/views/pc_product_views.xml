@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Product List View ─────────────────────────────────────────── -->
+    <record id="view_pc_product_tree" model="ir.ui.view">
+        <field name="name">pc.product.tree</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <tree string="PC Products">
+                <field name="name"/>
+                <field name="pc_brand"/>
+                <field name="pc_category"/>
+                <field name="list_price" string="Price"/>
+                <field name="pc_stock_status"/>
+                <field name="pc_rating"/>
+                <field name="pc_review_count"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ── Product Form View ─────────────────────────────────────────── -->
+    <record id="view_pc_product_form" model="ir.ui.view">
+        <field name="name">pc.product.form</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <form string="PC Product">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Product name"/></h1>
+                    </div>
+                    <group>
+                        <group string="PC Info">
+                            <field name="pc_category"/>
+                            <field name="pc_brand"/>
+                            <field name="list_price" string="Price"/>
+                            <field name="pc_stock_status"/>
+                        </group>
+                        <group string="Ratings">
+                            <field name="pc_rating"/>
+                            <field name="pc_review_count"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Tags">
+                        <field name="pc_tags" placeholder="gaming,bestseller,flagship"/>
+                    </group>
+                    <notebook>
+                        <page string="Specifications">
+                            <field name="pc_specs"
+                                   placeholder='{"cores": 8, "speed": "3.6GHz", ...}'/>
+                        </page>
+                        <page string="Description">
+                            <field name="description_sale"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Product Search View ───────────────────────────────────────── -->
+    <record id="view_pc_product_search" model="ir.ui.view">
+        <field name="name">pc.product.search</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <search string="Search PC Products">
+                <field name="name" string="Product"/>
+                <field name="pc_brand" string="Brand"/>
+                <field name="pc_category" string="Category"/>
+                <separator/>
+                <filter string="Components" name="components"
+                        domain="[('pc_category', 'in', ['cpu','gpu','motherboard','ram','storage','psu','cooling','case'])]"/>
+                <filter string="Peripherals" name="peripherals"
+                        domain="[('pc_category', 'in', ['mouse','keyboard','microphone','webcam','monitor','speaker','headset','usb','external_hdd','network'])]"/>
+                <separator/>
+                <filter string="In Stock" name="in_stock"
+                        domain="[('pc_stock_status', '=', 'in_stock')]"/>
+                <filter string="Low Stock" name="low_stock"
+                        domain="[('pc_stock_status', '=', 'low_stock')]"/>
+                <filter string="Out of Stock" name="out_of_stock"
+                        domain="[('pc_stock_status', '=', 'out_of_stock')]"/>
+                <separator/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Category" name="group_category" context="{'group_by': 'pc_category'}"/>
+                    <filter string="Brand" name="group_brand" context="{'group_by': 'pc_brand'}"/>
+                    <filter string="Stock Status" name="group_stock" context="{'group_by': 'pc_stock_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Inherited standard product form (xpath) ─────────────────── -->
+    <!--
+        Hérite du formulaire produit standard d'Odoo pour ajouter les champs
+        PC Builder directement, sans avoir à passer par le menu PC Builder.
+    -->
+    <record id="view_product_template_inherit_pc_builder" model="ir.ui.view">
+        <field name="name">product.template.inherit.pc.builder</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- Page dédiée PC Builder dans le notebook -->
+            <xpath expr="//notebook" position="inside">
+                <page string="PC Builder" name="pc_builder_tab">
+                    <group>
+                        <group string="Identification">
+                            <field name="pc_category" string="Catégorie"/>
+                            <field name="pc_brand"    string="Marque"/>
+                            <field name="pc_tags"
+                                   string="Tags"
+                                   placeholder="gaming, bestseller, flagship"/>
+                        </group>
+                        <group string="Disponibilité &amp; Prix">
+                            <field name="pc_stock_status" string="État du stock"/>
+                            <field name="list_price"      string="Prix public (€)"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Évaluation client">
+                            <field name="pc_rating"       string="Note moyenne (/ 5)"/>
+                            <field name="pc_review_count" string="Nombre d'avis"/>
+                        </group>
+                        <group string="Image produit">
+                            <field name="image_1920" widget="image" nolabel="1" options="{'size': [200, 200]}"/>
+                        </group>
+                    </group>
+                    <group string="Images complémentaires">
+                        <field name="pc_extra_image_ids" mode="kanban" context="{'default_product_tmpl_id': id, 'default_name': name}">
+                            <kanban>
+                                <field name="id"/>
+                                <field name="image_1920"/>
+                                <templates>
+                                    <t t-name="kanban-box">
+                                        <div class="oe_kanban_global_click">
+                                            <div class="o_kanban_image">
+                                                <img t-att-src="kanban_image('pc.product.image', 'image_1920', record.id.raw_value)" alt="Image"/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </templates>
+                            </kanban>
+                            <form>
+                                <sheet>
+                                    <group>
+                                        <field name="name"/>
+                                        <field name="image_1920" widget="image"/>
+                                    </group>
+                                </sheet>
+                            </form>
+                        </field>
+                    </group>
+                    <group string="Spécifications techniques (JSON)">
+                        <field name="pc_specs" nolabel="1"
+                               placeholder='ex: {"cores": 8, "boostClock": "5.6GHz", "tdp": 125, "socket": "AM5"}'/>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ── Product Action ────────────────────────────────────────────── -->
+    <record id="action_pc_products" model="ir.actions.act_window">
+        <field name="name">PC Products</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('pc_category', '!=', False)]</field>
+        <field name="context">{'default_type': 'consu'}</field>
+        <field name="search_view_id" ref="view_pc_product_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add your first PC product
+            </p>
+            <p>Create components and peripherals that will appear in the PC Builder shop.</p>
+        </field>
+    </record>
+
+</odoo>

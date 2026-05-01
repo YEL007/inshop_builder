@@ -1,0 +1,10 @@
+// Entry point — imports in execution order so window globals are set before render
+import './data.js'
+import './api.js'
+import './Nav.jsx'
+import './pages_home.jsx'
+import './pages_catalog.jsx'
+import './pages_builder.jsx'
+import './pages_secondary.jsx'
+import './pages_checkout.jsx'
+import './App.jsx'

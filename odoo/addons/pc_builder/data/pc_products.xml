@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         CPU — Processeurs
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="cpu_ryzen9_9950x" model="product.template">
+        <field name="name">AMD Ryzen 9 9950X</field>
+        <field name="list_price">649.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">cpu</field>
+        <field name="pc_brand">AMD</field>
+        <field name="pc_specs">{"cores":16,"threads":32,"baseClock":"4.3 GHz","boostClock":"5.7 GHz","socket":"AM5","tdp":170,"cache":"64MB L3"}</field>
+        <field name="pc_tags">bestseller,flagship</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">234</field>
+    </record>
+
+    <record id="cpu_ryzen7_9800x3d" model="product.template">
+        <field name="name">AMD Ryzen 7 9800X3D</field>
+        <field name="list_price">479.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">cpu</field>
+        <field name="pc_brand">AMD</field>
+        <field name="pc_specs">{"cores":8,"threads":16,"baseClock":"4.7 GHz","boostClock":"5.4 GHz","socket":"AM5","tdp":120,"cache":"96MB L3 3D V-Cache"}</field>
+        <field name="pc_tags">bestseller,gaming</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">5.0</field>
+        <field name="pc_review_count">891</field>
+    </record>
+
+    <record id="cpu_intel_ultra9_285k" model="product.template">
+        <field name="name">Intel Core Ultra 9 285K</field>
+        <field name="list_price">589.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">cpu</field>
+        <field name="pc_brand">Intel</field>
+        <field name="pc_specs">{"cores":24,"threads":24,"baseClock":"3.7 GHz","boostClock":"5.7 GHz","socket":"LGA1851","tdp":125,"cache":"36MB L3"}</field>
+        <field name="pc_tags">workstation</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.7</field>
+        <field name="pc_review_count">116</field>
+    </record>
+
+    <record id="cpu_ryzen5_9600x" model="product.template">
+        <field name="name">AMD Ryzen 5 9600X</field>
+        <field name="list_price">299.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">cpu</field>
+        <field name="pc_brand">AMD</field>
+        <field name="pc_specs">{"cores":6,"threads":12,"baseClock":"3.9 GHz","boostClock":"5.4 GHz","socket":"AM5","tdp":65,"cache":"32MB L3"}</field>
+        <field name="pc_tags">budget,value</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">512</field>
+    </record>
+
+    <record id="cpu_intel_ultra7_265k" model="product.template">
+        <field name="name">Intel Core Ultra 7 265K</field>
+        <field name="list_price">399.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">cpu</field>
+        <field name="pc_brand">Intel</field>
+        <field name="pc_specs">{"cores":20,"threads":20,"baseClock":"3.9 GHz","boostClock":"5.5 GHz","socket":"LGA1851","tdp":125,"cache":"30MB L3"}</field>
+        <field name="pc_tags">gaming</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.6</field>
+        <field name="pc_review_count">278</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         GPU — Cartes graphiques
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="gpu_rtx5090" model="product.template">
+        <field name="name">NVIDIA GeForce RTX 5090</field>
+        <field name="list_price">1999.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">gpu</field>
+        <field name="pc_brand">NVIDIA</field>
+        <field name="pc_specs">{"vram":"32GB GDDR7","tdp":575,"coreClock":"2.0 GHz","boostClock":"2.41 GHz","busWidth":"512-bit"}</field>
+        <field name="pc_tags">flagship,bestseller</field>
+        <field name="pc_stock_status">low_stock</field>
+        <field name="pc_rating">5.0</field>
+        <field name="pc_review_count">143</field>
+    </record>
+
+    <record id="gpu_rtx5080" model="product.template">
+        <field name="name">NVIDIA GeForce RTX 5080</field>
+        <field name="list_price">999.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">gpu</field>
+        <field name="pc_brand">NVIDIA</field>
+        <field name="pc_specs">{"vram":"16GB GDDR7","tdp":360,"coreClock":"2.3 GHz","boostClock":"2.62 GHz","busWidth":"256-bit"}</field>
+        <field name="pc_tags">high-end</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">321</field>
+    </record>
+
+    <record id="gpu_rtx5070ti" model="product.template">
+        <field name="name">NVIDIA GeForce RTX 5070 Ti</field>
+        <field name="list_price">749.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">gpu</field>
+        <field name="pc_brand">NVIDIA</field>
+        <field name="pc_specs">{"vram":"16GB GDDR7","tdp":300,"coreClock":"2.3 GHz","boostClock":"2.45 GHz","busWidth":"256-bit"}</field>
+        <field name="pc_tags">bestseller,gaming</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">567</field>
+    </record>
+
+    <record id="gpu_rtx5070" model="product.template">
+        <field name="name">NVIDIA GeForce RTX 5070</field>
+        <field name="list_price">549.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">gpu</field>
+        <field name="pc_brand">NVIDIA</field>
+        <field name="pc_specs">{"vram":"12GB GDDR7","tdp":250,"coreClock":"2.2 GHz","boostClock":"2.51 GHz","busWidth":"192-bit"}</field>
+        <field name="pc_tags">gaming,value</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.7</field>
+        <field name="pc_review_count">412</field>
+    </record>
+
+    <record id="gpu_rx9070xt" model="product.template">
+        <field name="name">AMD Radeon RX 9070 XT</field>
+        <field name="list_price">599.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">gpu</field>
+        <field name="pc_brand">AMD</field>
+        <field name="pc_specs">{"vram":"16GB GDDR6","tdp":304,"coreClock":"2.5 GHz","boostClock":"3.0 GHz","busWidth":"256-bit"}</field>
+        <field name="pc_tags">bestseller,value</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">298</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Motherboard — Cartes mères
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="mb_asus_x870e" model="product.template">
+        <field name="name">ASUS ROG Crosshair X870E Hero</field>
+        <field name="list_price">499.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">motherboard</field>
+        <field name="pc_brand">ASUS</field>
+        <field name="pc_specs">{"socket":"AM5","formFactor":"ATX","chipset":"X870E","memorySlots":4,"maxMemory":"256GB","pcie":"PCIe 5.0"}</field>
+        <field name="pc_tags">flagship,bestseller</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">187</field>
+    </record>
+
+    <record id="mb_msi_b650" model="product.template">
+        <field name="name">MSI MAG B650 Tomahawk WiFi</field>
+        <field name="list_price">199.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">motherboard</field>
+        <field name="pc_brand">MSI</field>
+        <field name="pc_specs">{"socket":"AM5","formFactor":"ATX","chipset":"B650","memorySlots":4,"maxMemory":"128GB","pcie":"PCIe 5.0"}</field>
+        <field name="pc_tags">value,bestseller</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.7</field>
+        <field name="pc_review_count">634</field>
+    </record>
+
+    <record id="mb_gigabyte_z890" model="product.template">
+        <field name="name">Gigabyte Z890 Aorus Elite WiFi7</field>
+        <field name="list_price">329.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">motherboard</field>
+        <field name="pc_brand">Gigabyte</field>
+        <field name="pc_specs">{"socket":"LGA1851","formFactor":"ATX","chipset":"Z890","memorySlots":4,"maxMemory":"256GB","pcie":"PCIe 5.0"}</field>
+        <field name="pc_tags">gaming</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.6</field>
+        <field name="pc_review_count">223</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         RAM — Mémoire
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="ram_gskill_32gb" model="product.template">
+        <field name="name">G.Skill Trident Z5 RGB 32GB DDR5-6400</field>
+        <field name="list_price">129.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">ram</field>
+        <field name="pc_brand">G.Skill</field>
+        <field name="pc_specs">{"capacity":"32GB","speed":6400,"type":"DDR5","kit":"2x16GB","latency":"CL32","voltage":"1.4V"}</field>
+        <field name="pc_tags">bestseller,gaming</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">892</field>
+    </record>
+
+    <record id="ram_corsair_64gb" model="product.template">
+        <field name="name">Corsair Dominator Titanium 64GB DDR5-6200</field>
+        <field name="list_price">249.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">ram</field>
+        <field name="pc_brand">Corsair</field>
+        <field name="pc_specs">{"capacity":"64GB","speed":6200,"type":"DDR5","kit":"2x32GB","latency":"CL30","voltage":"1.4V"}</field>
+        <field name="pc_tags">workstation,high-end</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">341</field>
+    </record>
+
+    <record id="ram_crucial_96gb" model="product.template">
+        <field name="name">Crucial Pro 96GB DDR5-6800</field>
+        <field name="list_price">319.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">ram</field>
+        <field name="pc_brand">Crucial</field>
+        <field name="pc_specs">{"capacity":"96GB","speed":6800,"type":"DDR5","kit":"2x48GB","latency":"CL34","voltage":"1.45V"}</field>
+        <field name="pc_tags">workstation</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.7</field>
+        <field name="pc_review_count">156</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Storage — Stockage
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="storage_samsung_990pro_2tb" model="product.template">
+        <field name="name">Samsung 990 Pro 2TB NVMe PCIe 4.0</field>
+        <field name="list_price">149.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">storage</field>
+        <field name="pc_brand">Samsung</field>
+        <field name="pc_specs">{"capacity":"2TB","interface":"NVMe PCIe 4.0","readSpeed":"7450 MB/s","writeSpeed":"6900 MB/s","formFactor":"M.2 2280"}</field>
+        <field name="pc_tags">bestseller</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">1423</field>
+    </record>
+
+    <record id="storage_wd_black_4tb" model="product.template">
+        <field name="name">WD Black SN850X 4TB NVMe PCIe 4.0</field>
+        <field name="list_price">249.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">storage</field>
+        <field name="pc_brand">Western Digital</field>
+        <field name="pc_specs">{"capacity":"4TB","interface":"NVMe PCIe 4.0","readSpeed":"7300 MB/s","writeSpeed":"6600 MB/s","formFactor":"M.2 2280"}</field>
+        <field name="pc_tags">gaming,high-end</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">678</field>
+    </record>
+
+    <record id="storage_crucial_t705_4tb" model="product.template">
+        <field name="name">Crucial T705 4TB NVMe PCIe 5.0</field>
+        <field name="list_price">349.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">storage</field>
+        <field name="pc_brand">Crucial</field>
+        <field name="pc_specs">{"capacity":"4TB","interface":"NVMe PCIe 5.0","readSpeed":"14500 MB/s","writeSpeed":"12700 MB/s","formFactor":"M.2 2280"}</field>
+        <field name="pc_tags">flagship,workstation</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">234</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         PSU — Alimentation
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="psu_corsair_1000w" model="product.template">
+        <field name="name">Corsair HX1000i 1000W 80+ Platinum</field>
+        <field name="list_price">219.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">psu</field>
+        <field name="pc_brand">Corsair</field>
+        <field name="pc_specs">{"wattage":1000,"certification":"80+ Platinum","modular":"Full","formFactor":"ATX","fanSize":"135mm"}</field>
+        <field name="pc_tags">bestseller</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">567</field>
+    </record>
+
+    <record id="psu_seasonic_850w" model="product.template">
+        <field name="name">Seasonic Focus GX-850 850W 80+ Gold</field>
+        <field name="list_price">139.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">psu</field>
+        <field name="pc_brand">Seasonic</field>
+        <field name="pc_specs">{"wattage":850,"certification":"80+ Gold","modular":"Full","formFactor":"ATX","fanSize":"120mm"}</field>
+        <field name="pc_tags">value,bestseller</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">934</field>
+    </record>
+
+    <record id="psu_be_quiet_1200w" model="product.template">
+        <field name="name">be quiet! Dark Power 13 1200W 80+ Titanium</field>
+        <field name="list_price">299.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">psu</field>
+        <field name="pc_brand">be quiet!</field>
+        <field name="pc_specs">{"wattage":1200,"certification":"80+ Titanium","modular":"Full","formFactor":"ATX","fanSize":"135mm"}</field>
+        <field name="pc_tags">flagship,high-end</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">312</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Cooling — Refroidissement
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="cooling_noctua_nh_d15" model="product.template">
+        <field name="name">Noctua NH-D15 G2</field>
+        <field name="list_price">109.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">cooling</field>
+        <field name="pc_brand">Noctua</field>
+        <field name="pc_specs">{"type":"Air Cooler","tdpRating":350,"sockets":["AM5","AM4","LGA1851","LGA1700"],"fanSize":"140mm","height":"165mm"}</field>
+        <field name="pc_tags">bestseller</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">1876</field>
+    </record>
+
+    <record id="cooling_corsair_h150i" model="product.template">
+        <field name="name">Corsair iCUE H150i Elite LCD XT 360mm</field>
+        <field name="list_price">199.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">cooling</field>
+        <field name="pc_brand">Corsair</field>
+        <field name="pc_specs">{"type":"AIO Liquid","tdpRating":400,"sockets":["AM5","AM4","LGA1851","LGA1700"],"radiatorSize":"360mm","fanSize":"120mm x3"}</field>
+        <field name="pc_tags">gaming,flagship</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.7</field>
+        <field name="pc_review_count">743</field>
+    </record>
+
+    <record id="cooling_arctic_liquid_360" model="product.template">
+        <field name="name">Arctic Liquid Freezer III 360 A-RGB</field>
+        <field name="list_price">89.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">cooling</field>
+        <field name="pc_brand">Arctic</field>
+        <field name="pc_specs">{"type":"AIO Liquid","tdpRating":370,"sockets":["AM5","AM4","LGA1851","LGA1700"],"radiatorSize":"360mm","fanSize":"120mm x3"}</field>
+        <field name="pc_tags">value,bestseller</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">1234</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Case — Boîtiers
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="case_fractal_torrent" model="product.template">
+        <field name="name">Fractal Design Torrent RGB</field>
+        <field name="list_price">179.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">case</field>
+        <field name="pc_brand">Fractal Design</field>
+        <field name="pc_specs">{"formFactor":"Mid Tower","supportedMB":["ATX","mATX","ITX"],"maxGPULength":"461mm","maxCoolerHeight":"188mm","driveBays":"2x3.5 + 4x2.5"}</field>
+        <field name="pc_tags">bestseller,airflow</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">1102</field>
+    </record>
+
+    <record id="case_lian_li_o11d_evo" model="product.template">
+        <field name="name">Lian Li O11 Dynamic EVO RGB</field>
+        <field name="list_price">169.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">case</field>
+        <field name="pc_brand">Lian Li</field>
+        <field name="pc_specs">{"formFactor":"Mid Tower","supportedMB":["ATX","mATX","ITX","E-ATX"],"maxGPULength":"446mm","maxCoolerHeight":"167mm","driveBays":"4x3.5 + 4x2.5"}</field>
+        <field name="pc_tags">gaming,flagship</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">876</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Mouse — Souris
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="mouse_logitech_gpx2" model="product.template">
+        <field name="name">Logitech G Pro X Superlight 2</field>
+        <field name="list_price">159.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">mouse</field>
+        <field name="pc_brand">Logitech</field>
+        <field name="pc_specs">{"sensor":"HERO 2","dpi":"100-32000","weight":"60g","wireless":"Yes","battery":"95h"}</field>
+        <field name="pc_tags">bestseller,esport</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">2341</field>
+    </record>
+
+    <record id="mouse_razer_deathadder_v3_pro" model="product.template">
+        <field name="name">Razer DeathAdder V3 Pro</field>
+        <field name="list_price">149.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">mouse</field>
+        <field name="pc_brand">Razer</field>
+        <field name="pc_specs">{"sensor":"Focus Pro 30K","dpi":"100-30000","weight":"64g","wireless":"Yes","battery":"90h"}</field>
+        <field name="pc_tags">bestseller,gaming</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">1234</field>
+    </record>
+
+    <record id="mouse_zowie_ec2c" model="product.template">
+        <field name="name">Zowie EC2-C</field>
+        <field name="list_price">79.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">mouse</field>
+        <field name="pc_brand">Zowie</field>
+        <field name="pc_specs">{"sensor":"3389","dpi":"400-3200","weight":"73g","wireless":"No","cable":"Paracord"}</field>
+        <field name="pc_tags">esport,value</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">890</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Keyboard — Claviers
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="kb_wooting_60he" model="product.template">
+        <field name="name">Wooting 60HE+</field>
+        <field name="list_price">174.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">keyboard</field>
+        <field name="pc_brand">Wooting</field>
+        <field name="pc_specs">{"layout":"60%","switch":"Lekker (Hall Effect)","actuation":"0.1-4.0mm","wireless":"No","hotswap":"Yes"}</field>
+        <field name="pc_tags">bestseller,esport</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">1456</field>
+    </record>
+
+    <record id="kb_keychron_q3" model="product.template">
+        <field name="name">Keychron Q3 Max QMK/VIA</field>
+        <field name="list_price">199.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">keyboard</field>
+        <field name="pc_brand">Keychron</field>
+        <field name="pc_specs">{"layout":"TKL","switch":"Gateron Jupiter Red","actuation":"2.0mm","wireless":"Yes","hotswap":"Yes"}</field>
+        <field name="pc_tags">value,wireless</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">987</field>
+    </record>
+
+    <record id="kb_ducky_one3" model="product.template">
+        <field name="name">Ducky One 3 SF RGB</field>
+        <field name="list_price">109.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">keyboard</field>
+        <field name="pc_brand">Ducky</field>
+        <field name="pc_specs">{"layout":"65%","switch":"Cherry MX Red","actuation":"2.0mm","wireless":"No","hotswap":"No"}</field>
+        <field name="pc_tags">budget</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.7</field>
+        <field name="pc_review_count">623</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Microphone
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="mic_shure_mv7" model="product.template">
+        <field name="name">Shure MV7+</field>
+        <field name="list_price">249.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">microphone</field>
+        <field name="pc_brand">Shure</field>
+        <field name="pc_specs">{"type":"Dynamic","connection":"USB-C + XLR","pattern":"Cardioid","frequencyResponse":"50Hz-20kHz","bitDepth":"24-bit"}</field>
+        <field name="pc_tags">bestseller,streaming</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.9</field>
+        <field name="pc_review_count">1876</field>
+    </record>
+
+    <record id="mic_blue_yeti_x" model="product.template">
+        <field name="name">Blue Yeti X</field>
+        <field name="list_price">169.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">microphone</field>
+        <field name="pc_brand">Blue</field>
+        <field name="pc_specs">{"type":"Condenser","connection":"USB-A","pattern":"Multi-Pattern","frequencyResponse":"20Hz-20kHz","bitDepth":"24-bit"}</field>
+        <field name="pc_tags">streaming,value</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.7</field>
+        <field name="pc_review_count">934</field>
+    </record>
+
+    <record id="mic_rode_nt_usb_mini" model="product.template">
+        <field name="name">Rode NT-USB Mini</field>
+        <field name="list_price">99.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">microphone</field>
+        <field name="pc_brand">Rode</field>
+        <field name="pc_specs">{"type":"Condenser","connection":"USB-C","pattern":"Cardioid","frequencyResponse":"20Hz-20kHz","bitDepth":"24-bit"}</field>
+        <field name="pc_tags">budget,compact</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.8</field>
+        <field name="pc_review_count">567</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Webcam
+    ════════════════════════════════════════════════════════════════════════ -->
+    <record id="webcam_logitech_brio_4k" model="product.template">
+        <field name="name">Logitech Brio 4K Pro</field>
+        <field name="list_price">199.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">webcam</field>
+        <field name="pc_brand">Logitech</field>
+        <field name="pc_specs">{"resolution":"4K 30fps / 1080p 60fps","fov":"90°","hdr":"Yes","autofocus":"Yes","connection":"USB-C"}</field>
+        <field name="pc_tags">bestseller,streaming</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.7</field>
+        <field name="pc_review_count">2134</field>
+    </record>
+
+    <record id="webcam_razer_kiyo_pro_ultra" model="product.template">
+        <field name="name">Razer Kiyo Pro Ultra</field>
+        <field name="list_price">299.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">webcam</field>
+        <field name="pc_brand">Razer</field>
+        <field name="pc_specs">{"resolution":"4K 30fps / 1080p 60fps","fov":"103°","hdr":"Yes","autofocus":"Yes","connection":"USB-C"}</field>
+        <field name="pc_tags">flagship,streaming</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.6</field>
+        <field name="pc_review_count">456</field>
+    </record>
+
+    <record id="webcam_anker_powerconf_c300" model="product.template">
+        <field name="name">Anker PowerConf C300</field>
+        <field name="list_price">79.0</field>
+        <field name="type">consu</field>
+        <field name="pc_category">webcam</field>
+        <field name="pc_brand">Anker</field>
+        <field name="pc_specs">{"resolution":"1080p 60fps","fov":"78°","hdr":"No","autofocus":"Yes","connection":"USB-A"}</field>
+        <field name="pc_tags">budget,value</field>
+        <field name="pc_stock_status">in_stock</field>
+        <field name="pc_rating">4.5</field>
+        <field name="pc_review_count">789</field>
+    </record>
+
+</odoo>
