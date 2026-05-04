@@ -118,46 +118,81 @@ const App = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Current user session
+  const [currentUser, setCurrentUser] = React.useState(null);
+  React.useEffect(() => {
+    const handler = (e) => {
+      if (e.detail?.authenticated) setCurrentUser(e.detail);
+      else setCurrentUser(null);
+    };
+    window.addEventListener('pc:session', handler);
+    window.addEventListener('pc:logout', () => setCurrentUser(null));
+    // Check session on mount
+    window.PcApi?.me().then(d => { if (d.authenticated) setCurrentUser(d); }).catch(() => { });
+    return () => {
+      window.removeEventListener('pc:session', handler);
+      window.removeEventListener('pc:logout', handler);
+    };
+  }, []);
+
   // Cart state
   const [cart, setCart] = React.useState(() => {
     try { return JSON.parse(localStorage.getItem('inshop_cart') || '[]'); } catch { return []; }
   });
+  const cartRef = React.useRef(cart);
 
   const addToCart = React.useCallback((product) => {
-    setCart(prev => {
-      const existing = prev.find(i => i.id === product.id);
-      let next;
-      if (existing) {
-        next = prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
-      } else {
-        next = [...prev, { ...product, cartId: product.id + '_' + Date.now(), qty: 1 }];
-      }
-      localStorage.setItem('inshop_cart', JSON.stringify(next));
-      return next;
-    });
-  }, []);
+    const prev = cartRef.current;
+    const existing = prev.find(i => i.id === product.id);
+    let next;
+    if (existing) {
+      next = prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
+    } else {
+      next = [...prev, { ...product, cartId: product.id + '_' + Date.now(), qty: 1 }];
+    }
+    localStorage.setItem('inshop_cart', JSON.stringify(next));
+    cartRef.current = next;
+    setCart(next);
+    if (currentUser?.authenticated && window.PcApi) {
+      window.PcApi.cartAdd(product.odoo_id || product.id, 1)
+        .catch(e => console.warn('[Cart] cartAdd:', e.message));
+    }
+  }, [currentUser]);
 
   const removeFromCart = React.useCallback((cartId) => {
-    setCart(prev => {
-      const next = prev.filter(i => i.cartId !== cartId);
-      localStorage.setItem('inshop_cart', JSON.stringify(next));
-      return next;
-    });
-  }, []);
+    const item = cartRef.current.find(i => i.cartId === cartId);
+    const next = cartRef.current.filter(i => i.cartId !== cartId);
+    localStorage.setItem('inshop_cart', JSON.stringify(next));
+    cartRef.current = next;
+    setCart(next);
+    if (currentUser?.authenticated && window.PcApi && item) {
+      window.PcApi.cartRemove(item.odoo_id || item.id)
+        .catch(e => console.warn('[Cart] cartRemove:', e.message));
+    }
+  }, [currentUser]);
 
   const updateQty = React.useCallback((cartId, qty) => {
     if (qty <= 0) { removeFromCart(cartId); return; }
-    setCart(prev => {
-      const next = prev.map(i => i.cartId === cartId ? { ...i, qty } : i);
-      localStorage.setItem('inshop_cart', JSON.stringify(next));
-      return next;
-    });
-  }, [removeFromCart]);
+    const next = cartRef.current.map(i => i.cartId === cartId ? { ...i, qty } : i);
+    localStorage.setItem('inshop_cart', JSON.stringify(next));
+    cartRef.current = next;
+    setCart(next);
+    if (currentUser?.authenticated && window.PcApi) {
+      const items = next.map(i => ({ product_id: i.odoo_id || i.id, qty: i.qty })).filter(i => i.product_id);
+      if (items.length > 0) {
+        window.PcApi.cartSync(items).catch(e => console.warn('[Cart] cartSync:', e.message));
+      }
+    }
+  }, [removeFromCart, currentUser]);
 
   const clearCart = React.useCallback(() => {
+    cartRef.current = [];
     setCart([]);
     localStorage.removeItem('inshop_cart');
-  }, []);
+    if (currentUser?.authenticated && window.PcApi) {
+      window.PcApi.cartSync([]).catch(e => console.warn('[Cart] cartSync(clear):', e.message));
+    }
+  }, [currentUser]);
 
   // Favorites
   const [favorites, setFavorites] = React.useState(() => {
@@ -203,22 +238,6 @@ const App = () => {
   // Search state
   const [searchQuery, setSearchQuery] = React.useState('');
 
-  // Current user session
-  const [currentUser, setCurrentUser] = React.useState(null);
-  React.useEffect(() => {
-    const handler = (e) => {
-      if (e.detail?.authenticated) setCurrentUser(e.detail);
-      else setCurrentUser(null);
-    };
-    window.addEventListener('pc:session', handler);
-    window.addEventListener('pc:logout', () => setCurrentUser(null));
-    // Check session on mount
-    window.PcApi?.me().then(d => { if (d.authenticated) setCurrentUser(d); }).catch(() => { });
-    return () => {
-      window.removeEventListener('pc:session', handler);
-      window.removeEventListener('pc:logout', handler);
-    };
-  }, []);
 
   // Tweaks message listener
   React.useEffect(() => {
