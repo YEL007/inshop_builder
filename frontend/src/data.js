@@ -17,26 +17,58 @@ window.PERIPHERALS_DATA = {
 
 window.ALL_PRODUCTS = [];
 
-// ── Compatibilité ────────────────────────────────────────────────────────────
+// ── Compatibilité (résumé final du build complet) ────────────────────────────
 window.checkCompatibility = (build) => {
   const issues = [];
   const warnings = [];
-  const { cpu, motherboard, ram, psu, cooling } = build;
+  const { cpu, motherboard, ram, gpu, psu, cooling, case: pc_case } = build;
+
+  // Socket CPU ↔ Carte mère
   if (cpu && motherboard) {
     if (cpu.specs.socket !== motherboard.specs.socket)
-      issues.push(`CPU socket (${cpu.specs.socket}) ne correspond pas à la carte mère (${motherboard.specs.socket})`);
+      issues.push(`Socket CPU (${cpu.specs.socket}) incompatible avec la carte mère (${motherboard.specs.socket})`);
   }
-  if (cpu && cooling) {
+
+  // RAM ↔ Carte mère : type DDR
+  if (ram && motherboard?.specs.ramType) {
+    if (ram.specs.type && ram.specs.type !== motherboard.specs.ramType)
+      issues.push(`RAM ${ram.specs.type} incompatible avec la carte mère (${motherboard.specs.ramType})`);
+  }
+
+  // Refroidissement ↔ CPU : socket
+  if (cooling && cpu) {
     if (cooling.specs.sockets && !cooling.specs.sockets.includes(cpu.specs.socket))
       issues.push(`Le refroidissement ne supporte pas le socket ${cpu.specs.socket}`);
+  }
+
+  // Refroidissement ↔ CPU : TDP
+  if (cooling && cpu) {
     if (cooling.specs.tdpRating && cpu.specs.tdp && cooling.specs.tdpRating < cpu.specs.tdp)
-      warnings.push(`TDP CPU (${cpu.specs.tdp}W) dépasse la capacité du refroidissement (${cooling.specs.tdpRating}W)`);
+      warnings.push(`Refroidissement (${cooling.specs.tdpRating}W) insuffisant pour le CPU (${cpu.specs.tdp}W TDP)`);
   }
-  if (psu && (cpu || build.gpu)) {
-    const totalTdp = (cpu?.specs.tdp || 0) + (build.gpu?.specs.tdp || 0) + 60;
-    if (psu.specs.wattage && psu.specs.wattage < totalTdp * 1.2)
-      warnings.push(`Alimentation (${psu.specs.wattage}W) insuffisante (~${totalTdp}W nécessaires)`);
+
+  // Alimentation ↔ CPU + GPU : puissance
+  if (psu && (cpu || gpu)) {
+    const totalTdp = (cpu?.specs.tdp || 0) + (gpu?.specs.tdp || 0) + 50;
+    const minWatt = Math.ceil(totalTdp * 1.2);
+    if (psu.specs.wattage && psu.specs.wattage < minWatt)
+      warnings.push(`Alimentation (${psu.specs.wattage}W) insuffisante — minimum ~${minWatt}W recommandé`);
   }
+
+  // Boîtier ↔ Carte mère : format
+  if (pc_case && motherboard?.specs.formFactor) {
+    if (pc_case.specs.supportedMB && !pc_case.specs.supportedMB.includes(motherboard.specs.formFactor))
+      issues.push(`Le boîtier ne supporte pas le format ${motherboard.specs.formFactor}`);
+  }
+
+  // Boîtier ↔ Refroidissement : hauteur ventirad
+  if (pc_case && cooling?.specs.height) {
+    const maxH = parseInt(pc_case.specs.maxCoolerHeight);
+    const coolerH = parseInt(cooling.specs.height);
+    if (coolerH && maxH && coolerH > maxH)
+      issues.push(`Le ventirad (${cooling.specs.height}) dépasse la hauteur max du boîtier (${pc_case.specs.maxCoolerHeight})`);
+  }
+
   return { issues, warnings, ok: issues.length === 0 };
 };
 
