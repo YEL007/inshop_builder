@@ -252,13 +252,13 @@ const App = () => {
 
   // Apply accent color CSS variable
   React.useEffect(() => {
-    const preset = STYLE_PRESETS[tweaks.style] || STYLE_PRESETS.gold;
+    const preset = STYLE_PRESETS[tweaks.style] || STYLE_PRESETS.white;
     document.documentElement.style.setProperty('--accent', tweaks.accentColor || preset.accent);
     document.documentElement.style.setProperty('--accent-bright', tweaks.accentBright || preset.bright);
     document.documentElement.style.setProperty('--bg-base', tweaks.bgBase || preset.bg);
   }, [tweaks]);
 
-  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+  const cartCount = React.useMemo(() => cart.reduce((s, i) => s + i.qty, 0), [cart]);
   const favCount = favorites.size;
 
   const ctxValue = {
@@ -298,7 +298,15 @@ const App = () => {
       case 'product': return pageParams.product && ProductDetail ? <ProductDetail product={pageParams.product} /> : <Home />;
       case 'prebuilt-detail': return pageParams.product && PrebuiltDetail ? <PrebuiltDetail product={pageParams.product} /> : <Prebuilt />;
       case 'compare': return Compare ? <Compare /> : null;
-      default: return Home ? <Home /> : null;
+      default: return (
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'80vh', gap:16 }}>
+          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:72, fontWeight:700, color:'#3c3c3c' }}>404</div>
+          <div style={{ color:'#9f9f9f', fontSize:16 }}>{t('page_not_found') || 'Page introuvable'}</div>
+          <button onClick={() => setPage('home')} style={{ marginTop:8, padding:'12px 28px', background:'#e8001d', color:'#fff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer' }}>
+            {t('back_home') || 'Retour à l\'accueil'}
+          </button>
+        </div>
+      );
     }
   };
 

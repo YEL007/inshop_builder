@@ -151,11 +151,13 @@ const ProductCard = ({ product, onAdd, onFav, onView, isFav }) => {
           </div>
         </div>
 
-        <button style={{ width:'100%', padding:'11px', background:color, color:'#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor:'pointer', transition:'opacity 0.2s', marginTop:'auto' }}
+        <button
+          disabled={product.stock === 'out_of_stock'}
+          style={{ width:'100%', padding:'11px', background: product.stock === 'out_of_stock' ? '#3c3c3c' : color, color: product.stock === 'out_of_stock' ? '#666' : '#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor: product.stock === 'out_of_stock' ? 'not-allowed' : 'pointer', transition:'opacity 0.2s', marginTop:'auto' }}
           onClick={e => { e.stopPropagation(); onAdd(product); }}
-          onMouseEnter={e => e.currentTarget.style.opacity='0.8'}
+          onMouseEnter={e => { if (product.stock !== 'out_of_stock') e.currentTarget.style.opacity='0.8'; }}
           onMouseLeave={e => e.currentTarget.style.opacity='1'}>
-          {t('add_to_cart', formatPrice(product.price))}
+          {product.stock === 'out_of_stock' ? t('out_of_stock') : t('add_to_cart', formatPrice(product.price))}
         </button>
       </div>
     </div>

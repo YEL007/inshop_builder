@@ -566,6 +566,7 @@ const AuthForm = ({ onSuccess }) => {
 
   const handle = async () => {
     if (!form.email || !form.password) { setError('Email et mot de passe requis'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError('Adresse email invalide'); return; }
     setError(''); setLoading(true);
     try {
       const res = mode === 'login'
@@ -714,7 +715,7 @@ const ProfileTab = ({ currentUser, setCurrentUser }) => {
 };
 
 const UserPage = ({ initialTab }) => {
-  const { favorites, setPage, addToCart, currentUser, setCurrentUser, t, formatPrice } = React.useContext(window.AppContext);
+  const { favorites, setPage, addToCart, toggleFav, currentUser, setCurrentUser, t, formatPrice } = React.useContext(window.AppContext);
   const [tab, setTab] = React.useState(initialTab || 'orders');
   const [orders, setOrders] = React.useState([]);
   const [ordersLoading, setOrdersLoading] = React.useState(false);
@@ -856,7 +857,7 @@ const UserPage = ({ initialTab }) => {
                 {favProducts.map(p => (
                   <ProductCard key={p.id} product={p}
                     onAdd={() => addToCart(p)}
-                    onFav={() => {}}
+                    onFav={() => toggleFav(p)}
                     onView={() => setPage('product', { product:p })}
                     isFav={true} />
                 ))}
