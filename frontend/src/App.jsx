@@ -68,8 +68,12 @@ const App = () => {
     return '$' + Number(usdPrice).toLocaleString('en-US');
   }, [lang, xofRate]);
 
+  const [catalogError, setCatalogError] = React.useState(false);
   React.useEffect(() => {
-    const handler = () => setDataLoaded(prev => !prev);
+    const handler = (e) => {
+      if (e.detail && e.detail.ok === false) setCatalogError(true);
+      setDataLoaded(prev => !prev);
+    };
     window.addEventListener('catalog:loaded', handler);
     return () => window.removeEventListener('catalog:loaded', handler);
   }, []);
@@ -269,7 +273,7 @@ const App = () => {
     compareList, toggleCompare,
     searchQuery, setSearchQuery,
     currentUser, setCurrentUser,
-    dataLoaded,
+    dataLoaded, catalogError,
     lang, setLang, t, formatPrice,
   };
 
@@ -320,6 +324,11 @@ const App = () => {
           cartCount={cartCount}
           searchQuery={searchQuery} setSearchQuery={setSearchQuery}
         />}
+        {catalogError && (
+          <div style={{ background:'#cc4444', color:'#fff', textAlign:'center', padding:'10px 16px', fontSize:13, fontFamily:"'Space Grotesk',sans-serif" }}>
+            ⚠ Impossible de joindre le serveur Odoo — le catalogue est indisponible.
+          </div>
+        )}
         <main>{renderPage()}</main>
 
         {/* Footer */}

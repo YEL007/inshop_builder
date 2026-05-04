@@ -29,16 +29,30 @@ class PcPrebuilt(models.Model):
 
     def to_dict(self):
         self.ensure_one()
+        components = [c for c in [self.cpu, self.gpu, self.ram, self.storage, self.psu, self.case, self.cooling] if c]
+        tags = [t.strip().lower().replace(' ', '-') for t in (self.badge or '').split(',')] if self.badge else []
         return {
-            'id': f'pb-{self.id:03d}',
+            'id': f'pre-{self.id}',
             'odoo_id': self.id,
             'name': self.name,
             'price': self.price,
+            'category': 'prebuilt',
             'tier': self.tier or '',
             'badge': self.badge or '',
             'tag': self.tag_line or '',
             'rating': self.rating,
             'reviews': self.review_count,
+            'stock': 'in_stock',
+            'tags': tags,
+            'images': [],
+            'specs': {
+                'cpu': self.cpu or '',
+                'gpu': self.gpu or '',
+                'ram': self.ram or '',
+                'storage': self.storage or '',
+                'psu': self.psu or '',
+            },
+            'components': components,
             'cpu': self.cpu or '',
             'gpu': self.gpu or '',
             'ram': self.ram or '',
