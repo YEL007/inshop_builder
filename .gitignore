@@ -28,3 +28,8 @@ Thumbs.db
 # Environment
 .env
 *.log
+
+# Test artifacts
+test.js
+test.cjs
+puppeteer_out.txt
