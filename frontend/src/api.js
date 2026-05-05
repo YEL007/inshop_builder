@@ -86,6 +86,10 @@
     async getOrders() {
       return get('/orders');
     },
+
+    async getRelated(productId) {
+      return get(`/product/${productId}/related`);
+    },
   };
 
   // ── Bootstrap: fetch catalog + pre-builts from Odoo, populate globals ──────

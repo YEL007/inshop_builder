@@ -518,6 +518,43 @@ const CartPage = () => {
 const ODOO_STATUS_MAP = { draft:'processing', sent:'processing', sale:'processing', done:'delivered', cancel:'cancelled' };
 const STATUS_COLORS = { delivered:'#55efc4', shipped:'#74b9ff', processing:'#fdcb6e', cancelled:'#cc4444' };
 
+const ORDER_TIMELINE_STEPS = ['Reçue', 'Préparation', 'Expédiée', 'Livrée'];
+const STATE_TO_STEP = { draft: 1, sent: 1, sale: 2, done: 4, cancel: 0 };
+
+const OrderTimeline = ({ state }) => {
+  const doneSteps = STATE_TO_STEP[state] ?? 1;
+  if (state === 'cancel') return (
+    <div style={{ padding:'12px 20px', background:'#212121', display:'flex', alignItems:'center', gap:8 }}>
+      <div style={{ width:8, height:8, borderRadius:'50%', background:'#cc4444' }} />
+      <span style={{ color:'#cc4444', fontSize:12, fontWeight:600 }}>Commande annulée</span>
+    </div>
+  );
+  return (
+    <div style={{ display:'flex', alignItems:'center', padding:'14px 20px', background:'#212121', gap:0 }}>
+      {ORDER_TIMELINE_STEPS.map((label, i) => {
+        const done = i < doneSteps;
+        const active = i === doneSteps - 1;
+        return (
+          <React.Fragment key={i}>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, flexShrink:0 }}>
+              <div style={{ width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700,
+                background: done ? '#55efc4' : '#2a2a2a',
+                border: `2px solid ${done ? '#55efc4' : active ? '#fdcb6e' : '#3c3c3c'}`,
+                color: done ? '#1a1a1a' : '#666666' }}>
+                {done ? '✓' : i+1}
+              </div>
+              <div style={{ color: done ? '#c8c8c8' : '#666666', fontSize:10, whiteSpace:'nowrap' }}>{label}</div>
+            </div>
+            {i < ORDER_TIMELINE_STEPS.length - 1 && (
+              <div style={{ flex:1, height:2, background: i < doneSteps - 1 ? '#55efc4' : '#2a2a2a', marginBottom:14, minWidth:16 }} />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+};
+
 function formatOrderDate(iso) {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('fr-FR', { year:'numeric', month:'short', day:'numeric' });
@@ -719,7 +756,21 @@ const UserPage = ({ initialTab }) => {
   const [tab, setTab] = React.useState(initialTab || 'orders');
   const [orders, setOrders] = React.useState([]);
   const [ordersLoading, setOrdersLoading] = React.useState(false);
+  const [shareMsg, setShareMsg] = React.useState(null);
   const tabs = ['orders', 'favorites', 'profile', 'settings'];
+
+  // Load shared favorites from URL on mount
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shared = params.get('share');
+    if (shared) {
+      shared.split(',').map(Number).filter(Boolean).forEach(id => {
+        if (!favorites.has(id)) toggleFav(id);
+      });
+      setTab('favorites');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const loadOrders = () => {
     if (!currentUser) return;
@@ -829,6 +880,8 @@ const UserPage = ({ initialTab }) => {
                       </div>
                     </div>
                   </div>
+                  {/* Tracking timeline */}
+                  <OrderTimeline state={order.state} />
                   <div style={secStyles.orderItems}>
                     {(order.items||[]).map((item, i) => (
                       <div key={i} style={secStyles.orderItemRow}>
@@ -846,7 +899,32 @@ const UserPage = ({ initialTab }) => {
         {/* FAVORITES */}
         {tab === 'favorites' && (
           <div>
-            <h2 style={secStyles.tabTitle}>{t('my_favorites')} <span style={{ color:'#9f9f9f', fontWeight:400 }}>({favProducts.length})</span></h2>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+              <h2 style={{ ...secStyles.tabTitle, margin:0 }}>{t('my_favorites')} <span style={{ color:'#9f9f9f', fontWeight:400 }}>({favProducts.length})</span></h2>
+              {favProducts.length > 0 && (
+                <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                  {shareMsg && <span style={{ color:'#55efc4', fontSize:13 }}>{shareMsg}</span>}
+                  <button
+                    style={{ background:'#2a2a2a', border:'1px solid #3c3c3c', borderRadius:8, color:'#a8a8a8', cursor:'pointer', padding:'8px 16px', fontFamily:"'Space Grotesk',sans-serif", fontSize:13, display:'flex', alignItems:'center', gap:6, transition:'all 0.15s' }}
+                    onClick={() => {
+                      const ids = [...favorites].join(',');
+                      const url = window.location.origin + '/user?share=' + ids;
+                      navigator.clipboard.writeText(url).then(() => {
+                        setShareMsg('Lien copié !');
+                        setTimeout(() => setShareMsg(null), 2500);
+                      }).catch(() => {
+                        setShareMsg(url);
+                        setTimeout(() => setShareMsg(null), 4000);
+                      });
+                    }}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor='#e8001d';e.currentTarget.style.color='#ffffff';}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor='#3c3c3c';e.currentTarget.style.color='#a8a8a8';}}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    Partager ma liste
+                  </button>
+                </div>
+              )}
+            </div>
             {favProducts.length === 0 ? (
               <div style={{ textAlign:'center', padding:'60px 20px' }}>
                 <div style={{ color:'#9f9f9f', fontSize:16, marginBottom:16 }}>{t('no_favorites')}</div>

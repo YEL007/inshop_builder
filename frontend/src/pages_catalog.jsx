@@ -24,6 +24,7 @@ const CatalogPage = ({ initialCategory }) => {
   const [brands, setBrands] = React.useState([]);
   const [inStockOnly, setInStockOnly] = React.useState(false);
   const [search, setSearch] = React.useState('');
+  const [minRating, setMinRating] = React.useState(0);
 
   const allProducts = React.useMemo(() => {
     let prods = category === 'all'
@@ -33,12 +34,13 @@ const CatalogPage = ({ initialCategory }) => {
     if (inStockOnly) prods = prods.filter(p => p.stock !== 'out_of_stock');
     if (brands.length) prods = prods.filter(p => brands.includes(p.brand));
     prods = prods.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+    if (minRating > 0) prods = prods.filter(p => (p.rating || 0) >= minRating);
     if (sortBy === 'price_asc') prods = [...prods].sort((a,b) => a.price - b.price);
     else if (sortBy === 'price_desc') prods = [...prods].sort((a,b) => b.price - a.price);
     else if (sortBy === 'rating') prods = [...prods].sort((a,b) => b.rating - a.rating);
     else if (sortBy === 'reviews') prods = [...prods].sort((a,b) => b.reviews - a.reviews);
     return prods;
-  }, [category, sortBy, priceRange, brands, inStockOnly, search, dataLoaded]);
+  }, [category, sortBy, priceRange, brands, inStockOnly, search, minRating, dataLoaded]);
 
   const availableBrands = React.useMemo(() => {
     const prods = category === 'all' ? Object.values(window.CATALOG).flat() : window.CATALOG[category] || [];
@@ -84,7 +86,7 @@ const CatalogPage = ({ initialCategory }) => {
             </label>
           </div>
 
-          {/* Price range */}
+          {/* Price range — dual slider */}
           <div style={catStyles.filterGroup}>
             <div style={catStyles.filterLabel}>PRICE RANGE</div>
             <div style={{ display:'flex', gap:8, marginBottom:10 }}>
@@ -92,9 +94,30 @@ const CatalogPage = ({ initialCategory }) => {
               <span style={{ color:'#9f9f9f', alignSelf:'center' }}>—</span>
               <div style={catStyles.priceInput}>{formatPrice(priceRange[1])}</div>
             </div>
+            <input type="range" min={0} max={2000} step={50} value={priceRange[0]}
+              onChange={e => setPriceRange([Math.min(+e.target.value, priceRange[1]-50), priceRange[1]])}
+              style={{ width:'100%', accentColor:'#e8001d', marginBottom:6 }}/>
             <input type="range" min={0} max={2000} step={50} value={priceRange[1]}
-              onChange={e => setPriceRange([priceRange[0], +e.target.value])}
+              onChange={e => setPriceRange([priceRange[0], Math.max(+e.target.value, priceRange[0]+50)])}
               style={{ width:'100%', accentColor:'#e8001d' }}/>
+          </div>
+
+          {/* Rating filter */}
+          <div style={catStyles.filterGroup}>
+            <div style={catStyles.filterLabel}>NOTE MINIMUM</div>
+            {[4, 3, 2].map(r => (
+              <label key={r} style={catStyles.checkRow}>
+                <input type="radio" name="rating" checked={minRating === r}
+                  onChange={() => setMinRating(minRating === r ? 0 : r)}
+                  style={{ accentColor:'#e8001d' }}/>
+                <span style={{ color:'#e8001d', fontSize:12 }}>{'★'.repeat(r)}{'☆'.repeat(5-r)}</span>
+                <span style={{ color:'#a8a8a8', fontSize:11 }}>&amp; +</span>
+              </label>
+            ))}
+            {minRating > 0 && (
+              <button style={{ ...catStyles.filterBtn, color:'#9f9f9f', fontSize:11 }}
+                onClick={() => setMinRating(0)}>✕ Effacer</button>
+            )}
           </div>
 
           {/* Brand filter */}
@@ -257,6 +280,15 @@ const ProductDetailPage = ({ product }) => {
   const [hoverStar, setHoverStar] = React.useState(0);
   const [submitting, setSubmitting] = React.useState(false);
   const [reviewMsg, setReviewMsg] = React.useState(null);
+  const [relatedProducts, setRelatedProducts] = React.useState([]);
+
+  React.useEffect(() => {
+    if (!product.odoo_id) return;
+    fetch(`/api/pc/product/${product.odoo_id}/related`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setRelatedProducts(d.related || []))
+      .catch(() => {});
+  }, [product.odoo_id]);
 
   React.useEffect(() => {
     if (!product.odoo_id) return;
@@ -482,6 +514,37 @@ const ProductDetailPage = ({ product }) => {
           </div>
         )}
       </div>
+
+      {/* Produits similaires */}
+      {relatedProducts.length > 0 && (
+        <div style={{ borderTop:'1px solid #3c3c3c', paddingTop:48, marginTop:8 }}>
+          <h2 style={pdStyles.specsTitle}>Produits similaires</h2>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16 }}>
+            {relatedProducts.map(rp => (
+              <div key={rp.id}
+                style={{ background:'#242424', border:'1px solid #3c3c3c', borderRadius:12, overflow:'hidden', cursor:'pointer', transition:'all 0.2s' }}
+                onClick={() => { setPage('product', { product: rp }); window.scrollTo(0,0); }}
+                onMouseEnter={e=>{ e.currentTarget.style.borderColor='#e8001d'; e.currentTarget.style.transform='translateY(-2px)'; }}
+                onMouseLeave={e=>{ e.currentTarget.style.borderColor='#3c3c3c'; e.currentTarget.style.transform='none'; }}>
+                <div style={{ height:130, background:'linear-gradient(135deg,#1e1e1e,#2a2a2a)', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+                  {rp.images?.[0]
+                    ? <img src={rp.images[0]} alt={rp.name} style={{ height:'100%', width:'100%', objectFit:'contain', padding:8 }} onError={e=>e.target.style.display='none'} />
+                    : <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3c3c3c" strokeWidth="1.5"><rect x="2" y="2" width="20" height="20" rx="3"/></svg>
+                  }
+                </div>
+                <div style={{ padding:'12px 14px' }}>
+                  <div style={{ color:'#9f9f9f', fontSize:10, fontWeight:700, letterSpacing:'0.12em', marginBottom:4 }}>{rp.brand}</div>
+                  <div style={{ color:'#ffffff', fontWeight:600, fontSize:13, lineHeight:1.3, marginBottom:6 }}>{rp.name.length>40?rp.name.slice(0,40)+'…':rp.name}</div>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <span style={{ color:'#e8001d', fontSize:11 }}>{'★'.repeat(Math.round(rp.rating||0))}</span>
+                    <span style={{ color:'#e8001d', fontWeight:700, fontSize:15, fontFamily:"'Space Grotesk',sans-serif" }}>{formatPrice(rp.price)}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -495,44 +558,121 @@ const ComparePage = () => {
       <button style={{ marginTop:20, ...window.homeStyles.heroBtnSecondary }} onClick={()=>setPage('catalog')}>Browse Catalog</button>
     </div>
   );
+
   const allKeys = [...new Set(compareList.flatMap(p=>Object.keys(p.specs)))];
+
+  // Compute a performance score (0-100) based on numeric specs and price/rating
+  const computeScore = (product) => {
+    const numericVals = Object.values(product.specs).filter(v => typeof v === 'number' || !isNaN(parseFloat(v)));
+    const specScore = numericVals.reduce((s, v) => s + Math.min(parseFloat(v) / 100, 1), 0) / Math.max(numericVals.length, 1);
+    return Math.min(100, Math.round((specScore * 50) + ((product.rating || 0) / 5 * 30) + Math.min((product.reviews || 0) / 500 * 20, 20)));
+  };
+
+  const scores = compareList.map(p => computeScore(p));
+  const maxScore = Math.max(...scores);
+
+  // Check basic compatibility between components
+  const getCompatibility = () => {
+    if (compareList.length < 2) return [];
+    const issues = [];
+    const cpu = compareList.find(p => p.category === 'cpu');
+    const mb = compareList.find(p => p.category === 'motherboard');
+    const ram = compareList.find(p => p.category === 'ram');
+    if (cpu && mb && cpu.specs?.socket && mb.specs?.socket && cpu.specs.socket !== mb.specs.socket)
+      issues.push(`Socket incompatible : CPU ${cpu.specs.socket} ≠ Carte mère ${mb.specs.socket}`);
+    if (ram && mb && ram.specs?.type && mb.specs?.ramType && ram.specs.type !== mb.specs.ramType)
+      issues.push(`RAM incompatible : ${ram.specs.type} ≠ ${mb.specs.ramType}`);
+    return issues;
+  };
+  const compatIssues = getCompatibility();
+
   return (
     <div style={{ paddingTop:64, padding:'64px 80px' }}>
-      <h1 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:32, color:'#ffffff', marginBottom:40 }}>Compare Products</h1>
+      <h1 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:32, color:'#ffffff', marginBottom:16 }}>Compare Products</h1>
+
+      {/* Compatibility alerts */}
+      {compatIssues.length > 0 && (
+        <div style={{ background:'#cc444420', border:'1px solid #cc4444', borderRadius:10, padding:'12px 20px', marginBottom:32, display:'flex', flexDirection:'column', gap:6 }}>
+          <div style={{ color:'#cc4444', fontWeight:700, fontSize:13, marginBottom:4 }}>⚠ Incompatibilités détectées</div>
+          {compatIssues.map((issue, i) => (
+            <div key={i} style={{ color:'#e8a8a8', fontSize:13 }}>• {issue}</div>
+          ))}
+        </div>
+      )}
+      {compatIssues.length === 0 && compareList.some(p=>['cpu','motherboard','ram'].includes(p.category)) && (
+        <div style={{ background:'#4caf5020', border:'1px solid #4caf50', borderRadius:10, padding:'10px 20px', marginBottom:32 }}>
+          <span style={{ color:'#4caf50', fontSize:13 }}>✓ Aucun problème de compatibilité détecté</span>
+        </div>
+      )}
+
       <div style={{ display:'grid', gridTemplateColumns:`200px repeat(${compareList.length}, 1fr)`, gap:2, border:'1px solid #3c3c3c', borderRadius:12, overflow:'hidden' }}>
         {/* Header */}
         <div style={cmpStyles.headerCell}/>
-        {compareList.map(p=>(
+        {compareList.map((p, idx)=>(
           <div key={p.id} style={cmpStyles.productHeader}>
             <button style={cmpStyles.removeBtn} onClick={()=>toggleCompare(p)}>×</button>
             <div style={{ height:80, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              {p.image
-                ? <img src={p.image} alt={p.name} style={{ maxHeight:70, maxWidth:'100%', objectFit:'contain' }} />
+              {p.images?.[0]
+                ? <img src={p.images[0]} alt={p.name} style={{ maxHeight:70, maxWidth:'100%', objectFit:'contain' }} onError={e=>e.target.style.display='none'} />
                 : <ProductVisual category={p.category} />
               }
             </div>
             <div style={{ color:'#9f9f9f', fontSize:11, marginBottom:4 }}>{p.brand}</div>
             <div style={{ color:'#ffffff', fontWeight:600, fontSize:13, lineHeight:1.4, marginBottom:8 }}>{p.name}</div>
-            <div style={{ color:'#e8001d', fontWeight:700, fontSize:18, marginBottom:12 }}>${p.price.toLocaleString()}</div>
+            <div style={{ color:'#e8001d', fontWeight:700, fontSize:18, marginBottom:12 }}>{formatPrice(p.price)}</div>
             <button style={cmpStyles.addBtn} onClick={()=>addToCart(p)}>Add to Cart</button>
           </div>
         ))}
-        {/* Rows */}
-        {allKeys.map((key,i)=>(
-          <React.Fragment key={key}>
-            <div style={{ ...cmpStyles.labelCell, background: i%2===0?'#212121':'#242424' }}>
-              {key.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase())}
+
+        {/* Score de performance */}
+        <div style={{ ...cmpStyles.labelCell, background:'#1a1a1a', color:'#e8001d', fontWeight:700 }}>SCORE PERF.</div>
+        {compareList.map((p, idx) => {
+          const score = scores[idx];
+          const isBest = score === maxScore;
+          return (
+            <div key={p.id} style={{ ...cmpStyles.valueCell, background:'#1a1a1a', padding:'12px 16px' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                <span style={{ color: isBest ? '#55efc4' : '#ffffff', fontWeight:700, fontSize:16, fontFamily:"'Space Grotesk',sans-serif" }}>{score}</span>
+                {isBest && <span style={{ background:'#55efc420', color:'#55efc4', fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:3 }}>MEILLEUR</span>}
+              </div>
+              <div style={{ height:6, background:'#2a2a2a', borderRadius:3, overflow:'hidden' }}>
+                <div style={{ height:'100%', width:`${score}%`, background: isBest ? '#55efc4' : '#e8001d', borderRadius:3, transition:'width 0.4s ease' }} />
+              </div>
             </div>
-            {compareList.map(p=>{
-              const val = p.specs[key];
-              return (
-                <div key={p.id} style={{ ...cmpStyles.valueCell, background: i%2===0?'#212121':'#242424' }}>
-                  {val !== undefined ? (Array.isArray(val)?val.join(', '):String(val)) : <span style={{ color:'#3c3c3c' }}>—</span>}
-                </div>
-              );
-            })}
-          </React.Fragment>
-        ))}
+          );
+        })}
+
+        {/* Spec rows with visual bars for numeric values */}
+        {allKeys.map((key,i)=>{
+          const rawVals = compareList.map(p => p.specs[key]);
+          const numVals = rawVals.map(v => v !== undefined && !isNaN(parseFloat(v)) ? parseFloat(v) : null);
+          const maxVal = Math.max(...numVals.filter(v => v !== null));
+          const hasNumeric = numVals.some(v => v !== null) && maxVal > 0;
+          return (
+            <React.Fragment key={key}>
+              <div style={{ ...cmpStyles.labelCell, background: i%2===0?'#212121':'#242424' }}>
+                {key.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase())}
+              </div>
+              {compareList.map((p, pIdx)=>{
+                const val = p.specs[key];
+                const numVal = numVals[pIdx];
+                const isTop = hasNumeric && numVal !== null && numVal === maxVal;
+                return (
+                  <div key={p.id} style={{ ...cmpStyles.valueCell, background: i%2===0?'#212121':'#242424', padding:'8px 16px' }}>
+                    <div style={{ color: isTop ? '#55efc4' : '#ffffff', fontWeight: isTop ? 600 : 400 }}>
+                      {val !== undefined ? (Array.isArray(val)?val.join(', '):String(val)) : <span style={{ color:'#3c3c3c' }}>—</span>}
+                    </div>
+                    {hasNumeric && numVal !== null && (
+                      <div style={{ height:3, background:'#2a2a2a', borderRadius:2, marginTop:5, overflow:'hidden' }}>
+                        <div style={{ height:'100%', width:`${(numVal/maxVal)*100}%`, background: isTop ? '#55efc4' : '#4a4a6a', borderRadius:2 }} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </React.Fragment>
+          );
+        })}
       </div>
     </div>
   );

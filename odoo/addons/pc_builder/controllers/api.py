@@ -98,6 +98,23 @@ class PcBuilderApi(http.Controller):
             _logger.exception('Error in get_product')
             return error_response(str(e), 500)
 
+    @http.route('/api/pc/product/<int:product_id>/related', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_related(self, product_id, **kwargs):
+        """Return up to 4 products from the same category."""
+        try:
+            product = request.env['product.template'].sudo().browse(product_id)
+            if not product.exists() or not product.pc_category:
+                return error_response('Product not found', 404)
+            related = request.env['product.template'].sudo().search([
+                ('active', '=', True),
+                ('pc_category', '=', product.pc_category),
+                ('id', '!=', product_id),
+            ], limit=4)
+            return json_response({'related': [p.to_pc_dict() for p in related]})
+        except Exception as e:
+            _logger.exception('Error in get_related')
+            return error_response(str(e), 500)
+
     @http.route('/api/pc/peripherals', type='http', auth='public', methods=['GET'], csrf=False)
     def get_peripherals(self, **kwargs):
         """Return peripheral products grouped by category."""
@@ -421,6 +438,25 @@ class PcBuilderApi(http.Controller):
                     order.partner_id.sudo().write(partner_vals)
 
             order.sudo().action_confirm()
+
+            # Send confirmation email
+            if order.partner_id.email:
+                try:
+                    request.env['mail.mail'].sudo().create({
+                        'subject': f'Confirmation de commande — {order.name}',
+                        'email_to': order.partner_id.email,
+                        'body_html': (
+                            f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;">'
+                            f'<h2 style="color:#e8001d;">Commande confirmée ✓</h2>'
+                            f'<p>Votre commande <strong>{order.name}</strong> a bien été enregistrée.</p>'
+                            f'<p>Montant total : <strong>{order.amount_total:.2f} USD</strong></p>'
+                            f'<p>Nous préparons votre commande et vous tiendrons informé.</p>'
+                            f'<p style="color:#9f9f9f;">— L\'équipe INSHOP BUILDER</p>'
+                            f'</div>'
+                        ),
+                    }).send()
+                except Exception as _mail_err:
+                    _logger.warning('Confirmation email failed: %s', _mail_err)
 
             # Clear cart from session
             request.session['sale_order_id'] = None
