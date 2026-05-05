@@ -53,7 +53,7 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
   };
 
   return (
-    <nav style={navStyles.nav}>
+    <nav style={navStyles.nav} className="responsive-nav">
       {/* Logo */}
       <div style={navStyles.logo} onClick={() => setPage('home')} role="button">
         <div style={navStyles.logoMark}>
@@ -72,7 +72,7 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
       </div>
 
       {/* Desktop links */}
-      <div style={navStyles.links}>
+      <div style={navStyles.links} className="nav-links rsp-nav-links">
         {navLinks.map(link => (
           <button
             key={link.id}
@@ -88,6 +88,35 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
           </button>
         ))}
       </div>
+
+      {/* Mobile hamburger */}
+      <button
+        className="rsp-nav-mobile-btn"
+        style={navStyles.iconBtn}
+        onClick={() => setMobileOpen(v => !v)}
+        aria-label="Menu"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          {mobileOpen
+            ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
+            : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>
+          }
+        </svg>
+      </button>
+      {mobileOpen && (
+        <div style={{ position:'fixed', top:64, left:0, right:0, background:'rgba(14,14,14,0.98)', borderBottom:'1px solid var(--border2)', padding:'16px 20px', zIndex:999 }}>
+          {navLinks.map(link => (
+            <button key={link.id}
+              style={{ ...navStyles.link, display:'block', width:'100%', textAlign:'left', padding:'12px 16px', marginBottom:4, fontSize:15,
+                ...(page === link.id ? navStyles.linkActive : {}),
+                ...(link.highlight ? navStyles.linkHighlight : {}),
+              }}
+              onClick={() => { setPage(link.id); setMobileOpen(false); }}>
+              {link.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Right actions */}
       <div style={navStyles.actions}>

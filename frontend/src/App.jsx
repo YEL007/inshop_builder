@@ -72,6 +72,25 @@ const App = () => {
   React.useEffect(() => {
     const handler = (e) => {
       if (e.detail && e.detail.ok === false) setCatalogError(true);
+      
+      // Clean up cached build items that no longer exist in the backend
+      setBuild(prevBuild => {
+        const nextBuild = { ...prevBuild };
+        let changed = false;
+        const allIds = window.ALL_PRODUCTS.map(p => p.id);
+        for (const key of Object.keys(nextBuild)) {
+          if (nextBuild[key] && !allIds.includes(nextBuild[key].id)) {
+            delete nextBuild[key];
+            changed = true;
+          }
+        }
+        if (changed) {
+          localStorage.setItem('inshop_build', JSON.stringify(nextBuild));
+          return nextBuild;
+        }
+        return prevBuild;
+      });
+
       setDataLoaded(prev => !prev);
     };
     window.addEventListener('catalog:loaded', handler);
@@ -334,8 +353,8 @@ const App = () => {
         <main>{renderPage()}</main>
 
         {/* Footer */}
-        <footer style={appStyles.footer}>
-          <div style={appStyles.footerTop}>
+        <footer style={appStyles.footer} className="responsive-footer">
+          <div style={appStyles.footerTop} className="responsive-footer-top rsp-footer-top">
             <div style={appStyles.footerBrand}>
               <svg width="20" height="20" viewBox="0 0 22 22" fill="none" style={{ marginRight: 10 }}>
                 <rect x="1" y="1" width="20" height="20" rx="3" stroke="#e8001d" strokeWidth="1.5" />
@@ -346,7 +365,7 @@ const App = () => {
               </svg>
               <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#ffffff', letterSpacing: '0.1em' }}>INSHOP BUILDER</span>
             </div>
-            <div style={appStyles.footerLinks}>
+            <div style={appStyles.footerLinks} className="responsive-footer-links rsp-footer-links">
               {[[t('footer_col_components'), ['CPU', 'GPU', lang==='fr'?'Cartes Mères':'Motherboards', lang==='fr'?'Mémoire':'Memory', lang==='fr'?'Stockage':'Storage']],
               [t('footer_col_products'), [t('nav_prebuilt'), t('nav_peripherals'), t('nav_builder'), t('compare_title')]],
               [t('footer_col_account'), [t('my_orders'), t('my_favorites'), t('profile_tab'), t('settings_tab')]]].map(([title, links]) => (
@@ -357,7 +376,7 @@ const App = () => {
               ))}
             </div>
           </div>
-          <div style={appStyles.footerBottom}>
+          <div style={appStyles.footerBottom} className="responsive-footer-bottom rsp-footer-bottom">
             <span style={{ color: '#d0d0d0' }}>{t('footer_copyright')}</span>
             <span style={{ color: '#d0d0d0' }}>{t('footer_tagline')}</span>
           </div>

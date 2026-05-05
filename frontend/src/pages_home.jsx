@@ -208,7 +208,7 @@ const HomePage = () => {
   return (
     <div style={homeStyles.page}>
       {/* Hero */}
-      <section style={homeStyles.hero}>
+      <section style={homeStyles.hero} className="home-hero">
         <video autoPlay loop muted playsInline style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', top: 0, left: 0, zIndex: 0, opacity: 0.4 }}>
           <source src="/Vidéo_Rouge_Blanc_Noir_Pour_Site.mp4" type="video/mp4" />
         </video>
@@ -223,7 +223,7 @@ const HomePage = () => {
           <p style={homeStyles.heroDesc}>
             {t('hero_desc')}
           </p>
-          <div style={homeStyles.heroBtns}>
+          <div style={homeStyles.heroBtns} className="rsp-hero-btns">
             <button style={homeStyles.heroBtnPrimary}
               onClick={() => setPage('builder')}
               onMouseEnter={e => e.currentTarget.style.background='#2a2a2a'}
@@ -247,8 +247,8 @@ const HomePage = () => {
             ))}
           </div>
         </div>
-        <div style={homeStyles.heroRight}>
-          <div style={homeStyles.heroPC}>
+        <div style={homeStyles.heroRight} className="hero-right">
+          <div style={homeStyles.heroPC} className="hero-pc">
             <svg width="220" height="280" viewBox="0 0 220 280" fill="none">
               {/* Case outline */}
               <rect x="40" y="20" width="140" height="240" rx="12" fill="#242424" stroke="#e8001d" strokeWidth="1"/>
@@ -288,14 +288,14 @@ const HomePage = () => {
       </section>
 
       {/* Categories */}
-      <section style={homeStyles.section}>
+      <section style={homeStyles.section} className="rsp-section">
         <div style={homeStyles.sectionHeader}>
           <div>
             <div style={homeStyles.sectionEye}>{t('section_cat_eye')}</div>
             <h2 style={homeStyles.sectionTitle}>{t('section_cat_title')}</h2>
           </div>
         </div>
-        <div style={homeStyles.categoriesGrid}>
+        <div style={homeStyles.categoriesGrid} className="home-grid">
           {CATEGORY_CARDS.map(cat => (
             <button key={cat.id} style={homeStyles.catCard}
               onClick={() => setPage('catalog', { category: cat.id })}
@@ -314,7 +314,7 @@ const HomePage = () => {
       </section>
 
       {/* Featured */}
-      <section style={homeStyles.section}>
+      <section style={homeStyles.section} className="rsp-section">
         <div style={homeStyles.sectionHeader}>
           <div>
             <div style={homeStyles.sectionEye}>{t('section_feat_eye')}</div>
@@ -326,7 +326,7 @@ const HomePage = () => {
             {t('view_all')}
           </button>
         </div>
-        <div style={homeStyles.productsGrid}>
+        <div style={homeStyles.productsGrid} className="home-grid">
           {featured.map(p => (
             <ProductCard key={p.id} product={p}
               onAdd={() => addToCart(p)}
@@ -338,7 +338,7 @@ const HomePage = () => {
       </section>
 
       {/* CTA Banner */}
-      <section style={homeStyles.ctaBanner}>
+      <section style={homeStyles.ctaBanner} className="rsp-cta">
         <div style={homeStyles.ctaBannerGlow}/>
         <div style={{ position:'relative', zIndex:1 }}>
           <div style={homeStyles.ctaEye}>{t('cta_eye')}</div>

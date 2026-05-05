@@ -139,9 +139,9 @@ const BuilderPage = () => {
         </div>
       </div>
 
-      <div style={wiz.body}>
+      <div style={wiz.body} className="wizard-body">
         {/* Left sidebar */}
-        <aside style={wiz.sidebar}>
+        <aside style={wiz.sidebar} className="wizard-sidebar">
           <div style={wiz.stepList}>
             {WIZARD_STEPS.map((s, i) => {
               const isActive = i === currentStep;
@@ -203,9 +203,9 @@ const BuilderPage = () => {
         </aside>
 
         {/* Main content */}
-        <main style={wiz.main}>
+        <main style={wiz.main} className="wizard-main">
           {/* Step header */}
-          <div style={wiz.stepHeader}>
+          <div style={wiz.stepHeader} className="wizard-step-header">
             <div>
               <h2 style={wiz.stepTitle}>{t('step_label_' + step.key)}</h2>
               <p style={wiz.stepHint}>
@@ -223,7 +223,7 @@ const BuilderPage = () => {
           </div>
 
           {/* Product grid */}
-          <div style={wiz.productGrid}>
+          <div style={wiz.productGrid} className="wizard-grid">
             {products.map(product => {
               const compat = getCompatNote(step, product, build);
               const isSelected = build[step.key]?.id === product.id;

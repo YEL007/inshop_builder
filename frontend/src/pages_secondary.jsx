@@ -19,7 +19,7 @@ const PrebuiltPage = () => {
         <p style={secStyles.pageDesc}>Professionally assembled, tested, and ready to go.</p>
       </div>
 
-      <div style={secStyles.pbGrid}>
+      <div style={secStyles.pbGrid} className="rsp-pb-grid">
         {window.PREBUILTS.map(pc => {
           const color = tierColors[pc.tier] || '#e8001d';
           return (
@@ -103,7 +103,7 @@ const PrebuiltDetailPage = ({ product: pc }) => {
   const componentEntries = Object.entries(components);
 
   return (
-    <div style={{ paddingTop: 64, padding: '64px 80px' }}>
+    <div style={{ paddingTop: 64, padding: '64px 80px' }} className="rsp-cart-pad">
       {/* Back button + Name */}
       <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:32 }}>
         <button onClick={() => setPage('prebuilt')}
@@ -335,7 +335,7 @@ const PeripheralsPage = () => {
         </div>
 
         {/* Product grid */}
-        <div style={periStyles.grid}>
+        <div style={periStyles.grid} className="rsp-grid-3">
           {products.map(p => (
             <PeriProductCard key={p.id} product={p}
               visual={PERI_VISUALS[p.category]}
@@ -436,9 +436,9 @@ const CartPage = () => {
   );
 
   return (
-    <div style={{ paddingTop: 64, padding: '64px 80px' }}>
+    <div style={{ paddingTop: 64, padding: '64px 80px' }} className="rsp-cart-pad">
       <h1 style={secStyles.pageTitle2}>{t('cart_title')} <span style={{ color: '#9f9f9f', fontWeight: 400, fontSize: 20 }}>({cart.length})</span></h1>
-      <div style={secStyles.cartLayout}>
+      <div style={secStyles.cartLayout} className="rsp-cart">
         {/* Items */}
         <div style={{ flex: 1 }}>
           {cart.map(item => (
@@ -931,7 +931,7 @@ const UserPage = ({ initialTab }) => {
                 <button style={window.homeStyles.heroBtnSecondary} onClick={() => setPage('catalog')}>{t('browse_catalog')}</button>
               </div>
             ) : (
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16 }} className="rsp-grid-4">
                 {favProducts.map(p => (
                   <ProductCard key={p.id} product={p}
                     onAdd={() => addToCart(p)}

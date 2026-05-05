@@ -63,9 +63,9 @@ const CatalogPage = ({ initialCategory }) => {
         </div>
       </div>
 
-      <div style={catStyles.layout}>
+      <div style={catStyles.layout} className="rsp-catalog">
         {/* Sidebar */}
-        <aside style={catStyles.sidebar}>
+        <aside style={catStyles.sidebar} className="rsp-catalog-sidebar">
           {/* Category filter */}
           <div style={catStyles.filterGroup}>
             <div style={catStyles.filterLabel}>CATEGORY</div>
@@ -175,7 +175,7 @@ const CatalogPage = ({ initialCategory }) => {
               <div style={{ color:'#a8a8a8' }}>{t('no_products')}</div>
             </div>
           ) : (
-            <div style={catStyles.grid}>
+            <div style={catStyles.grid} className="rsp-grid-3">
               {allProducts.map(p => (
                 <CatalogProductCard key={p.id} product={p}
                   onView={() => setPage('product', { product: p })}
@@ -342,7 +342,7 @@ const ProductDetailPage = ({ product }) => {
         <h2 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:20, color:'#ffffff', margin:0 }}>{product.name}</h2>
       </div>
 
-      <div style={pdStyles.layout}>
+      <div style={pdStyles.layout} className="rsp-pd-layout">
         {/* Image Area */}
         <div style={{ display:'flex', flexDirection:'row', gap:16, height: 500 }}>
           {/* Thumbnails */}
@@ -519,7 +519,7 @@ const ProductDetailPage = ({ product }) => {
       {relatedProducts.length > 0 && (
         <div style={{ borderTop:'1px solid #3c3c3c', paddingTop:48, marginTop:8 }}>
           <h2 style={pdStyles.specsTitle}>Produits similaires</h2>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16 }} className="rsp-grid-4">
             {relatedProducts.map(rp => (
               <div key={rp.id}
                 style={{ background:'#242424', border:'1px solid #3c3c3c', borderRadius:12, overflow:'hidden', cursor:'pointer', transition:'all 0.2s' }}

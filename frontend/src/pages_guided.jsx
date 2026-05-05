@@ -97,13 +97,13 @@ const GuidedPage = () => {
         ))}
       </div>
 
-      <div style={{ padding: '48px 80px', maxWidth: 1200 }}>
+      <div style={{ padding: '48px 80px', maxWidth: 1200 }} className="rsp-pad">
 
         {/* Step 0 — Use case */}
         {step === 0 && (
           <div>
             <h2 style={guidedStyles.stepTitle}>Quel est ton usage principal ?</h2>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }} className="rsp-guided-uc">
               {USE_CASES.map(uc => (
                 <div key={uc.id}
                   onClick={() => { setUseCase(uc); setStep(1); }}
@@ -127,7 +127,7 @@ const GuidedPage = () => {
             <p style={{ color:'#a8a8a8', fontSize:14, marginBottom:32, marginTop:-8 }}>
               Usage sélectionné : <span style={{ color: selectedUC?.color, fontWeight:600 }}>{selectedUC?.emoji} {selectedUC?.label}</span>
             </p>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20, maxWidth:720 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20, maxWidth:720 }} className="rsp-guided-bud">
               {BUDGETS.map(bud => (
                 <div key={bud.id}
                   onClick={() => {
@@ -172,7 +172,7 @@ const GuidedPage = () => {
               </div>
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12, marginBottom:32 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12, marginBottom:32 }} className="rsp-guided-res">
               {Object.entries(recommendation.components).map(([cat, product]) => (
                 <div key={cat}
                   style={{ background:'#242424', border:'1px solid #3c3c3c', borderRadius:12, padding:'14px 18px', display:'flex', alignItems:'center', gap:14, cursor:'pointer', transition:'border-color 0.15s' }}
