@@ -82,7 +82,7 @@ const App = () => {
   const [page, setPageRaw] = React.useState(() => {
     // Read page from URL path on load (e.g. /catalog → 'catalog')
     const pathPage = window.location.pathname.replace('/', '') || 'home';
-    const knownPages = ['home','catalog','prebuilt','peripherals','builder','cart','checkout','user','product','prebuilt-detail','compare'];
+    const knownPages = ['home','catalog','prebuilt','peripherals','builder','cart','checkout','user','product','prebuilt-detail','compare','guided'];
     return knownPages.includes(pathPage) ? pathPage : (localStorage.getItem('inshop_page') || 'home');
   });
   const [pageParams, setPageParams] = React.useState(() => {
@@ -289,6 +289,7 @@ const App = () => {
     const ProductDetail = window.ProductDetailPage;
     const PrebuiltDetail = window.PrebuiltDetailPage;
     const Compare = window.ComparePage;
+    const Guided = window.GuidedPage;
 
     switch (page) {
       case 'home': return Home ? <Home /> : null;
@@ -302,6 +303,7 @@ const App = () => {
       case 'product': return pageParams.product && ProductDetail ? <ProductDetail product={pageParams.product} /> : <Home />;
       case 'prebuilt-detail': return pageParams.product && PrebuiltDetail ? <PrebuiltDetail product={pageParams.product} /> : <Prebuilt />;
       case 'compare': return Compare ? <Compare /> : null;
+      case 'guided': return Guided ? <Guided /> : null;
       default: return (
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'80vh', gap:16 }}>
           <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:72, fontWeight:700, color:'#3c3c3c' }}>404</div>

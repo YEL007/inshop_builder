@@ -6,13 +6,26 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [searchResults, setSearchResults] = React.useState([]);
+  const [isDark, setIsDark] = React.useState(() => {
+    return localStorage.getItem('inshop_theme') !== 'light';
+  });
   const { favorites, lang, setLang, t, currentUser } = React.useContext(window.AppContext);
+
+  React.useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.remove('light-mode');
+    } else {
+      document.documentElement.classList.add('light-mode');
+    }
+    localStorage.setItem('inshop_theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
 
   const navLinks = [
     { id: 'catalog', label: t('nav_components') },
     { id: 'prebuilt', label: t('nav_prebuilt') },
     { id: 'peripherals', label: t('nav_peripherals') },
     { id: 'builder', label: t('nav_builder'), highlight: true },
+    { id: 'guided', label: lang === 'fr' ? 'Configurateur' : 'Configurator' },
   ];
 
   const handleSearch = (q) => {
@@ -134,6 +147,14 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
           onClick={() => setLang('en')}
           title="English — USD prices">
           🇺🇸
+        </button>
+
+        {/* Dark / Light mode toggle */}
+        <button
+          style={{ ...navStyles.iconBtn, fontSize:16, opacity: 0.8 }}
+          onClick={() => setIsDark(v => !v)}
+          title={isDark ? 'Mode clair' : 'Mode sombre'}>
+          {isDark ? '☀️' : '🌙'}
         </button>
 
         {/* User / Connexion */}

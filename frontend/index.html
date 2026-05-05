@@ -32,6 +32,27 @@
       --text: var(--white);
       --text-muted: var(--gray);
     }
+    /* Light mode overrides */
+    .light-mode {
+      --black:   #f0f0f0;
+      --dark:    #ffffff;
+      --panel:   #f5f5f5;
+      --metal:   #cccccc;
+      --metal2:  #e8e8e8;
+      --white:   #1a1a1a;
+      --offwhite:#2a2a2a;
+      --gray:    #555555;
+      --border-color: rgba(0,0,0,0.12);
+      --border2: rgba(0,0,0,0.08);
+      --bg-base: #f0f0f0;
+      --bg-surface: #ffffff;
+      --text: #1a1a1a;
+      --text-muted: #555555;
+    }
+    .light-mode body { background: #f0f0f0; color: #1a1a1a; }
+    .light-mode ::-webkit-scrollbar-track { background: #e0e0e0; }
+    .light-mode ::-webkit-scrollbar-thumb { background: #b0b0b0; }
+
     html { scroll-behavior: smooth; }
     body {
       background: var(--bg-base);
