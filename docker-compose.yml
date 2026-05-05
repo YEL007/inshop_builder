@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: odoo
       POSTGRES_USER: odoo
-      POSTGRES_PASSWORD: odoo_secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -26,7 +26,8 @@ services:
     environment:
       HOST: db
       USER: odoo
-      PASSWORD: odoo_secret
+      PASSWORD: ${POSTGRES_PASSWORD}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://localhost:8080}
     volumes:
       - ./odoo/config/odoo.conf:/etc/odoo/odoo.conf:ro
       - ./odoo/addons:/mnt/extra-addons

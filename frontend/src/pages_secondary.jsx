@@ -63,11 +63,11 @@ const PrebuiltPage = () => {
                 <div style={secStyles.pbPerf}>
                   <div style={secStyles.pbPerfItem}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-                    <span style={{ color: '#666666', fontSize: 12 }}>{pc.gaming}</span>
+                    <span style={{ color: '#b8b8b8', fontSize: 12 }}>{pc.gaming}</span>
                   </div>
                   <div style={secStyles.pbPerfItem}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></svg>
-                    <span style={{ color: '#666666', fontSize: 12 }}>{pc.workflow}</span>
+                    <span style={{ color: '#b8b8b8', fontSize: 12 }}>{pc.workflow}</span>
                   </div>
                 </div>
 
@@ -397,8 +397,8 @@ const PeriProductCard = ({ product, visual, onAdd, onFav, onView, isFav }) => {
             <span style={{ color:'#9f9f9f', marginLeft:5, fontSize:11 }}>{product.rating} ({product.reviews?.toLocaleString()})</span>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-            <div style={{ width:5, height:5, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':'#555' }} />
-            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':'#9f9f9f', fontSize:11 }}>
+            <div style={{ width:5, height:5, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'#4caf70' }} />
+            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'#b0b0b0', fontSize:11 }}>
               {product.stock==='in_stock'?t('in_stock'):product.stock==='low_stock'?t('low_stock'):t('out_of_stock')}
             </span>
           </div>
@@ -474,7 +474,7 @@ const CartPage = () => {
         <div style={secStyles.cartSummary}>
           <div style={secStyles.summaryTitle}>{t('order_summary')}</div>
           <div style={secStyles.summaryRow}>
-            <span style={{ color: '#666666' }}>{t('cart_subtotal')}</span>
+            <span style={{ color: '#b8b8b8' }}>{t('cart_subtotal')}</span>
             <span style={{ color: '#ffffff' }}>{formatPrice(subtotal)}</span>
           </div>
           {couponApplied && (
@@ -484,7 +484,7 @@ const CartPage = () => {
             </div>
           )}
           <div style={secStyles.summaryRow}>
-            <span style={{ color: '#666666' }}>{t('cart_shipping')}</span>
+            <span style={{ color: '#b8b8b8' }}>{t('cart_shipping')}</span>
             <span style={{ color: shipping === 0 ? '#909090' : '#ffffff' }}>{shipping === 0 ? t('cart_free') : formatPrice(shipping)}</span>
           </div>
           {subtotal < 500 && <div style={{ color: '#9f9f9f', fontSize: 11, marginBottom: 12 }}>Free shipping on orders over {formatPrice(500)}</div>}
@@ -592,20 +592,20 @@ const AuthForm = ({ onSuccess }) => {
       <h2 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:28, color:'#ffffff', marginBottom:8, marginTop:0 }}>
         {mode === 'login' ? t('sign_in_title') : t('create_account')}
       </h2>
-      <p style={{ color:'#555555', fontSize:14, marginBottom:32, marginTop:0, lineHeight:1.6 }}>
+      <p style={{ color:'#a8a8a8', fontSize:14, marginBottom:32, marginTop:0, lineHeight:1.6 }}>
         {mode === 'login' ? t('sign_in_sub') : t('register_sub')}
       </p>
 
       {mode === 'register' && (
         <div style={{ marginBottom:20 }}>
-          <label style={{ display:'block', color:'#777777', fontSize:11, fontWeight:700, letterSpacing:'0.13em', marginBottom:8 }}>NOM COMPLET</label>
+          <label style={{ display:'block', color:'#b8b8b8', fontSize:11, fontWeight:700, letterSpacing:'0.13em', marginBottom:8 }}>NOM COMPLET</label>
           <input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Jean Dupont" style={authInp}
             onFocus={e=>e.target.style.borderColor='#e8001d'} onBlur={e=>e.target.style.borderColor='transparent'} />
         </div>
       )}
 
       <div style={{ marginBottom:20 }}>
-        <label style={{ display:'block', color:'#777777', fontSize:11, fontWeight:700, letterSpacing:'0.13em', marginBottom:8 }}>EMAIL</label>
+        <label style={{ display:'block', color:'#b8b8b8', fontSize:11, fontWeight:700, letterSpacing:'0.13em', marginBottom:8 }}>EMAIL</label>
         <input type="email" value={form.email} onChange={e=>set('email',e.target.value)}
           placeholder="votre@email.com" style={authInp}
           onFocus={e=>e.target.style.borderColor='#e8001d'} onBlur={e=>e.target.style.borderColor='transparent'} />
@@ -613,7 +613,7 @@ const AuthForm = ({ onSuccess }) => {
 
       <div style={{ marginBottom:28 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-          <label style={{ color:'#777777', fontSize:11, fontWeight:700, letterSpacing:'0.13em' }}>PASSWORD</label>
+          <label style={{ color:'#b8b8b8', fontSize:11, fontWeight:700, letterSpacing:'0.13em' }}>PASSWORD</label>
           {mode === 'login' && (
             <span style={{ color:'#e8001d', fontSize:11, fontWeight:700, letterSpacing:'0.1em', cursor:'pointer' }}>OUBLIÉ ?</span>
           )}
@@ -640,7 +640,7 @@ const AuthForm = ({ onSuccess }) => {
         {loading ? '...' : mode==='login' ? t('sign_in').toUpperCase() : t('create_account').toUpperCase()}
       </button>
 
-      <div style={{ textAlign:'center', marginTop:24, color:'#555555', fontSize:13 }}>
+      <div style={{ textAlign:'center', marginTop:24, color:'#a8a8a8', fontSize:13 }}>
         {mode === 'login' ? t('no_account') : t('already_account')}
         <span style={{ color:'#e8001d', cursor:'pointer', fontWeight:600 }}
           onClick={() => { setMode(m=>m==='login'?'register':'login'); setError(''); }}>
@@ -801,7 +801,7 @@ const UserPage = ({ initialTab }) => {
           <div>
             <h2 style={secStyles.tabTitle}>{t('my_orders')}</h2>
             {ordersLoading ? (
-              <div style={{ color:'#666666', padding:'40px 0' }}>Chargement…</div>
+              <div style={{ color:'#a8a8a8', padding:'40px 0' }}>Chargement…</div>
             ) : orders.length === 0 ? (
               <div style={{ textAlign:'center', padding:'60px 20px' }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3c3c3c" strokeWidth="1.5" style={{ marginBottom:16 }}>
@@ -832,7 +832,7 @@ const UserPage = ({ initialTab }) => {
                   <div style={secStyles.orderItems}>
                     {(order.items||[]).map((item, i) => (
                       <div key={i} style={secStyles.orderItemRow}>
-                        <span style={{ color:'#666666', fontSize:13 }}>{item.name}</span>
+                        <span style={{ color:'#c0c0c0', fontSize:13 }}>{item.name}</span>
                         <span style={{ color:'#9f9f9f', fontSize:13 }}>×{item.qty} · {formatPrice(Number(item.price||0))}</span>
                       </div>
                     ))}
@@ -916,7 +916,7 @@ const periStyles = {
   subTab: {
     display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px',
     background: 'transparent', border: '1px solid #3c3c3c', borderRadius: 8,
-    color: '#666666', cursor: 'pointer', fontSize: 13, fontWeight: 500,
+    color: '#a8a8a8', cursor: 'pointer', fontSize: 13, fontWeight: 500,
     fontFamily: "'Space Grotesk',sans-serif", transition: 'all 0.15s',
   },
   subTabActive: { background: '#333333', borderColor: '#e8001d', color: '#ffffff' },
@@ -944,7 +944,7 @@ pageHeader: { background: 'linear-gradient(135deg,#1a1a1a,#242424)', borderBotto
 headerEye: { color: '#e8001d', fontSize: 11, fontWeight: 600, letterSpacing: '0.2em', marginBottom: 8 },
 pageTitle: { fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 36, color: '#ffffff', margin: '0 0 8px' },
 pageTitle2: { fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 32, color: '#ffffff', margin: '0 0 32px', paddingTop: 64 },
-pageDesc: { color: '#666666', fontSize: 15, margin: 0 },
+pageDesc: { color: '#a8a8a8', fontSize: 15, margin: 0 },
 pbGrid: { padding: '48px 80px', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 20 },
 pbCard: { background: '#242424', border: '1px solid #3c3c3c', borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'all 0.25s', position: 'relative' },
 pbBadge: { position: 'absolute', top: 16, right: 16, fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 4, letterSpacing: '0.1em', zIndex: 1 },
@@ -960,14 +960,14 @@ pbPerfItem: { display: 'flex', alignItems: 'center', gap: 8 },
 pbRating: { marginBottom: 16 },
 pbAddBtn: { width: '100%', padding: '12px', color: '#1a1a1a', border: 'none', borderRadius: 8, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'opacity 0.2s' },
 tabs: { display: 'flex', gap: 4, marginBottom: 32 },
-tab: { padding: '10px 20px', background: 'none', border: '1px solid #3c3c3c', borderRadius: 8, color: '#666666', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontSize: 14, fontWeight: 500, transition: 'all 0.15s' },
+tab: { padding: '10px 20px', background: 'none', border: '1px solid #3c3c3c', borderRadius: 8, color: '#a8a8a8', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontSize: 14, fontWeight: 500, transition: 'all 0.15s' },
 tabActive: { background: '#2a2a2a', color: '#ffffff', borderColor: '#e8001d' },
 periGrid: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20, paddingBottom: 60 },
 cartLayout: { display: 'grid', gridTemplateColumns: '1fr 360px', gap: 40, paddingBottom: 60 },
 cartItem: { display: 'flex', gap: 20, padding: '20px 0', borderBottom: '1px solid #3c3c3c', alignItems: 'flex-start' },
 cartImg: { width: 80, height: 80, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
 qtyControl: { display: 'flex', alignItems: 'center', gap: 8, background: '#242424', border: '1px solid #3c3c3c', borderRadius: 7, padding: '4px 8px' },
-qtyBtnSm: { background: 'none', border: 'none', color: '#666666', cursor: 'pointer', fontSize: 16, padding: '0 2px', fontFamily: "'Space Grotesk',sans-serif" },
+qtyBtnSm: { background: 'none', border: 'none', color: '#a8a8a8', cursor: 'pointer', fontSize: 16, padding: '0 2px', fontFamily: "'Space Grotesk',sans-serif" },
 removeItemBtn: { background: 'none', border: '1px solid #3c3c3c', borderRadius: 8, color: '#9f9f9f', cursor: 'pointer', padding: '6px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.15s, border-color 0.15s' },
 cartSummary: { background: '#242424', border: '1px solid #3c3c3c', borderRadius: 16, padding: '24px', height: 'fit-content', position: 'sticky', top: 80 },
 summaryTitle: { fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 18, color: '#ffffff', marginBottom: 20 },
@@ -976,7 +976,7 @@ summaryDivider: { height: 1, background: '#3c3c3c', margin: '16px 0' },
 couponInput: { flex: 1, background: '#2a2a2a', border: '1px solid #3c3c3c', borderRadius: 7, padding: '9px 12px', color: '#ffffff', fontFamily: "'Space Grotesk',sans-serif", fontSize: 13, outline: 'none' },
 couponBtn: { background: '#2a2a2a', border: '1px solid #3c3c3c', borderRadius: 7, padding: '9px 16px', color: '#e8001d', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 13 },
 checkoutBtn: { width: '100%', padding: '14px', background: '#e8001d', color: '#1a1a1a', border: 'none', borderRadius: 9, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.2s', marginBottom: 10 },
-continueBtn: { width: '100%', padding: '11px', background: 'transparent', color: '#666666', border: '1px solid #3c3c3c', borderRadius: 9, fontFamily: "'Space Grotesk',sans-serif", fontSize: 13, cursor: 'pointer' },
+continueBtn: { width: '100%', padding: '11px', background: 'transparent', color: '#a8a8a8', border: '1px solid #3c3c3c', borderRadius: 9, fontFamily: "'Space Grotesk',sans-serif", fontSize: 13, cursor: 'pointer' },
 avatarLg: { width: 64, height: 64, borderRadius: '50%', background: '#2a2a2a', border: '2px solid #e8001d', color: '#e8001d', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' },
 userTab: { padding: '14px 24px', background: 'none', border: 'none', color: '#9f9f9f', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontSize: 14, fontWeight: 500, borderBottom: '2px solid transparent', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 6 },
 userTabActive: { color: '#ffffff', borderBottomColor: '#e8001d' },
@@ -987,7 +987,7 @@ orderHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'ce
 statusBadge: { fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 20 },
 orderItems: { padding: '12px 20px' },
 orderItemRow: { display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #212121' },
-orderActionBtn: { background: '#2a2a2a', border: '1px solid #3c3c3c', borderRadius: 6, padding: '7px 14px', color: '#666666', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontSize: 12, transition: 'all 0.15s' },
+orderActionBtn: { background: '#2a2a2a', border: '1px solid #3c3c3c', borderRadius: 6, padding: '7px 14px', color: '#a0a0a0', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontSize: 12, transition: 'all 0.15s' },
 profileField: { marginBottom: 16 },
 fieldLabel: { display: 'block', color: '#9f9f9f', fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', marginBottom: 6 },
 fieldInput: { width: '100%', background: '#242424', border: '1px solid #3c3c3c', borderRadius: 8, padding: '10px 14px', color: '#ffffff', fontFamily: "'Space Grotesk',sans-serif", fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' },
