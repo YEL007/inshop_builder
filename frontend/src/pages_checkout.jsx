@@ -26,7 +26,7 @@ const CheckoutPage = () => {
       <div style={ckStyles.header}>
         <div style={ckStyles.logo} onClick={() => setPage('home')}>
           <svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="1" y="1" width="20" height="20" rx="3" stroke="#e8e8e8" strokeWidth="1.5"/><rect x="5" y="5" width="5" height="5" fill="#e8e8e8"/><rect x="12" y="5" width="5" height="5" fill="#e8e8e8" opacity="0.5"/><rect x="5" y="12" width="5" height="5" fill="#e8e8e8" opacity="0.5"/><rect x="12" y="12" width="5" height="5" fill="#e8e8e8"/></svg>
-          <span style={{ color:'var(--black)', fontWeight:700, fontSize:14, letterSpacing:'0.1em' }}>INSHOP</span>
+          <span style={{ color:'#ffffff', fontWeight:700, fontSize:14, letterSpacing:'0.1em' }}>INSHOP</span>
         </div>
         {/* Barre 2 étapes */}
         <div style={ckStyles.stepBar}>
@@ -36,7 +36,7 @@ const CheckoutPage = () => {
                 <div style={{ ...ckStyles.stepDot, ...(i <= step ? ckStyles.stepDotActive : {}) }}>
                   {i < step ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#080808" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg> : i + 1}
                 </div>
-                <span style={{ color: i <= step ? 'var(--black)' : '#606060', fontSize:13, fontWeight: i === step ? 600 : 400 }}>{label}</span>
+                <span style={{ color: i <= step ? '#ffffff' : '#a0a0a0', fontSize:13, fontWeight: i === step ? 600 : 400 }}>{label}</span>
               </div>
               {i < 1 && <div style={{ ...ckStyles.stepLine, background: i < step ? '#e8e8e8' : '#2a2a2a' }}/>}
             </React.Fragment>
@@ -288,11 +288,11 @@ const CartReview = ({ cart, setPage, subtotal, formatPrice, onNext }) => (
           <ProductVisual category={item.category} />
         </div>
         <div style={{ flex:1 }}>
-          <div style={{ color:'#606060', fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:2 }}>{item.brand||item.category}</div>
-          <div style={{ color:'var(--black)', fontWeight:600, fontSize:14, marginBottom:4 }}>{item.name}</div>
-          <div style={{ color:'#606060', fontSize:12 }}>Qté : {item.qty}</div>
+          <div style={{ color:'#a0a0a0', fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:2 }}>{item.brand||item.category}</div>
+          <div style={{ color:'#ffffff', fontWeight:600, fontSize:14, marginBottom:4 }}>{item.name}</div>
+          <div style={{ color:'#a0a0a0', fontSize:12 }}>Qté : {item.qty}</div>
         </div>
-        <div style={{ color:'var(--black)', fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", fontSize:18 }}>{formatPrice(item.price*item.qty)}</div>
+        <div style={{ color:'#ffffff', fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", fontSize:18 }}>{formatPrice(item.price*item.qty)}</div>
       </div>
     ))}
     <div style={ckStyles.btnRow}>
@@ -314,7 +314,7 @@ const OrderConfirmStep = ({ currentUser, cart, subtotal, orderNum, formatPrice, 
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#606060" strokeWidth="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         </div>
         <h2 style={{ ...ckStyles.sectionTitle, marginBottom:8 }}>Connexion requise</h2>
-        <p style={{ color:'#606060', fontSize:14, maxWidth:340, lineHeight:1.6, margin:'0 0 24px' }}>
+        <p style={{ color:'#a0a0a0', fontSize:14, maxWidth:340, lineHeight:1.6, margin:'0 0 24px' }}>
           Connectez-vous à votre compte pour finaliser la commande. Vos informations seront utilisées automatiquement.
         </p>
         <div style={{ display:'flex', gap:12 }}>
@@ -388,7 +388,7 @@ const OrderConfirmStep = ({ currentUser, cart, subtotal, orderNum, formatPrice, 
 
       {/* Fiche compte */}
       <div style={{ background:'#121212', border:'1px solid #1e1e1e', borderRadius:12, padding:'20px 24px', display:'flex', flexDirection:'column', gap:10 }}>
-        <div style={{ color:'#606060', fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 }}>Vos informations</div>
+        <div style={{ color:'#a0a0a0', fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 }}>Vos informations</div>
         {[
           { icon:'M12 12c2.7 0 5-2.2 5-5s-2.3-5-5-5-5 2.2-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z', val: customer.name },
           { icon:'M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z', val: customer.phone },
@@ -397,10 +397,10 @@ const OrderConfirmStep = ({ currentUser, cart, subtotal, orderNum, formatPrice, 
         ].filter(Boolean).map((row, i) => (
           <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#606060"><path d={row.icon}/></svg>
-            <span style={{ color:'#e8e8e8', fontSize:13 }}>{row.val || <span style={{ color:'#404040', fontStyle:'italic' }}>Non renseigné</span>}</span>
+            <span style={{ color:'#e8e8e8', fontSize:13 }}>{row.val || <span style={{ color:'#707070', fontStyle:'italic' }}>Non renseigné</span>}</span>
           </div>
         ))}
-        <button style={{ alignSelf:'flex-start', marginTop:4, background:'transparent', border:'none', color:'#606060', fontSize:11, cursor:'pointer', padding:0, textDecoration:'underline' }}
+        <button style={{ alignSelf:'flex-start', marginTop:4, background:'transparent', border:'none', color:'#909090', fontSize:11, cursor:'pointer', padding:0, textDecoration:'underline' }}
           onClick={() => setPage('user', { tab:'profile' })}>
           Modifier mes informations →
         </button>
@@ -613,7 +613,7 @@ const ckStyles = {
   header: { height:60, borderBottom:'1px solid #1e1e1e', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 40px', position:'sticky', top:64, background:'rgba(8,8,8,0.95)', backdropFilter:'blur(12px)', zIndex:100 },
   logo: { display:'flex', alignItems:'center', gap:8, cursor:'pointer', width:100 },
   stepBar: { display:'flex', alignItems:'center', gap:8 },
-  stepDot: { width:24, height:24, borderRadius:'50%', background:'#1e1e1e', color:'#606060', fontSize:11, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
+  stepDot: { width:24, height:24, borderRadius:'50%', background:'#1e1e1e', color:'#a0a0a0', fontSize:11, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
   stepDotActive: { background:'#e8e8e8', color:'#080808' },
   stepLine: { width:32, height:1 },
   body: { display:'grid', gridTemplateColumns:'1fr 360px', gap:0, flex:1, maxWidth:1100, margin:'0 auto', width:'100%', padding:'40px 20px' },
@@ -625,11 +625,11 @@ const ckStyles = {
   itemImgSm: { width:40, height:40, background:'#141414', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
   itemImgMd: { width:64, height:64, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
   itemName: { color:'#ffffff', fontSize:12, fontWeight:500, lineHeight:1.3, marginBottom:2 },
-  itemQty: { color:'#606060', fontSize:11 },
+  itemQty: { color:'#a0a0a0', fontSize:11 },
   itemPrice: { color:'#ffffff', fontWeight:600, fontSize:13, flexShrink:0 },
   divider: { height:1, background:'#1e1e1e', margin:'14px 0' },
   summRow: { display:'flex', justifyContent:'space-between', color:'#999999', fontSize:13, marginBottom:8 },
-  secBadge: { display:'flex', alignItems:'center', gap:6, color:'#606060', fontSize:11, marginTop:16, padding:'10px', background:'#0d0d0d', borderRadius:8 },
+  secBadge: { display:'flex', alignItems:'center', gap:6, color:'#909090', fontSize:11, marginTop:16, padding:'10px', background:'#0d0d0d', borderRadius:8 },
   section: { display:'flex', flexDirection:'column', gap:24 },
   sectionTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#ffffff', margin:0 },
   reviewItem: { display:'flex', alignItems:'center', gap:16, padding:'16px', background:'#121212', border:'1px solid #1e1e1e', borderRadius:10 },
@@ -651,7 +651,7 @@ const ckStyles = {
   altPay: { display:'flex', flexDirection:'column', alignItems:'center', gap:12, padding:'40px', background:'#121212', border:'1px solid #2a2a2a', borderRadius:12, textAlign:'center' },
   btnRow: { display:'flex', gap:12, justifyContent:'space-between', marginTop:8 },
   btnPrimary: { display:'flex', alignItems:'center', gap:8, background:'#e8e8e8', color:'#080808', border:'none', cursor:'pointer', padding:'12px 28px', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, transition:'background 0.2s' },
-  btnSecondary: { background:'transparent', border:'1px solid #2a2a2a', color:'#999999', cursor:'pointer', padding:'12px 24px', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontSize:14, transition:'all 0.15s' },
+  btnSecondary: { background:'transparent', border:'1px solid #3c3c3c', color:'#b0b0b0', cursor:'pointer', padding:'12px 24px', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontSize:14, transition:'all 0.15s' },
   btnWhatsApp: { display:'flex', alignItems:'center', gap:10, background:'#25D366', color:'#ffffff', border:'none', cursor:'pointer', padding:'12px 28px', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, transition:'background 0.2s' },
   notifGreen: { display:'flex', alignItems:'flex-start', gap:12, background:'#0d2e1a', border:'1px solid #1a5c30', borderRadius:10, padding:'14px 16px', color:'#4caf80', fontSize:13, lineHeight:1.6 },
   confirmPage: { display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', padding:'60px 40px', gap:16, gridColumn:'1/-1' },

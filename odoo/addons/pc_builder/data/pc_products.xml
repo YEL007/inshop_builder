@@ -146,7 +146,7 @@
         <field name="type">consu</field>
         <field name="pc_category">motherboard</field>
         <field name="pc_brand">ASUS</field>
-        <field name="pc_specs">{"socket":"AM5","formFactor":"ATX","chipset":"X870E","memorySlots":4,"maxMemory":"256GB","pcie":"PCIe 5.0"}</field>
+        <field name="pc_specs">{"socket":"AM5","formFactor":"ATX","chipset":"X870E","ramType":"DDR5","memorySlots":4,"maxMemory":"256GB","pcie":"PCIe 5.0"}</field>
         <field name="pc_tags">flagship,bestseller</field>
         <field name="pc_stock_status">in_stock</field>
         <field name="pc_rating">4.9</field>
@@ -159,7 +159,7 @@
         <field name="type">consu</field>
         <field name="pc_category">motherboard</field>
         <field name="pc_brand">MSI</field>
-        <field name="pc_specs">{"socket":"AM5","formFactor":"ATX","chipset":"B650","memorySlots":4,"maxMemory":"128GB","pcie":"PCIe 5.0"}</field>
+        <field name="pc_specs">{"socket":"AM5","formFactor":"ATX","chipset":"B650","ramType":"DDR5","memorySlots":4,"maxMemory":"128GB","pcie":"PCIe 5.0"}</field>
         <field name="pc_tags">value,bestseller</field>
         <field name="pc_stock_status">in_stock</field>
         <field name="pc_rating">4.7</field>
@@ -172,7 +172,7 @@
         <field name="type">consu</field>
         <field name="pc_category">motherboard</field>
         <field name="pc_brand">Gigabyte</field>
-        <field name="pc_specs">{"socket":"LGA1851","formFactor":"ATX","chipset":"Z890","memorySlots":4,"maxMemory":"256GB","pcie":"PCIe 5.0"}</field>
+        <field name="pc_specs">{"socket":"LGA1851","formFactor":"ATX","chipset":"Z890","ramType":"DDR5","memorySlots":4,"maxMemory":"256GB","pcie":"PCIe 5.0"}</field>
         <field name="pc_tags">gaming</field>
         <field name="pc_stock_status">in_stock</field>
         <field name="pc_rating">4.6</field>

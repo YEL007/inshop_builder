@@ -80,7 +80,7 @@ const CatalogPage = ({ initialCategory }) => {
             <div style={catStyles.filterLabel}>AVAILABILITY</div>
             <label style={catStyles.checkRow}>
               <input type="checkbox" checked={inStockOnly} onChange={e=>setInStockOnly(e.target.checked)} style={{ accentColor:'#e8001d' }}/>
-              <span style={{ color:'#666666', fontSize:13 }}>In Stock Only</span>
+              <span style={{ color:'#b8b8b8', fontSize:13 }}>In Stock Only</span>
             </label>
           </div>
 
@@ -104,7 +104,7 @@ const CatalogPage = ({ initialCategory }) => {
               {availableBrands.map(b => (
                 <label key={b} style={catStyles.checkRow}>
                   <input type="checkbox" checked={brands.includes(b)} onChange={()=>toggleBrand(b)} style={{ accentColor:'#e8001d' }}/>
-                  <span style={{ color:'#666666', fontSize:13 }}>{b}</span>
+                  <span style={{ color:'#b8b8b8', fontSize:13 }}>{b}</span>
                 </label>
               ))}
             </div>
@@ -116,7 +116,7 @@ const CatalogPage = ({ initialCategory }) => {
               <div style={catStyles.filterLabel}>{t('compare_label', compareList.length)}</div>
               {compareList.map(p => (
                 <div key={p.id} style={catStyles.compareItem}>
-                  <span style={{ color:'#666666', fontSize:12, flex:1 }}>{p.name.slice(0,24)}…</span>
+                  <span style={{ color:'#b0b0b0', fontSize:12, flex:1 }}>{p.name.slice(0,24)}…</span>
                   <button style={catStyles.removeBtn} onClick={() => toggleCompare(p)}>×</button>
                 </div>
               ))}
@@ -149,7 +149,7 @@ const CatalogPage = ({ initialCategory }) => {
           {allProducts.length === 0 ? (
             <div style={catStyles.empty}>
               <div style={{ fontSize:40, marginBottom:12, opacity:0.3 }}>🔍</div>
-              <div style={{ color:'#666666' }}>{t('no_products')}</div>
+              <div style={{ color:'#a8a8a8' }}>{t('no_products')}</div>
             </div>
           ) : (
             <div style={catStyles.grid}>
@@ -219,8 +219,8 @@ const CatalogProductCard = ({ product, onView, onAdd, onFav, isFav, onCompare, i
             <span style={{ color:'#9f9f9f', marginLeft:5, fontSize:11 }}>{product.rating} ({product.reviews?.toLocaleString()})</span>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-            <div style={{ width:5, height:5, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':'#555' }} />
-            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':'#9f9f9f', fontSize:11 }}>
+            <div style={{ width:5, height:5, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'#4caf70' }} />
+            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'#b0b0b0', fontSize:11 }}>
               {product.stock==='in_stock'?t('in_stock'):product.stock==='low_stock'?t('low_stock'):t('out_of_stock')}
             </span>
           </div>
@@ -293,8 +293,8 @@ const ProductDetailPage = ({ product }) => {
     setSubmitting(false);
   };
 
-  const catColors = { cpu:'#888888',gpu:'#909090',motherboard:'#666666',ram:'#444444',storage:'#909090',psu:'#888888',cooling:'#333333',case:'#777777' };
-  const catGrad = { cpu:'135deg,#222222,#333333',gpu:'135deg,#222222,#333333',motherboard:'135deg,#222222,#333333',ram:'135deg,#222222,#333333',storage:'135deg,#222222,#333333',psu:'135deg,#222222,#333333',cooling:'135deg,#222222,#333333',case:'135deg,#222222,#333333',monitor:'135deg,#222222,#333333',mouse:'135deg,#222222,#333333',headset:'135deg,#222222,#333333',keyboard:'135deg,#222222,#333333' };
+  const catColors = window.CARD_COLORS || {};
+  const catGrad = 'linear-gradient(135deg, #1e1e1e, #2a2a2a)';
 
   return (
     <div style={pdStyles.page}>
@@ -341,7 +341,7 @@ const ProductDetailPage = ({ product }) => {
           )}
 
           {/* Main Image */}
-          <div style={{ ...pdStyles.imgArea, background:`linear-gradient(${catGrad[product.category]||'135deg,#242424,#2a2a2a'})`, overflow:'hidden', padding:0, flex: 1, minHeight: 0, height: '100%' }}>
+          <div style={{ ...pdStyles.imgArea, background: catGrad, overflow:'hidden', padding:0, flex: 1, minHeight: 0, height: '100%' }}>
             {product.images && product.images.length > 0 ? (
               <img src={product.images[selectedImage] || product.images[0]} alt="" style={{ width:'100%', height:'100%', objectFit:'contain', display:'block', padding: 24 }} onError={e => e.target.style.display='none'} />
             ) : (
@@ -370,8 +370,8 @@ const ProductDetailPage = ({ product }) => {
           <div style={pdStyles.price}>{formatPrice(product.price)}</div>
 
           <div style={pdStyles.stockRow}>
-            <div style={{ width:8, height:8, borderRadius:'50%', background: product.stock==='in_stock'?'#909090':'#909090' }}/>
-            <span style={{ color: product.stock==='in_stock'?'#909090':'#909090', fontSize:14 }}>
+            <div style={{ width:8, height:8, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'#4caf70' }}/>
+            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'#b0b0b0', fontSize:14 }}>
               {product.stock==='in_stock'?t('in_stock'):t('low_stock_order')}
             </span>
           </div>
@@ -464,7 +464,7 @@ const ProductDetailPage = ({ product }) => {
 
         {/* Reviews list */}
         {reviews.length === 0 ? (
-          <div style={{ color:'#666666', fontSize:14 }}>Aucun avis pour le moment. Soyez le premier !</div>
+          <div style={{ color:'#a8a8a8', fontSize:14 }}>Aucun avis pour le moment. Soyez le premier !</div>
         ) : (
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             {reviews.map(r => (
@@ -474,7 +474,7 @@ const ProductDetailPage = ({ product }) => {
                     <span style={{ color:'#ffffff', fontWeight:600, fontFamily:"'Space Grotesk',sans-serif" }}>{r.user_name}</span>
                     <span style={{ color:'#e8001d', marginLeft:12, fontSize:16 }}>{'★'.repeat(r.rating)}{'☆'.repeat(5-r.rating)}</span>
                   </div>
-                  <span style={{ color:'#666666', fontSize:12 }}>{r.date}</span>
+                  <span style={{ color:'#a0a0a0', fontSize:12 }}>{r.date}</span>
                 </div>
                 {r.comment && <p style={{ color:'#c0c0c0', fontSize:14, margin:0, lineHeight:1.6 }}>{r.comment}</p>}
               </div>
@@ -548,10 +548,10 @@ const catStyles = {
   sidebar: { width:240, flexShrink:0, padding:'28px 24px', borderRight:'1px solid #3c3c3c', minHeight:'100vh', background:'#1a1a1a' },
   filterGroup: { marginBottom:28 },
   filterLabel: { color:'#9f9f9f', fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:10 },
-  filterBtn: { display:'block', width:'100%', textAlign:'left', background:'none', border:'none', padding:'6px 10px', borderRadius:6, color:'#666666', fontSize:13, cursor:'pointer', transition:'all 0.15s', fontFamily:"'Space Grotesk',sans-serif" },
+  filterBtn: { display:'block', width:'100%', textAlign:'left', background:'none', border:'none', padding:'6px 10px', borderRadius:6, color:'#a8a8a8', fontSize:13, cursor:'pointer', transition:'all 0.15s', fontFamily:"'Space Grotesk',sans-serif" },
   filterBtnActive: { background:'#2a2a2a', color:'#ffffff', borderLeft:'2px solid #e8001d', paddingLeft:8 },
   checkRow: { display:'flex', alignItems:'center', gap:8, marginBottom:8, cursor:'pointer' },
-  priceInput: { background:'#242424', border:'1px solid #3c3c3c', borderRadius:6, padding:'4px 8px', color:'#666666', fontSize:12, minWidth:60, textAlign:'center' },
+  priceInput: { background:'#242424', border:'1px solid #3c3c3c', borderRadius:6, padding:'4px 8px', color:'#c8c8c8', fontSize:12, minWidth:60, textAlign:'center' },
   comparePanel: { background:'#242424', border:'1px solid #3c3c3c', borderRadius:10, padding:14, marginTop:16 },
   compareItem: { display:'flex', alignItems:'center', gap:8, marginBottom:8 },
   removeBtn: { background:'none', border:'none', cursor:'pointer', color:'#9f9f9f', fontSize:16, padding:'0 4px', flexShrink:0 },
@@ -559,7 +559,7 @@ const catStyles = {
   main: { flex:1, padding:'28px 32px' },
   toolbar: { display:'flex', alignItems:'center', gap:12, marginBottom:24, background:'#242424', border:'1px solid #3c3c3c', borderRadius:10, padding:'12px 16px' },
   searchInput: { background:'transparent', border:'none', outline:'none', color:'#ffffff', fontFamily:"'Space Grotesk',sans-serif", fontSize:14, flex:1, minWidth:0 },
-  sortSelect: { background:'#2a2a2a', border:'1px solid #3c3c3c', color:'#666666', padding:'6px 10px', borderRadius:6, fontFamily:"'Space Grotesk',sans-serif", fontSize:13, outline:'none' },
+  sortSelect: { background:'#2a2a2a', border:'1px solid #3c3c3c', color:'#c8c8c8', padding:'6px 10px', borderRadius:6, fontFamily:"'Space Grotesk',sans-serif", fontSize:13, outline:'none' },
   grid: { display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:16 },
   empty: { textAlign:'center', padding:'80px 20px' },
   card: { background:'#242424', border:'1px solid #3c3c3c', borderRadius:12, overflow:'hidden', display:'flex', flexDirection:'column', transition:'all 0.2s' },

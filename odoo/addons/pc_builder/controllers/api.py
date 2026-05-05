@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 from odoo import http
 from odoo.http import request
@@ -7,18 +8,22 @@ from odoo.exceptions import AccessError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
-CORS_HEADERS = [
-    ('Access-Control-Allow-Origin', '*'),
-    ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
-    ('Access-Control-Allow-Headers', 'Content-Type, Authorization'),
-    ('Content-Type', 'application/json'),
-]
+_ALLOWED_ORIGIN = os.environ.get('ALLOWED_ORIGIN', 'http://localhost:8080')
+
+
+def _cors_headers():
+    return [
+        ('Access-Control-Allow-Origin', _ALLOWED_ORIGIN),
+        ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
+        ('Access-Control-Allow-Headers', 'Content-Type, Authorization'),
+        ('Content-Type', 'application/json'),
+    ]
 
 
 def json_response(data, status=200):
     return request.make_response(
         json.dumps(data, ensure_ascii=False),
-        headers=CORS_HEADERS,
+        headers=_cors_headers(),
         status=status,
     )
 
@@ -135,7 +140,7 @@ class PcBuilderApi(http.Controller):
                 'uid': uid,
                 'name': user.name,
                 'email': user.email,
-                'session_id': request.session.sid,
+                # session_id is not returned — use the session cookie instead
             })
         except Exception as e:
             _logger.exception('Error in login')
@@ -173,7 +178,7 @@ class PcBuilderApi(http.Controller):
                 'uid': uid,
                 'name': user.name,
                 'email': user.email,
-                'session_id': request.session.sid,
+                # session_id is not returned — use the session cookie instead
             }, status=201)
         except ValidationError as e:
             return error_response(str(e), 400)
@@ -209,17 +214,17 @@ class PcBuilderApi(http.Controller):
         try:
             body = json.loads(request.httprequest.data or '{}')
             data = body.get('data', {})
-            
+
             user = request.env.user
             vals = {}
             if 'name' in data: vals['name'] = data['name']
             if 'phone' in data: vals['phone'] = data['phone']
             if 'street' in data: vals['street'] = data['street']
-            
+
             if vals:
                 user.sudo().write({'name': vals.get('name', user.name)})
                 user.partner_id.sudo().write(vals)
-                
+
             return json_response({
                 'ok': True,
                 'user': {
@@ -247,14 +252,11 @@ class PcBuilderApi(http.Controller):
             _logger.exception('Error in get_reviews')
             return error_response(str(e), 500)
 
-    @http.route('/api/pc/review', type='http', auth='public', methods=['POST'], csrf=False)
+    @http.route('/api/pc/review', type='http', auth='user', methods=['POST'], csrf=False)
     def submit_review(self, **kwargs):
         """Submit or update a review. Requires authenticated session."""
         try:
-            uid = request.session.uid
-            if not uid:
-                return error_response('Vous devez être connecté pour laisser un avis.', 401)
-
+            uid = request.env.uid
             body = json.loads(request.httprequest.data or '{}')
             product_id = int(body.get('product_id', 0))
             rating = int(body.get('rating', 0))
@@ -265,7 +267,8 @@ class PcBuilderApi(http.Controller):
             if not (1 <= rating <= 5):
                 return error_response('La note doit être entre 1 et 5.', 400)
 
-            Review = request.env['pc.review'].sudo()
+            # Portal users have write access on pc.review — no sudo() needed
+            Review = request.env['pc.review'].with_user(uid)
             existing = Review.search([('product_id', '=', product_id), ('user_id', '=', uid)], limit=1)
 
             if existing:
@@ -363,17 +366,17 @@ class PcBuilderApi(http.Controller):
             items = body.get('items', [])
 
             order = self._get_or_create_cart()
-            
+
             # Clear existing lines
             order.order_line.sudo().unlink()
-            
+
             # Add new lines
             for item in items:
                 product_id = int(item.get('product_id', 0))
                 qty = int(item.get('qty', 1))
                 if not product_id:
                     continue
-                
+
                 product = request.env['product.product'].sudo().search(
                     [('product_tmpl_id', '=', product_id)], limit=1
                 )
@@ -431,14 +434,11 @@ class PcBuilderApi(http.Controller):
             _logger.exception('Error in confirm_order')
             return error_response(str(e), 500)
 
-    @http.route('/api/pc/orders', type='http', auth='public', methods=['GET'], csrf=False)
+    @http.route('/api/pc/orders', type='http', auth='user', methods=['GET'], csrf=False)
     def get_orders(self, **kwargs):
         """Return confirmed orders for the logged-in user."""
         try:
-            uid = request.session.uid
-            if not uid:
-                return error_response('Authentication required', 401)
-
+            uid = request.env.uid
             orders = request.env['sale.order'].sudo().search([
                 ('partner_id.user_ids', 'in', [uid]),
                 ('state', 'in', ['sale', 'done']),

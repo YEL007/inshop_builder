@@ -88,9 +88,11 @@
     },
   };
 
-  // ── Bootstrap: fetch catalog + pre-builts, update globals ────────────────
+  // ── Bootstrap: fetch catalog + pre-builts from Odoo, populate globals ──────
 
   async function bootstrap() {
+    let catalogOk = false;
+
     try {
       const [catalogRes, peripheralsRes, prebuiltsRes] = await Promise.all([
         get('/catalog'),
@@ -98,34 +100,30 @@
         get('/prebuilts'),
       ]);
 
-      // Replace catalog globals with live data
-      if (catalogRes.catalog && Object.keys(catalogRes.catalog).length) {
+      if (catalogRes.catalog) {
         Object.assign(window.CATALOG, catalogRes.catalog);
       }
 
-      // Replace peripherals
-      if (peripheralsRes.peripherals && Object.keys(peripheralsRes.peripherals).length) {
+      if (peripheralsRes.peripherals) {
         Object.assign(window.PERIPHERALS_DATA, peripheralsRes.peripherals);
       }
 
-      // Replace pre-builts
-      if (prebuiltsRes.prebuilts && prebuiltsRes.prebuilts.length) {
+      if (Array.isArray(prebuiltsRes.prebuilts)) {
         window.PREBUILTS = prebuiltsRes.prebuilts;
       }
 
-      // Rebuild ALL_PRODUCTS from fresh catalog + peripherals
       window.ALL_PRODUCTS = [
         ...Object.values(window.CATALOG).flat(),
         ...Object.values(window.PERIPHERALS_DATA).flat(),
       ];
 
+      catalogOk = true;
       console.info('[PcApi] Live data loaded from Odoo.');
-      window.dispatchEvent(new CustomEvent('catalog:loaded'));
     } catch (err) {
-      // API unreachable — static data from data.js remains active
-      console.warn('[PcApi] Could not reach backend, using static data.', err.message);
-      window.dispatchEvent(new CustomEvent('catalog:loaded'));
+      console.error('[PcApi] Backend unreachable — catalog empty.', err.message);
     }
+
+    window.dispatchEvent(new CustomEvent('catalog:loaded', { detail: { ok: catalogOk } }));
 
     // Check existing session
     try {

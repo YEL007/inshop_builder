@@ -132,7 +132,7 @@ const ProductCard = ({ product, onAdd, onFav, onView, isFav }) => {
             {specEntries.map(([k, v], i) => (
               <div key={k} style={{ display:'flex', gap:8, alignItems:'baseline', ...(i < specEntries.length-1 ? { marginBottom:5, borderBottom:'1px solid #2a2a2a', paddingBottom:5 } : {}) }}>
                 <span style={{ color:'#9f9f9f', fontSize:11, minWidth:56 }}>{k}</span>
-                <span style={{ color:'#666666', fontSize:12, fontFamily:"'DM Mono',monospace" }}>{Array.isArray(v)?v.join(', '):String(v)}</span>
+                <span style={{ color:'#c8c8c8', fontSize:12, fontFamily:"'DM Mono',monospace" }}>{Array.isArray(v)?v.join(', '):String(v)}</span>
               </div>
             ))}
           </div>
@@ -144,18 +144,20 @@ const ProductCard = ({ product, onAdd, onFav, onView, isFav }) => {
             <span style={{ color:'#9f9f9f', marginLeft:5, fontSize:11 }}>{product.rating} ({product.reviews?.toLocaleString()})</span>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-            <div style={{ width:5, height:5, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':'#555' }} />
-            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':'#9f9f9f', fontSize:11 }}>
+            <div style={{ width:5, height:5, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'#4caf70' }} />
+            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'#b0b0b0', fontSize:11 }}>
               {product.stock==='in_stock'?t('in_stock'):product.stock==='low_stock'?t('low_stock'):t('out_of_stock')}
             </span>
           </div>
         </div>
 
-        <button style={{ width:'100%', padding:'11px', background:color, color:'#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor:'pointer', transition:'opacity 0.2s', marginTop:'auto' }}
+        <button
+          disabled={product.stock === 'out_of_stock'}
+          style={{ width:'100%', padding:'11px', background: product.stock === 'out_of_stock' ? '#3c3c3c' : color, color: product.stock === 'out_of_stock' ? '#666' : '#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor: product.stock === 'out_of_stock' ? 'not-allowed' : 'pointer', transition:'opacity 0.2s', marginTop:'auto' }}
           onClick={e => { e.stopPropagation(); onAdd(product); }}
-          onMouseEnter={e => e.currentTarget.style.opacity='0.8'}
+          onMouseEnter={e => { if (product.stock !== 'out_of_stock') e.currentTarget.style.opacity='0.8'; }}
           onMouseLeave={e => e.currentTarget.style.opacity='1'}>
-          {t('add_to_cart', formatPrice(product.price))}
+          {product.stock === 'out_of_stock' ? t('out_of_stock') : t('add_to_cart', formatPrice(product.price))}
         </button>
       </div>
     </div>
@@ -376,7 +378,7 @@ const homeStyles = {
     fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:64,
     color:'#ffffff', lineHeight:1.1, margin:'0 0 20px 0',
   },
-  heroDesc: { color:'#666666', fontSize:17, lineHeight:1.6, margin:'0 0 36px 0' },
+  heroDesc: { color:'#a8a8a8', fontSize:17, lineHeight:1.6, margin:'0 0 36px 0' },
   heroBtns: { display:'flex', gap:12, marginBottom:52 },
   heroBtnPrimary: {
     display:'flex', alignItems:'center', gap:8,
@@ -454,7 +456,7 @@ const homeStyles = {
   },
   ctaEye: { color:'#e8001d', fontSize:11, fontWeight:600, letterSpacing:'0.2em', marginBottom:12 },
   ctaTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:40, color:'#ffffff', margin:'0 0 16px 0' },
-  ctaDesc: { color:'#666666', fontSize:16, maxWidth:500, lineHeight:1.6, margin:'0 0 32px 0' },
+  ctaDesc: { color:'#a8a8a8', fontSize:16, maxWidth:500, lineHeight:1.6, margin:'0 0 32px 0' },
   ctaBtn: {
     display:'inline-flex', alignItems:'center', gap:8,
     background:'#e8001d', color:'#ffffff', border:'none', cursor:'pointer',

@@ -32,18 +32,62 @@ const getSpecSnippet = (product) => {
 };
 
 const getCompatNote = (step, product, build) => {
+  const s = product.specs;
+
+  // ── CPU ↔ Carte mère : socket ────────────────────────────────────────────
   if (step.key === 'motherboard' && build.cpu) {
-    if (product.specs.socket !== build.cpu.specs.socket)
-      return { ok:false, msg:`Socket ${product.specs.socket} ≠ CPU ${build.cpu.specs.socket}` };
+    if (s.socket !== build.cpu.specs.socket)
+      return { ok:false, msg:`Socket carte mère (${s.socket}) ≠ CPU (${build.cpu.specs.socket})` };
   }
   if (step.key === 'cpu' && build.motherboard) {
-    if (product.specs.socket !== build.motherboard.specs.socket)
-      return { ok:false, msg:`Socket ${product.specs.socket} ≠ MB ${build.motherboard.specs.socket}` };
+    if (s.socket !== build.motherboard.specs.socket)
+      return { ok:false, msg:`Socket CPU (${s.socket}) ≠ carte mère (${build.motherboard.specs.socket})` };
   }
+
+  // ── RAM ↔ Carte mère : type DDR ─────────────────────────────────────────
+  if (step.key === 'ram' && build.motherboard?.specs.ramType) {
+    if (s.type && s.type !== build.motherboard.specs.ramType)
+      return { ok:false, msg:`RAM ${s.type} incompatible avec carte mère ${build.motherboard.specs.ramType}` };
+  }
+  if (step.key === 'motherboard' && build.ram?.specs.type) {
+    if (s.ramType && s.ramType !== build.ram.specs.type)
+      return { ok:false, msg:`Carte mère ${s.ramType} incompatible avec RAM ${build.ram.specs.type}` };
+  }
+
+  // ── Refroidissement ↔ CPU : socket + TDP ────────────────────────────────
   if (step.key === 'cooling' && build.cpu) {
-    if (!product.specs.sockets?.includes(build.cpu.specs.socket))
-      return { ok:false, msg:`Socket ${build.cpu.specs.socket} non supporté` };
+    if (s.sockets && !s.sockets.includes(build.cpu.specs.socket))
+      return { ok:false, msg:`Refroidissement: socket ${build.cpu.specs.socket} non supporté` };
+    if (s.tdpRating && build.cpu.specs.tdp && s.tdpRating < build.cpu.specs.tdp)
+      return { ok:false, msg:`Refroidissement ${s.tdpRating}W insuffisant pour CPU ${build.cpu.specs.tdp}W` };
   }
+
+  // ── Alimentation ↔ CPU + GPU : puissance totale ──────────────────────────
+  if (step.key === 'psu' && (build.cpu || build.gpu)) {
+    const totalTdp = (build.cpu?.specs.tdp || 0) + (build.gpu?.specs.tdp || 0) + 50;
+    const minWatt = Math.ceil(totalTdp * 1.2);
+    if (s.wattage && s.wattage < minWatt)
+      return { ok:false, msg:`${s.wattage}W insuffisant — minimum ~${minWatt}W recommandé` };
+  }
+
+  // ── Boîtier ↔ Carte mère : format (ATX / mATX / ITX) ───────────────────
+  if (step.key === 'case' && build.motherboard?.specs.formFactor) {
+    if (s.supportedMB && !s.supportedMB.includes(build.motherboard.specs.formFactor))
+      return { ok:false, msg:`Boîtier ne supporte pas le format ${build.motherboard.specs.formFactor}` };
+  }
+  if (step.key === 'motherboard' && build.case?.specs.supportedMB) {
+    if (s.formFactor && !build.case.specs.supportedMB.includes(s.formFactor))
+      return { ok:false, msg:`Format carte mère (${s.formFactor}) incompatible avec le boîtier` };
+  }
+
+  // ── Boîtier ↔ Refroidissement : hauteur ventirad ────────────────────────
+  if (step.key === 'cooling' && build.case?.specs.maxCoolerHeight && s.height) {
+    const maxH = parseInt(build.case.specs.maxCoolerHeight);
+    const coolerH = parseInt(s.height);
+    if (coolerH && maxH && coolerH > maxH)
+      return { ok:false, msg:`Ventirad trop grand (${s.height}) — max boîtier: ${build.case.specs.maxCoolerHeight}` };
+  }
+
   return { ok:true };
 };
 
