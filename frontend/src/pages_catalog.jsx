@@ -229,14 +229,25 @@ const CatalogProductCard = ({ product, onView, onAdd, onFav, isFav, onCompare, i
       </div>
 
       <div style={{ padding:'20px', flex:1, display:'flex', flexDirection:'column' }} onClick={onView}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
           <div style={{ flex:1, minWidth:0, paddingRight:10 }}>
             <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label.toUpperCase()}</div>
-            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:20, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
+            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:18, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
+            {product.brand && <div style={{ color:'#9f9f9f', fontSize:11, marginTop:3 }}>{product.brand}</div>}
           </div>
-          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
+          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:20, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
         </div>
 
+        {specEntries.length > 0 && (
+          <div style={{ background:'#1e1e1e', borderRadius:8, padding:'9px 12px', marginBottom:12 }}>
+            {specEntries.map(([k, v], i) => (
+              <div key={k} style={{ display:'flex', gap:8, alignItems:'baseline', ...(i < specEntries.length - 1 ? { marginBottom:4, borderBottom:'1px solid #2a2a2a', paddingBottom:4 } : {}) }}>
+                <span style={{ color:'#9f9f9f', fontSize:10, minWidth:56, flexShrink:0 }}>{k}</span>
+                <span style={{ color:'#cccccc', fontSize:11, fontFamily:"'DM Mono',monospace" }}>{Array.isArray(v) ? v.join(', ') : String(v)}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
           <div>
@@ -335,7 +346,12 @@ const ProductDetailPage = ({ product }) => {
     <div style={pdStyles.page}>
       {/* Back button + Product name */}
       <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:32 }}>
-        <button onClick={()=>window.history.length > 1 ? setPage('catalog',{category:product.category}) : setPage('home')}
+        <button onClick={()=>{
+          const cat = product.category;
+          if (cat === 'laptop') setPage('laptops');
+          else if (['keyboard','mouse','microphone','webcam','monitor','speaker','headset','usb','external_hdd','network'].includes(cat)) setPage('peripherals');
+          else setPage('catalog', { category: cat });
+        }}
           style={{ background:'#242424', border:'1px solid #3c3c3c', borderRadius:8, color:'#9f9f9f', cursor:'pointer', padding:'8px 14px', display:'flex', alignItems:'center', gap:6, fontFamily:"'Space Grotesk',sans-serif", fontSize:13, transition:'all 0.15s' }}
           onMouseEnter={e=>{e.currentTarget.style.borderColor='#e8001d';e.currentTarget.style.color='#ffffff';}}
           onMouseLeave={e=>{e.currentTarget.style.borderColor='#3c3c3c';e.currentTarget.style.color='#9f9f9f';}}>

@@ -889,14 +889,25 @@ const PeriProductCard = ({ product, visual, onAdd, onFav, onView, isFav }) => {
       </div>
 
       <div style={{ padding:'20px', flex:1, display:'flex', flexDirection:'column' }} onClick={onView}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
           <div style={{ flex:1, minWidth:0, paddingRight:10 }}>
             <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label.toUpperCase()}</div>
-            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:20, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
+            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:18, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
+            {product.brand && <div style={{ color:'#9f9f9f', fontSize:11, marginTop:3 }}>{product.brand}</div>}
           </div>
-          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
+          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:20, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
         </div>
 
+        {specEntries.length > 0 && (
+          <div style={{ background:'#1e1e1e', borderRadius:8, padding:'9px 12px', marginBottom:12 }}>
+            {specEntries.map(([k, v], i) => (
+              <div key={k} style={{ display:'flex', gap:8, alignItems:'baseline', ...(i < specEntries.length - 1 ? { marginBottom:4, borderBottom:'1px solid #2a2a2a', paddingBottom:4 } : {}) }}>
+                <span style={{ color:'#9f9f9f', fontSize:10, minWidth:56, flexShrink:0 }}>{k}</span>
+                <span style={{ color:'#cccccc', fontSize:11, fontFamily:"'DM Mono',monospace" }}>{Array.isArray(v) ? v.join(', ') : String(v)}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
           <div>
@@ -915,7 +926,7 @@ const PeriProductCard = ({ product, visual, onAdd, onFav, onView, isFav }) => {
           onClick={e => { e.stopPropagation(); onAdd(); }}
           onMouseEnter={e => e.currentTarget.style.opacity='0.8'}
           onMouseLeave={e => e.currentTarget.style.opacity='1'}>
-          Add to Cart — {formatPrice(product.price)}
+          {t('add_to_cart', formatPrice(product.price))}
         </button>
       </div>
     </div>
