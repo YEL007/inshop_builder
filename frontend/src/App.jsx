@@ -71,8 +71,9 @@ const App = () => {
   const [catalogError, setCatalogError] = React.useState(false);
   React.useEffect(() => {
     const handler = (e) => {
-      if (e.detail && e.detail.ok === false) setCatalogError(true);
-      
+      const ok = e.detail?.ok !== false;
+      if (!ok) setCatalogError(true);
+
       // Clean up cached build items that no longer exist in the backend
       setBuild(prevBuild => {
         const nextBuild = { ...prevBuild };
@@ -84,12 +85,34 @@ const App = () => {
             changed = true;
           }
         }
-        if (changed) {
-          localStorage.setItem('inshop_build', JSON.stringify(nextBuild));
-          return nextBuild;
+        if (!ok || changed) {
+          if (!ok) {
+            localStorage.removeItem('inshop_build');
+            return {};
+          } else if (changed) {
+            localStorage.setItem('inshop_build', JSON.stringify(nextBuild));
+            return nextBuild;
+          }
         }
         return prevBuild;
       });
+
+      // Clean up cached cart items that no longer exist in the backend
+      cartRef.current = cartRef.current.filter(item => window.ALL_PRODUCTS.some(p => p.id === item.id));
+      if (!ok || cartRef.current.length !== cart.length) {
+        if (!ok) {
+          cartRef.current = [];
+          localStorage.removeItem('inshop_cart');
+        } else {
+          localStorage.setItem('inshop_cart', JSON.stringify(cartRef.current));
+        }
+        setCart(cartRef.current);
+      }
+
+      if (!ok) {
+        setPageParams({});
+        localStorage.removeItem('inshop_params');
+      }
 
       setDataLoaded(prev => !prev);
     };
@@ -101,7 +124,7 @@ const App = () => {
   const [page, setPageRaw] = React.useState(() => {
     // Read page from URL path on load (e.g. /catalog → 'catalog')
     const pathPage = window.location.pathname.replace('/', '') || 'home';
-    const knownPages = ['home','catalog','prebuilt','peripherals','builder','cart','checkout','user','product','prebuilt-detail','compare','guided'];
+    const knownPages = ['home','catalog','prebuilt','onlyonepc','peripherals','laptops','builder','onlyone_builder','cart','checkout','user','product','prebuilt-detail','onlyonepc-detail','compare','guided'];
     return knownPages.includes(pathPage) ? pathPage : (localStorage.getItem('inshop_page') || 'home');
   });
   const [pageParams, setPageParams] = React.useState(() => {
@@ -300,6 +323,7 @@ const App = () => {
     const Home = window.HomePage;
     const Catalog = window.CatalogPage;
     const Prebuilt = window.PrebuiltPage;
+    const OnlyOnePc = window.OnlyOnePcPage;
     const Peripherals = window.PeripheralsPage;
     const Builder = window.BuilderPage;
     const Cart = window.CartPage;
@@ -307,20 +331,26 @@ const App = () => {
     const User = window.UserPage;
     const ProductDetail = window.ProductDetailPage;
     const PrebuiltDetail = window.PrebuiltDetailPage;
+    const OnlyOnePcDetail = window.OnlyOnePcDetailPage;
     const Compare = window.ComparePage;
     const Guided = window.GuidedPage;
+    const Laptops = window.LaptopsPage;
 
     switch (page) {
       case 'home': return Home ? <Home /> : null;
       case 'catalog': return Catalog ? <Catalog initialCategory={pageParams.category || 'all'} /> : null;
       case 'prebuilt': return Prebuilt ? <Prebuilt /> : null;
+      case 'onlyonepc': return OnlyOnePc ? <OnlyOnePc /> : null;
+      case 'onlyone_builder': return window.OnlyOneBuilderPage ? <window.OnlyOneBuilderPage /> : null;
       case 'peripherals': return Peripherals ? <Peripherals /> : null;
+      case 'laptops': return Laptops ? <Laptops /> : null;
       case 'builder': return Builder ? <Builder /> : null;
       case 'cart': return Cart ? <Cart /> : null;
       case 'checkout': return Checkout ? <Checkout /> : null;
       case 'user': return User ? <User initialTab={pageParams.tab} /> : null;
       case 'product': return pageParams.product && ProductDetail ? <ProductDetail product={pageParams.product} /> : <Home />;
       case 'prebuilt-detail': return pageParams.product && PrebuiltDetail ? <PrebuiltDetail product={pageParams.product} /> : <Prebuilt />;
+      case 'onlyonepc-detail': return pageParams.product && OnlyOnePcDetail ? <OnlyOnePcDetail product={pageParams.product} /> : <OnlyOnePc />;
       case 'compare': return Compare ? <Compare /> : null;
       case 'guided': return Guided ? <Guided /> : null;
       default: return (

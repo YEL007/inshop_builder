@@ -3,38 +3,23 @@ import React from "react";
 const ImageCarousel = window.ImageCarousel;
 const ProductVisual = window.ProductVisual;
 
-// pages_builder.jsx — Custom PC Builder — Wizard Step-by-Step Layout
+// pages_onlyone_builder.jsx — Custom Only One PC Builder
 
 const WIZARD_STEPS = [
-  { key:'cpu',         num:1, catalog:'cpu' },
+  { key:'case',        num:1, catalog:'case' },
   { key:'motherboard', num:2, catalog:'motherboard' },
-  { key:'ram',         num:3, catalog:'ram' },
-  { key:'gpu',         num:4, catalog:'gpu' },
-  { key:'storage',     num:5, catalog:'storage' },
-  { key:'psu',         num:6, catalog:'psu' },
-  { key:'case',        num:7, catalog:'case' },
-  { key:'cooling',     num:8, catalog:'cooling' },
+  { key:'cpu',         num:3, catalog:'cpu' },
+  { key:'cooling',     num:4, catalog:'cooling' },
+  { key:'ram',         num:5, catalog:'ram' },
+  { key:'gpu',         num:6, catalog:'gpu' },
+  { key:'storage',     num:7, catalog:'storage' },
+  { key:'psu',         num:8, catalog:'psu' },
 ];
-
-const getSpecSnippet = (product) => {
-  const s = product.specs || {};
-  switch(product.category) {
-    case 'cpu':         return s.cores ? `Cores: ${s.cores}  |  Threads: ${s.threads}  |  Boost: ${s.boostClock}` : '';
-    case 'motherboard': return s.socket ? `Socket: ${s.socket}  |  ${s.formFactor}  |  ${s.ramType}` : '';
-    case 'ram':         return s.capacity ? `${s.capacity}  |  ${s.speed} MHz  |  ${s.timing}` : '';
-    case 'gpu':         return s.vram ? `${s.vram}  |  TDP: ${s.tdp}W  |  ${s.architecture}` : '';
-    case 'storage':     return s.capacity ? `${s.capacity}  |  Read: ${s.read}  |  ${s.type}` : '';
-    case 'psu':         return s.wattage ? `${s.wattage}W  |  ${s.efficiency}  |  ${s.modular}` : '';
-    case 'case':        return s.formFactors ? `${s.formFactors.join(', ')}  |  GPU max: ${s.maxGpuLength}mm` : '';
-    case 'cooling':     return s.type ? `${s.type}  |  ${s.size}  |  TDP: ${s.tdpRating}W` : '';
-    default:            return '';
-  }
-};
 
 const getCompatNote = (step, product, build) => {
   const s = product.specs || {};
 
-  // ── CPU ↔ Carte mère : socket ────────────────────────────────────────────
+  // Similar checks as standard builder
   if (step.key === 'motherboard' && build.cpu) {
     if (s.socket !== build.cpu.specs.socket)
       return { ok:false, msg:`Socket carte mère (${s.socket}) ≠ CPU (${build.cpu.specs.socket})` };
@@ -43,8 +28,6 @@ const getCompatNote = (step, product, build) => {
     if (s.socket !== build.motherboard.specs.socket)
       return { ok:false, msg:`Socket CPU (${s.socket}) ≠ carte mère (${build.motherboard.specs.socket})` };
   }
-
-  // ── RAM ↔ Carte mère : type DDR ─────────────────────────────────────────
   if (step.key === 'ram' && build.motherboard?.specs.ramType) {
     if (s.type && s.type !== build.motherboard.specs.ramType)
       return { ok:false, msg:`RAM ${s.type} incompatible avec carte mère ${build.motherboard.specs.ramType}` };
@@ -53,75 +36,53 @@ const getCompatNote = (step, product, build) => {
     if (s.ramType && s.ramType !== build.ram.specs.type)
       return { ok:false, msg:`Carte mère ${s.ramType} incompatible avec RAM ${build.ram.specs.type}` };
   }
-
-  // ── Refroidissement ↔ CPU : socket + TDP ────────────────────────────────
-  if (step.key === 'cooling' && build.cpu) {
-    if (s.sockets && !s.sockets.includes(build.cpu.specs.socket))
-      return { ok:false, msg:`Refroidissement: socket ${build.cpu.specs.socket} non supporté` };
-    if (s.tdpRating && build.cpu.specs.tdp && s.tdpRating < build.cpu.specs.tdp)
-      return { ok:false, msg:`Refroidissement ${s.tdpRating}W insuffisant pour CPU ${build.cpu.specs.tdp}W` };
-  }
-
-  // ── Alimentation ↔ CPU + GPU : puissance totale ──────────────────────────
-  if (step.key === 'psu' && (build.cpu || build.gpu)) {
-    const totalTdp = (build.cpu?.specs.tdp || 0) + (build.gpu?.specs.tdp || 0) + 50;
-    const minWatt = Math.ceil(totalTdp * 1.2);
-    if (s.wattage && s.wattage < minWatt)
-      return { ok:false, msg:`${s.wattage}W insuffisant — minimum ~${minWatt}W recommandé` };
-  }
-
-  // ── Boîtier ↔ Carte mère : format (ATX / mATX / ITX) ───────────────────
-  if (step.key === 'case' && build.motherboard?.specs.formFactor) {
-    if (s.formFactors && !s.formFactors.includes(build.motherboard.specs.formFactor))
-      return { ok:false, msg:`Boîtier ne supporte pas le format ${build.motherboard.specs.formFactor}` };
-  }
-  if (step.key === 'motherboard' && build.case?.specs.formFactors) {
-    if (s.formFactor && !build.case.specs.formFactors.includes(s.formFactor))
-      return { ok:false, msg:`Format carte mère (${s.formFactor}) incompatible avec le boîtier` };
-  }
-
-  // ── Boîtier ↔ Refroidissement : hauteur ventirad ────────────────────────
-  if (step.key === 'cooling' && build.case?.specs.maxCoolerHeight && s.height) {
-    const maxH = parseInt(build.case.specs.maxCoolerHeight);
-    const coolerH = parseInt(s.height);
-    if (coolerH && maxH && coolerH > maxH)
-      return { ok:false, msg:`Ventirad trop grand (${s.height}) — max boîtier: ${build.case.specs.maxCoolerHeight}` };
-  }
-
   return { ok:true };
 };
 
-const BuilderPage = () => {
-  const { build, setBuild, addToCart, dataLoaded, t, formatPrice } = React.useContext(window.AppContext);
+const OnlyOneBuilderPage = () => {
+  const { addToCart, dataLoaded, t, formatPrice, setPage } = React.useContext(window.AppContext);
   const [currentStep, setCurrentStep] = React.useState(0);
   const [addedAll, setAddedAll] = React.useState(false);
   const [sortBy, setSortBy] = React.useState('featured');
+  
+  // Local build state for Only One
+  const [build, setBuild] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('inshop_onlyone_build') || '{}'); } catch { return {}; }
+  });
+
+  const updateBuild = (updater) => {
+    setBuild(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      localStorage.setItem('inshop_onlyone_build', JSON.stringify(next));
+      return next;
+    });
+  };
 
   const step = WIZARD_STEPS[currentStep];
   const products = React.useMemo(() => {
-    let p = window.CATALOG[step.catalog] || [];
+    let p = (window.ONLYONE_CATALOG || {})[step.catalog] || [];
     if (sortBy === 'price_asc') p = [...p].sort((a,b)=>a.price-b.price);
     else if (sortBy === 'price_desc') p = [...p].sort((a,b)=>b.price-a.price);
-    else if (sortBy === 'rating') p = [...p].sort((a,b)=>b.rating-a.rating);
+    else if (sortBy === 'rating') p = [...p].sort((a,b)=>(b.rating||0)-(a.rating||0));
     return p;
   }, [step, sortBy, dataLoaded]);
 
   const completedCount = WIZARD_STEPS.filter(s => build[s.key]).length;
-  const total = window.calcBuildTotal(build);
+  const total = Object.values(build).reduce((sum, p) => sum + (p?.price || 0), 0);
 
   const handleSelect = (product) => {
     // Toggle: clicking the already-selected product deselects it
     if (build[step.key]?.id === product.id) {
-      setBuild(prev => ({ ...prev, [step.key]: null }));
+      updateBuild(prev => ({ ...prev, [step.key]: null }));
       return;
     }
     const compat = getCompatNote(step, product, build);
     if (!compat.ok) return;
-    setBuild(prev => ({ ...prev, [step.key]: product }));
+    updateBuild(prev => ({ ...prev, [step.key]: product }));
   };
 
   const handleAddAll = () => {
-    Object.values(build).forEach(p => { if (p) addToCart(p); });
+    Object.values(build).forEach(p => { if (p) addToCart({ ...p, category: 'onlyonepc' }); });
     setAddedAll(true);
     setTimeout(() => setAddedAll(false), 2000);
   };
@@ -131,23 +92,28 @@ const BuilderPage = () => {
 
   return (
     <div style={wiz.page}>
-      {/* Title bar */}
-      <div style={wiz.titleBar} className="rsp-banner">
-        <video autoPlay loop muted playsInline style={wiz.bannerVideo}>
+      <div style={wiz.heroBanner} className="rsp-banner">
+        <video autoPlay loop muted playsInline style={wiz.heroBannerImg}>
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
-        <div style={wiz.bannerOverlay} />
-        <div style={wiz.titleContent} className="rsp-banner-content">
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e8001d" strokeWidth="1.5">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-            </svg>
-            <div>
-              <h1 style={wiz.title} className="rsp-banner-title">{t('builder_title')}</h1>
-              <p style={wiz.subtitle} className="rsp-banner-eye">{t('builder_subtitle')}</p>
-            </div>
-          </div>
+        <div style={wiz.heroBannerOverlay} />
+        <div style={wiz.heroBannerContent} className="rsp-banner-content">
+          <div style={wiz.headerEye} className="rsp-banner-eye">{t('onlyone_builder_eyebrow')}</div>
+          <h1 style={wiz.pageTitle} className="rsp-banner-title">{t('nav_onlyonepc')}</h1>
+          <p style={wiz.pageDesc}>{t('onlyone_builder_desc')}</p>
         </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, borderBottom: '1px solid #2a2a2a', marginBottom: 0 }}>
+        <button onClick={() => setPage('onlyonepc')}
+          style={{ padding: '16px 24px', background: 'transparent', border: 'none', borderBottom: '2px solid transparent', color: '#9f9f9f', fontFamily: "'Space Grotesk',sans-serif", fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'color 0.2s' }}
+          onMouseEnter={e=>e.currentTarget.style.color='#ffffff'} onMouseLeave={e=>e.currentTarget.style.color='#9f9f9f'}>
+          {t('onlyone_unique_tab')}
+        </button>
+        <button onClick={() => {}}
+          style={{ padding: '16px 24px', background: 'transparent', border: 'none', borderBottom: '2px solid #e8001d', color: '#ffffff', fontFamily: "'Space Grotesk',sans-serif", fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+          {t('onlyone_custom_tab')}
+        </button>
       </div>
 
       <div style={wiz.body} className="wizard-body">
@@ -206,7 +172,7 @@ const BuilderPage = () => {
               ) : (
                 <>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                  {t('add_all_to_cart')}
+                  {t('onlyone_add_config')}
                 </>
               )}
             </button>
@@ -222,7 +188,7 @@ const BuilderPage = () => {
               <p style={wiz.stepHint}>
                 {build[step.key]
                   ? <><span style={{ color:'#e8001d' }}>✓ {t('selected')}: </span>{build[step.key].name}</>
-                  : t('select_component') + ' — ' + t('step_label_' + step.key)}
+                  : t('onlyone_select_hint') + ' — ' + t('step_label_' + step.key)}
               </p>
             </div>
             <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={wiz.sortSelect}>
@@ -235,7 +201,11 @@ const BuilderPage = () => {
 
           {/* Product grid */}
           <div style={wiz.productGrid} className="wizard-grid">
-            {products.map(product => {
+            {products.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center', color: '#9f9f9f' }}>
+                {t('onlyone_no_products')}
+              </div>
+            ) : products.map(product => {
               const compat = getCompatNote(step, product, build);
               const isSelected = build[step.key]?.id === product.id;
               return (
@@ -319,7 +289,7 @@ const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
       <div style={{ padding:'16px', flex:1, display:'flex', flexDirection:'column' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
           <div style={{ flex:1, minWidth:0, paddingRight:8 }}>
-            <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:4 }}>{label.toUpperCase()}</div>
+            <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:4 }}>ONLY ONE {label.toUpperCase()}</div>
             <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
           </div>
           <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:17, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
@@ -338,8 +308,8 @@ const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'auto' }}>
           <div>
-            <span style={{ color:'#e8001d', fontSize:11 }}>{'★'.repeat(Math.round(product.rating))}</span>
-            <span style={{ color:'#9f9f9f', marginLeft:4, fontSize:10 }}>{product.rating}</span>
+            <span style={{ color:'#e8001d', fontSize:11 }}>{'★'.repeat(Math.round(product.rating||0))}</span>
+            <span style={{ color:'#9f9f9f', marginLeft:4, fontSize:10 }}>{product.rating||0}</span>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:4 }}>
             <div style={{ width:5, height:5, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':'#555' }} />
@@ -362,13 +332,17 @@ const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
 
 const wiz = {
   page: { paddingTop:64, minHeight:'100vh', background:'#1a1a1a', display:'flex', flexDirection:'column' },
-  titleBar: { position:'relative', height:180, overflow:'hidden', borderBottom:'1px solid #333333' },
-  bannerVideo: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.6 },
-  bannerOverlay: { position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, transparent 60%, rgba(0,0,0,0.8) 100%)' },
-  titleContent: { position:'relative', zIndex:2, padding:'32px 40px', height:'100%', boxSizing:'border-box', display:'flex', flexDirection:'column', justifyContent:'center' },
-  title: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:26, color:'#ffffff', margin:0, lineHeight:1.2 },
-  subtitle: { color:'#9f9f9f', fontSize:13, marginTop:4 },
-  body: { display:'grid', gridTemplateColumns:'280px 1fr', flex:1, minHeight:0 },
+
+  // Bannière hero
+  heroBanner: { position:'relative', height:320, overflow:'hidden', flexShrink:0, display:'flex', alignItems:'center' },
+  heroBannerImg: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 25%', filter:'brightness(0.9)' },
+  heroBannerOverlay: { position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.85) 100%)' },
+  heroBannerContent: { position:'relative', zIndex:2, width:'100%', padding:'0 80px' },
+  headerEye: { color:'#e8001d', fontSize:11, fontWeight:600, letterSpacing:'0.2em', marginBottom:8 },
+  pageTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:36, color:'#ffffff', margin:'0 0 8px' },
+  pageDesc: { color:'#a8a8a8', fontSize:15, margin:0 },
+
+  body: { display:'grid', gridTemplateColumns:'280px 1fr', flex:1, minHeight:0, borderTop: '1px solid #333' },
 
   // Sidebar
   sidebar: { borderRight:'1px solid #333333', display:'flex', flexDirection:'column', background:'#1e1e1e' },
@@ -412,30 +386,6 @@ const wiz = {
 
   productGrid: { display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 },
 
-  prodCard: {
-    display:'flex', gap:0, background:'#242424', border:'1px solid #333333',
-    borderRadius:10, overflow:'hidden', cursor:'pointer', transition:'all 0.15s', position:'relative',
-  },
-  prodCardHov: { borderColor:'#444444', background:'#2e2e2e' },
-  prodCardSelected: { borderColor:'#e8001d', background:'#222222' },
-  prodCardIncompat: { opacity:0.5, cursor:'not-allowed' },
-  prodImg: {
-    width:90, height:90, flexShrink:0,
-    display:'flex', alignItems:'center', justifyContent:'center',
-    borderRight:'1px solid #333333',
-  },
-  prodInfo: { padding:'12px 14px', flex:1, minWidth:0 },
-  prodBrand: { color:'#9f9f9f', fontSize:10, fontWeight:700, letterSpacing:'0.12em', marginBottom:2 },
-  prodName: { color:'#ffffff', fontWeight:600, fontSize:13, lineHeight:1.3, marginBottom:6 },
-  prodSpecs: { color:'#9f9f9f', fontSize:11, fontFamily:"'DM Mono',monospace", lineHeight:1.5, marginBottom:8 },
-  prodFooter: { display:'flex', justifyContent:'space-between', alignItems:'center' },
-  prodPrice: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:18, color:'#ffffff' },
-  incompatNote: { display:'flex', alignItems:'center', gap:6, marginTop:6, color:'#cc4444', fontSize:11 },
-  selectedCheck: {
-    position:'absolute', top:8, right:8, width:20, height:20, borderRadius:'50%',
-    background:'#e8001d', display:'flex', alignItems:'center', justifyContent:'center',
-  },
-
   navRow: { display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:8, marginTop:'auto' },
   navBtn: {
     background:'#222222', border:'1px solid #3c3c3c', color:'#666666',
@@ -451,4 +401,4 @@ const wiz = {
   navBtnPrimaryDone: { background:'#909090' },
 };
 
-Object.assign(window, { BuilderPage });
+Object.assign(window, { OnlyOneBuilderPage });

@@ -4,10 +4,19 @@ export const FR = {
   // Nav
   nav_components: 'Composants',
   nav_prebuilt: 'PC Pré-montés',
+  nav_onlyonepc: 'Only One PC',
+  nav_laptops: 'PC Portables',
   nav_peripherals: 'Périphériques',
   nav_builder: 'Configurateur PC',
   nav_search: 'Rechercher produits, marques...',
   nav_new_badge: 'NOUVEAU',
+
+  // PC Portables
+  laptops_title: 'PC Portables',
+  laptops_eye: 'MOBILITÉ & PERFORMANCE',
+  laptops_desc: 'PC portables sélectionnés pour leurs performances, leur autonomie et leur légèreté.',
+  laptops_search: 'Rechercher un portable, une marque...',
+  label_laptop: 'PC Portable',
 
   // Catégories
   cat_cpu: 'Processeurs',
@@ -193,6 +202,45 @@ export const FR = {
   prebuilt_what_inside: 'Contenu de la Config',
   prebuilt_add_cart: 'Ajouter au Panier',
   prebuilt_customize: 'Personnaliser',
+  technical_specs: 'Spécifications Techniques',
+  spec_cpu: 'Processeur (CPU)',
+  spec_gpu: 'Carte Graphique (GPU)',
+  spec_ram: 'Mémoire (RAM)',
+  spec_storage: 'Stockage',
+  spec_psu: 'Alimentation (PSU)',
+  spec_case: 'Boîtier',
+  spec_cooling: 'Refroidissement',
+
+  // Configurateur guidé
+  guided_eyebrow: 'CONFIGURATEUR GUIDÉ',
+  guided_title: 'Build ta config idéale',
+  guided_subtitle: 'Réponds à deux questions — on te propose une configuration optimisée depuis notre catalogue live.',
+  guided_step_usecase: "Cas d'utilisation",
+  guided_step_budget: 'Budget',
+  guided_step_result: 'Résultat',
+  guided_question_usecase: 'Quel est ton usage principal ?',
+  guided_question_budget: 'Quel est ton budget ?',
+  guided_selected_usecase: 'Usage sélectionné :',
+  guided_budget_entry: 'Entrée de gamme',
+  guided_budget_mid: 'Milieu de gamme',
+  guided_budget_high: 'Haut de gamme',
+  guided_upto: "Jusqu'à",
+  guided_above: 'Plus de',
+  guided_recommended: 'Configuration recommandée',
+  guided_total_cost: 'COÛT TOTAL ESTIMÉ',
+  guided_within_budget: '✓ Dans le budget',
+  guided_over_budget: '⚠ Légèrement au-dessus',
+  guided_add_all: '🛒 Ajouter tout au panier',
+  guided_added_all: '✓ Tout ajouté au panier',
+  guided_no_catalog: 'Catalogue non disponible. Vérifie ta connexion au serveur Odoo.',
+  guided_open_builder: 'Voir dans le Configurateur',
+  guided_restart: 'Recommencer',
+  guided_back: '← Retour',
+  guided_modify: '← Modifier',
+  guided_uc_gaming_desc: 'Jeux AAA, FPS élevé, haute résolution',
+  guided_uc_workstation_desc: 'Rendu 3D, DAO, compilation, modélisation',
+  guided_uc_office_desc: 'Productivité, emails, documents, navigation',
+  guided_uc_streaming_desc: 'Stream, montage vidéo, création de contenu',
 
   // Périphériques
   peripherals_title: 'Périphériques',
@@ -245,6 +293,25 @@ export const FR = {
   footer_col_products: 'Produits',
   footer_col_account: 'Compte',
 
+  // Filtres
+  filter_min_rating: 'NOTE MINIMUM',
+  clear_filter: 'Effacer',
+
+  // Configurateur Only One PC
+  onlyone_builder_eyebrow: 'CRÉATIONS EXCLUSIVES',
+  onlyone_builder_desc: 'Des créations uniques et des configurations sur mesure.',
+  onlyone_unique_tab: 'Configurations Uniques',
+  onlyone_custom_tab: 'Configurateur Sur Mesure',
+  onlyone_no_products: 'Aucun composant Only One disponible pour cette catégorie.',
+  onlyone_select_hint: 'Sélectionnez un composant Only One',
+  onlyone_add_config: 'Ajouter la configuration',
+
+  // Bannières
+  prebuilt_banner_eye: 'PRÊTS À L\'ENVOI',
+  prebuilt_banner_desc: 'Assemblés, testés et prêts à l\'emploi.',
+  cat_banner_eye: 'COMPOSANTS',
+  back: 'Retour',
+
   // Devises
   currency_name: 'CFA (XOF)',
 };
@@ -253,10 +320,19 @@ export const EN = {
   // Nav
   nav_components: 'Components',
   nav_prebuilt: 'Pre-Built PCs',
+  nav_onlyonepc: 'Only One PC',
+  nav_laptops: 'Laptops',
   nav_peripherals: 'Peripherals',
   nav_builder: 'PC Builder',
   nav_search: 'Search products, brands...',
   nav_new_badge: 'NEW',
+
+  // Laptops
+  laptops_title: 'Laptops',
+  laptops_eye: 'MOBILITY & PERFORMANCE',
+  laptops_desc: 'Laptops selected for performance, battery life and portability.',
+  laptops_search: 'Search a laptop or brand...',
+  label_laptop: 'Laptop',
 
   // Categories
   cat_cpu: 'Processors',
@@ -442,6 +518,45 @@ export const EN = {
   prebuilt_what_inside: "What's Inside",
   prebuilt_add_cart: 'Add to Cart',
   prebuilt_customize: 'Customize',
+  technical_specs: 'Technical Specifications',
+  spec_cpu: 'Processor (CPU)',
+  spec_gpu: 'Graphics Card (GPU)',
+  spec_ram: 'Memory (RAM)',
+  spec_storage: 'Storage',
+  spec_psu: 'Power Supply (PSU)',
+  spec_case: 'Case',
+  spec_cooling: 'Cooling',
+
+  // Guided Configurator
+  guided_eyebrow: 'GUIDED CONFIGURATOR',
+  guided_title: 'Build your ideal setup',
+  guided_subtitle: 'Answer two questions — we suggest an optimized configuration from our live catalog.',
+  guided_step_usecase: 'Use Case',
+  guided_step_budget: 'Budget',
+  guided_step_result: 'Result',
+  guided_question_usecase: 'What is your main use case?',
+  guided_question_budget: 'What is your budget?',
+  guided_selected_usecase: 'Selected use case:',
+  guided_budget_entry: 'Entry Level',
+  guided_budget_mid: 'Mid Range',
+  guided_budget_high: 'High End',
+  guided_upto: 'Up to',
+  guided_above: 'Above',
+  guided_recommended: 'Recommended Configuration',
+  guided_total_cost: 'ESTIMATED TOTAL COST',
+  guided_within_budget: '✓ Within budget',
+  guided_over_budget: '⚠ Slightly over budget',
+  guided_add_all: '🛒 Add all to cart',
+  guided_added_all: '✓ All added to cart',
+  guided_no_catalog: 'Catalog unavailable. Check your Odoo server connection.',
+  guided_open_builder: 'Open in Builder',
+  guided_restart: 'Start over',
+  guided_back: '← Back',
+  guided_modify: '← Modify',
+  guided_uc_gaming_desc: 'AAA games, high FPS, high resolution',
+  guided_uc_workstation_desc: '3D rendering, CAD, compilation, modeling',
+  guided_uc_office_desc: 'Productivity, emails, documents, browsing',
+  guided_uc_streaming_desc: 'Streaming, video editing, content creation',
 
   // Peripherals
   peripherals_title: 'Peripherals',
@@ -493,6 +608,25 @@ export const EN = {
   footer_col_components: 'Components',
   footer_col_products: 'Products',
   footer_col_account: 'Account',
+
+  // Filters
+  filter_min_rating: 'MIN. RATING',
+  clear_filter: 'Clear',
+
+  // Only One PC Builder
+  onlyone_builder_eyebrow: 'EXCLUSIVE BUILDS',
+  onlyone_builder_desc: 'Unique creations and custom configurations.',
+  onlyone_unique_tab: 'Unique Configurations',
+  onlyone_custom_tab: 'Custom Builder',
+  onlyone_no_products: 'No Only One components available for this category.',
+  onlyone_select_hint: 'Select an Only One component',
+  onlyone_add_config: 'Add configuration',
+
+  // Banners
+  prebuilt_banner_eye: 'READY TO SHIP',
+  prebuilt_banner_desc: 'Assembled, tested and ready to use.',
+  cat_banner_eye: 'COMPONENTS',
+  back: 'Back',
 
   // Currency
   currency_name: 'USD ($)',

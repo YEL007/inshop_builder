@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ── Pre-built List View ───────────────────────────────────────── -->
-    <record id="view_pc_prebuilt_tree" model="ir.ui.view">
-        <field name="name">pc.prebuilt.tree</field>
-        <field name="model">pc.prebuilt</field>
+    <!-- ── Only One PC List View ──────────────────────────────────── -->
+    <record id="view_pc_onlyonepc_tree" model="ir.ui.view">
+        <field name="name">pc.onlyonepc.tree</field>
+        <field name="model">pc.onlyonepc</field>
         <field name="arch" type="xml">
-            <tree string="Pre-built PCs">
+            <tree string="Only One PC">
                 <field name="name"/>
                 <field name="tier"/>
                 <field name="price"/>
@@ -18,12 +18,12 @@
         </field>
     </record>
 
-    <!-- ── Pre-built Form View ───────────────────────────────────────── -->
-    <record id="view_pc_prebuilt_form" model="ir.ui.view">
-        <field name="name">pc.prebuilt.form</field>
-        <field name="model">pc.prebuilt</field>
+    <!-- ── Only One PC Form View ──────────────────────────────────── -->
+    <record id="view_pc_onlyonepc_form" model="ir.ui.view">
+        <field name="name">pc.onlyonepc.form</field>
+        <field name="model">pc.onlyonepc</field>
         <field name="arch" type="xml">
-            <form string="Pre-built PC">
+            <form string="Only One PC">
                 <sheet>
                     <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'image_128'}"/>
                     <div class="oe_title">
@@ -35,7 +35,7 @@
                             <field name="tier" placeholder="Budget / Mid-Range / High-End / Flagship"/>
                             <field name="badge" placeholder="Best Seller"/>
                             <field name="tag_line" placeholder="Short marketing line"/>
-                            <field name="brand" placeholder="INSHOP"/>
+                            <field name="brand" placeholder="Only One"/>
                             <field name="price"/>
                             <field name="stock_status"/>
                             <field name="active"/>
@@ -85,12 +85,12 @@
         </field>
     </record>
 
-    <!-- ── Pre-built Search View ─────────────────────────────────────── -->
-    <record id="view_pc_prebuilt_search" model="ir.ui.view">
-        <field name="name">pc.prebuilt.search</field>
-        <field name="model">pc.prebuilt</field>
+    <!-- ── Only One PC Search View ────────────────────────────────── -->
+    <record id="view_pc_onlyonepc_search" model="ir.ui.view">
+        <field name="name">pc.onlyonepc.search</field>
+        <field name="model">pc.onlyonepc</field>
         <field name="arch" type="xml">
-            <search string="Search Pre-builts">
+            <search string="Search Only One PC">
                 <field name="name"/>
                 <field name="tier"/>
                 <separator/>
@@ -103,17 +103,17 @@
         </field>
     </record>
 
-    <!-- ── Pre-built Action ──────────────────────────────────────────── -->
-    <record id="action_pc_prebuilts" model="ir.actions.act_window">
-        <field name="name">Pre-built PCs</field>
-        <field name="res_model">pc.prebuilt</field>
+    <!-- ── Only One PC Action ─────────────────────────────────────── -->
+    <record id="action_pc_onlyonepc" model="ir.actions.act_window">
+        <field name="name">Only One PC</field>
+        <field name="res_model">pc.onlyonepc</field>
         <field name="view_mode">tree,form</field>
-        <field name="search_view_id" ref="view_pc_prebuilt_search"/>
+        <field name="search_view_id" ref="view_pc_onlyonepc_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create your first pre-built configuration
+                Créez votre première configuration Only One PC
             </p>
-            <p>Pre-built PCs appear in the "Pre-built" section of the shop.</p>
+            <p>Les configurations Only One PC apparaîtront dans la section dédiée du shop.</p>
         </field>
     </record>
 

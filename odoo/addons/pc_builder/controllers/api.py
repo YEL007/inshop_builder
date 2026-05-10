@@ -1,14 +1,40 @@
 import json
 import logging
 import os
+import secrets
 
 from odoo import http
 from odoo.http import request
-from odoo.exceptions import AccessError, ValidationError
+from odoo.exceptions import AccessDenied, AccessError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
 _ALLOWED_ORIGIN = os.environ.get('ALLOWED_ORIGIN', 'http://localhost:8080')
+
+# ── Frontend token store ─────────────────────────────────────────────────────
+# Maps random token → uid for portal users logged in from the React frontend.
+# Completely separate from Odoo's session system so the admin backend is never
+# affected by frontend logins.
+_PC_TOKENS: dict[str, int] = {}
+
+
+def _issue_token(uid: int) -> str:
+    token = secrets.token_hex(32)
+    _PC_TOKENS[token] = uid
+    return token
+
+
+def _revoke_token(token: str) -> None:
+    _PC_TOKENS.pop(token, None)
+
+
+def _uid_from_request() -> int | None:
+    """Read the Authorization: Bearer <token> header and return the uid or None."""
+    auth = request.httprequest.headers.get('Authorization', '')
+    if auth.startswith('Bearer '):
+        token = auth[7:].strip()
+        return _PC_TOKENS.get(token)
+    return None
 
 
 def _cors_headers():
@@ -44,6 +70,16 @@ class PcBuilderApi(http.Controller):
             return json_response({'catalog': catalog})
         except Exception as e:
             _logger.exception('Error in get_catalog')
+            return error_response(str(e), 500)
+
+    @http.route('/api/pc/onlyone_catalog', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_onlyone_catalog(self, **kwargs):
+        """Return Only One PC components grouped by category."""
+        try:
+            catalog = request.env['product.template'].sudo().get_only_one_catalog()
+            return json_response({'catalog': catalog})
+        except Exception as e:
+            _logger.exception('Error in get_onlyone_catalog')
             return error_response(str(e), 500)
 
     @http.route('/api/pc/products', type='http', auth='public', methods=['GET'], csrf=False)
@@ -115,6 +151,16 @@ class PcBuilderApi(http.Controller):
             _logger.exception('Error in get_related')
             return error_response(str(e), 500)
 
+    @http.route('/api/pc/laptops', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_laptops(self, **kwargs):
+        """Return all active laptop products."""
+        try:
+            laptops = request.env['product.template'].sudo().get_laptops()
+            return json_response({'laptops': laptops})
+        except Exception as e:
+            _logger.exception('Error in get_laptops')
+            return error_response(str(e), 500)
+
     @http.route('/api/pc/peripherals', type='http', auth='public', methods=['GET'], csrf=False)
     def get_peripherals(self, **kwargs):
         """Return peripheral products grouped by category."""
@@ -137,27 +183,66 @@ class PcBuilderApi(http.Controller):
             _logger.exception('Error in get_prebuilts')
             return error_response(str(e), 500)
 
+    # ── Only One PCs ─────────────────────────────────────────────────────────
+
+    @http.route('/api/pc/onlyonepcs', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_onlyonepcs(self, **kwargs):
+        """Return all active Only One PC configurations."""
+        try:
+            onlyonepcs = request.env['pc.onlyonepc'].sudo().search([('active', '=', True)])
+            return json_response({'onlyonepcs': [p.to_dict() for p in onlyonepcs]})
+        except Exception as e:
+            _logger.exception('Error in get_onlyonepcs')
+            return error_response(str(e), 500)
+
     # ── Authentication ───────────────────────────────────────────────────────
 
     @http.route('/api/pc/auth/login', type='http', auth='public', methods=['POST'], csrf=False)
     def login(self, **kwargs):
-        """Authenticate user and return session info."""
+        """Verify portal-user credentials and issue a frontend token.
+
+        Never calls session.authenticate() — the Odoo admin backend session is
+        completely untouched.
+        """
         try:
             body = json.loads(request.httprequest.data or '{}')
-            login = body.get('login', '').strip()
+            login_val = body.get('login', '').strip().lower()
             password = body.get('password', '')
-            db = request.db
 
-            uid = request.session.authenticate(db, login, password)
-            if not uid:
+            if not login_val or not password:
                 return error_response('Invalid credentials', 401)
 
-            user = request.env['res.users'].sudo().browse(uid)
+            # Search active=any so previously-inactive accounts (pre-activation fix)
+            # can still log in once manually activated.
+            user = request.env['res.users'].sudo().search(
+                [('login', '=', login_val), ('active', 'in', [True, False])], limit=1
+            )
+            if not user:
+                return error_response('Invalid credentials', 401)
+
+            # Activate the user silently if they were left inactive by portal.wizard
+            if not user.active:
+                user.sudo().write({'active': True})
+
+            try:
+                user.sudo()._check_credentials(password, {'interactive': False})
+            except AccessDenied:
+                return error_response('Invalid credentials', 401)
+            except Exception:
+                # Odoo version compatibility: some builds raise other exceptions
+                # on a bad password (e.g. ValidationError). Treat all as bad creds.
+                return error_response('Invalid credentials', 401)
+
+            token = _issue_token(user.id)
+            partner = user.partner_id
             return json_response({
-                'uid': uid,
+                'authenticated': True,
+                'token': token,
+                'uid': user.id,
                 'name': user.name,
                 'email': user.email,
-                # session_id is not returned — use the session cookie instead
+                'phone': partner.phone or '',
+                'street': partner.street or '',
             })
         except Exception as e:
             _logger.exception('Error in login')
@@ -165,12 +250,18 @@ class PcBuilderApi(http.Controller):
 
     @http.route('/api/pc/auth/register', type='http', auth='public', methods=['POST'], csrf=False)
     def register(self, **kwargs):
-        """Create a new portal user."""
+        """Create a new portal user (NO backend access).
+
+        Accepts: name, email, password, phone (optional), address (optional).
+        Uses Odoo's portal.wizard to guarantee the user is portal-only.
+        """
         try:
             body = json.loads(request.httprequest.data or '{}')
             name = body.get('name', '').strip()
             email = body.get('email', '').strip().lower()
             password = body.get('password', '')
+            phone = body.get('phone', '').strip()
+            address = body.get('address', '').strip()
 
             if not name or not email or not password:
                 return error_response('name, email, and password are required', 400)
@@ -180,22 +271,74 @@ class PcBuilderApi(http.Controller):
             if existing:
                 return error_response('Email already registered', 409)
 
-            # Create portal user
-            portal_group = request.env.ref('base.group_portal')
-            user = request.env['res.users'].sudo().create({
+            # ── Step 1: Create a partner (contact) with full info ─────
+            partner_vals = {
                 'name': name,
-                'login': email,
                 'email': email,
-                'password': password,
-                'groups_id': [(6, 0, [portal_group.id])],
-            })
+            }
+            if phone:
+                partner_vals['phone'] = phone
+            if address:
+                partner_vals['street'] = address
 
-            uid = request.session.authenticate(request.db, email, password)
+            partner = request.env['res.partner'].sudo().create(partner_vals)
+
+            # ── Step 2: Use portal.wizard to grant portal access ──────
+            # This is Odoo's official mechanism and correctly sets the
+            # user as portal-only (group_portal) WITHOUT group_user.
+            try:
+                wizard = request.env['portal.wizard'].sudo().with_context(
+                    active_ids=[partner.id]
+                ).create({})
+                for line in wizard.user_ids:
+                    line.sudo().write({'in_portal': True})
+                wizard.sudo().action_apply()
+            except Exception as wiz_err:
+                _logger.warning('portal.wizard failed (%s), falling back to manual creation', wiz_err)
+                # Fallback: create user manually with portal group
+                portal_group = request.env.ref('base.group_portal')
+                request.env['res.users'].sudo().with_context(no_reset_password=True).create({
+                    'name': name,
+                    'login': email,
+                    'email': email,
+                    'password': password,
+                    'partner_id': partner.id,
+                    'groups_id': [(6, 0, [portal_group.id])],
+                })
+
+            # ── Step 3: Retrieve the created user and set password ────
+            user = request.env['res.users'].sudo().search(
+                [('login', '=', email)], limit=1
+            )
+            if not user:
+                return error_response('User creation failed', 500)
+
+            # Ensure user is active (portal.wizard may create inactive users
+            # requiring email confirmation — bypass that for this custom frontend)
+            user.sudo().write({'password': password, 'active': True})
+
+            # ── Step 4: Safety net — ensure portal-only access ────────
+            # In some Odoo configurations the user may still inherit
+            # group_user.  Strip it to guarantee portal-only.
+            group_internal = request.env.ref('base.group_user')
+            group_portal = request.env.ref('base.group_portal')
+            if group_internal in user.groups_id:
+                user.sudo().write({
+                    'groups_id': [
+                        (3, group_internal.id),   # remove internal
+                        (4, group_portal.id),      # ensure portal
+                    ]
+                })
+
+            # ── Step 5: Return without touching the session ───────────
+            # Never call session.authenticate() here — it would overwrite
+            # the admin cookie (same origin) and disconnect the backend.
+            # The frontend calls /api/pc/auth/login separately after this.
             return json_response({
-                'uid': uid,
+                'created': True,
+                'uid': user.id,
                 'name': user.name,
                 'email': user.email,
-                # session_id is not returned — use the session cookie instead
             }, status=201)
         except ValidationError as e:
             return error_response(str(e), 400)
@@ -205,16 +348,20 @@ class PcBuilderApi(http.Controller):
 
     @http.route('/api/pc/auth/logout', type='http', auth='public', methods=['POST'], csrf=False)
     def logout(self, **kwargs):
-        request.session.logout()
+        auth = request.httprequest.headers.get('Authorization', '')
+        if auth.startswith('Bearer '):
+            _revoke_token(auth[7:].strip())
         return json_response({'ok': True})
 
     @http.route('/api/pc/auth/me', type='http', auth='public', methods=['GET'], csrf=False)
     def me(self, **kwargs):
-        """Return current session user info."""
-        uid = request.session.uid
+        """Return current frontend-user info from Bearer token."""
+        uid = _uid_from_request()
         if not uid:
             return json_response({'authenticated': False})
         user = request.env['res.users'].sudo().browse(uid)
+        if not user.exists():
+            return json_response({'authenticated': False})
         partner = user.partner_id
         return json_response({
             'authenticated': True,
@@ -225,14 +372,18 @@ class PcBuilderApi(http.Controller):
             'street': partner.street or '',
         })
 
-    @http.route('/api/pc/auth/update', type='http', auth='user', methods=['POST'], csrf=False)
+    @http.route('/api/pc/auth/update', type='http', auth='public', methods=['POST'], csrf=False)
     def update_profile(self, **kwargs):
         """Update current user partner info."""
         try:
+            uid = _uid_from_request()
+            if not uid:
+                return error_response('Not authenticated', 401)
+
             body = json.loads(request.httprequest.data or '{}')
             data = body.get('data', {})
 
-            user = request.env.user
+            user = request.env['res.users'].sudo().browse(uid)
             vals = {}
             if 'name' in data: vals['name'] = data['name']
             if 'phone' in data: vals['phone'] = data['phone']
@@ -269,11 +420,13 @@ class PcBuilderApi(http.Controller):
             _logger.exception('Error in get_reviews')
             return error_response(str(e), 500)
 
-    @http.route('/api/pc/review', type='http', auth='user', methods=['POST'], csrf=False)
+    @http.route('/api/pc/review', type='http', auth='public', methods=['POST'], csrf=False)
     def submit_review(self, **kwargs):
-        """Submit or update a review. Requires authenticated session."""
+        """Submit or update a review. Requires frontend token."""
         try:
-            uid = request.env.uid
+            uid = _uid_from_request()
+            if not uid:
+                return error_response('Not authenticated', 401)
             body = json.loads(request.httprequest.data or '{}')
             product_id = int(body.get('product_id', 0))
             rating = int(body.get('rating', 0))
@@ -284,8 +437,7 @@ class PcBuilderApi(http.Controller):
             if not (1 <= rating <= 5):
                 return error_response('La note doit être entre 1 et 5.', 400)
 
-            # Portal users have write access on pc.review — no sudo() needed
-            Review = request.env['pc.review'].with_user(uid)
+            Review = request.env['pc.review'].sudo()
             existing = Review.search([('product_id', '=', product_id), ('user_id', '=', uid)], limit=1)
 
             if existing:
@@ -470,11 +622,13 @@ class PcBuilderApi(http.Controller):
             _logger.exception('Error in confirm_order')
             return error_response(str(e), 500)
 
-    @http.route('/api/pc/orders', type='http', auth='user', methods=['GET'], csrf=False)
+    @http.route('/api/pc/orders', type='http', auth='public', methods=['GET'], csrf=False)
     def get_orders(self, **kwargs):
         """Return confirmed orders for the logged-in user."""
         try:
-            uid = request.env.uid
+            uid = _uid_from_request()
+            if not uid:
+                return error_response('Not authenticated', 401)
             orders = request.env['sale.order'].sudo().search([
                 ('partner_id.user_ids', 'in', [uid]),
                 ('state', 'in', ['sale', 'done']),
@@ -499,7 +653,8 @@ class PcBuilderApi(http.Controller):
             if order.exists() and order.state == 'draft':
                 return order
 
-        uid = request.session.uid
+        # Prefer the frontend token uid, fall back to public partner.
+        uid = _uid_from_request() or request.session.uid
         partner = (
             request.env['res.users'].sudo().browse(uid).partner_id
             if uid
@@ -519,6 +674,7 @@ class PcBuilderApi(http.Controller):
             'name': order.name,
             'state': order.state,
             'total': order.amount_total,
+            'pc_delivery_status': getattr(order, 'pc_delivery_status', None),
             'items': [
                 {
                     'product_id': line.product_id.product_tmpl_id.id,
@@ -533,3 +689,202 @@ class PcBuilderApi(http.Controller):
         if full:
             data['date'] = order.date_order.isoformat() if order.date_order else None
         return data
+
+    def _get_current_uid(self):
+        return request.env.uid if request.env.uid else None
+
+    def _assert_order_belongs_to_user(self, order, uid):
+        """
+        Ownership check (long-term compatible):
+        match how /api/pc/orders filters orders:
+        ('partner_id.user_ids', 'in', [uid])
+        """
+        try:
+            return bool(order.partner_id.user_ids and order.partner_id.user_ids.ids and uid in order.partner_id.user_ids.ids)
+        except Exception:
+            return False
+
+    @http.route('/api/pc/dashboard', type='http', auth='public', methods=['GET'], csrf=False)
+    def dashboard_me(self, **kwargs):
+        """Return dashboard summary (front-end) for the logged-in user."""
+        try:
+            uid = _uid_from_request()
+            if not uid:
+                return error_response('Not authenticated', 401)
+
+            user = request.env['res.users'].sudo().browse(uid)
+            orders = request.env['sale.order'].sudo().search([
+                ('partner_id.user_ids', 'in', [uid]),
+                ('state', 'in', ['sale', 'done']),
+            ], order='date_order desc')
+
+            counts = {
+                'processing': 0,
+                'preparing': 0,
+                'shipped': 0,
+                'delivered': 0,
+            }
+            for o in orders:
+                status = getattr(o, 'pc_delivery_status', 'processing') or 'processing'
+                if status not in counts:
+                    counts[status] = 0
+                counts[status] += 1
+
+            return json_response({
+                'authenticated': True,
+                'uid': uid,
+                'user': {
+                    'name': user.name,
+                    'email': user.email,
+                },
+                'counts': counts,
+                'orders': [self._serialize_order(o, full=True) for o in orders],
+            })
+        except Exception as e:
+            _logger.exception('Error in dashboard_me')
+            return error_response(str(e), 500)
+
+    @http.route('/api/pc/admin/dashboard', type='http', auth='user', methods=['GET'], csrf=False)
+    def dashboard_admin(self, **kwargs):
+        """Admin dashboard (front-end) - requires system group."""
+        try:
+            if not request.env.user.has_group('base.group_system'):
+                return error_response('Forbidden', 403)
+
+            orders = request.env['sale.order'].sudo().search([
+                ('state', 'in', ['sale', 'done']),
+            ])
+
+            counts = {
+                'processing': 0,
+                'preparing': 0,
+                'shipped': 0,
+                'delivered': 0,
+            }
+            for o in orders:
+                status = getattr(o, 'pc_delivery_status', 'processing') or 'processing'
+                if status not in counts:
+                    counts[status] = 0
+                counts[status] += 1
+
+            users = request.env['res.users'].sudo().search([
+                ('login', '!=', False),
+            ], limit=200)
+
+            return json_response({
+                'authenticated': True,
+                'counts': counts,
+                'total_users_sampled': len(users),
+                'users': [
+                    {'id': u.id, 'name': u.name, 'email': u.email, 'phone': u.phone}
+                    for u in users
+                ],
+                'total_orders': len(orders),
+            })
+        except Exception as e:
+            _logger.exception('Error in dashboard_admin')
+            return error_response(str(e), 500)
+
+    @http.route('/api/pc/order/<int:order_id>/delivery/next', type='http', auth='public', methods=['POST'], csrf=False)
+    def order_delivery_next(self, order_id, **kwargs):
+        """Advance delivery status for a user's own order."""
+        try:
+            uid = _uid_from_request()
+            if not uid:
+                return error_response('Not authenticated', 401)
+
+            order = request.env['sale.order'].sudo().browse(order_id)
+            if not order.exists():
+                return error_response('Order not found', 404)
+
+            if not self._assert_order_belongs_to_user(order, uid):
+                return error_response('Forbidden', 403)
+
+            if order.state not in ['sale', 'done']:
+                return error_response('Order not confirmed', 400)
+
+            current = getattr(order, 'pc_delivery_status', 'processing') or 'processing'
+            next_map = {
+                'processing': 'preparing',
+                'preparing': 'shipped',
+                'shipped': 'delivered',
+                'delivered': 'delivered',
+            }
+
+            if current == 'delivered':
+                return error_response('Order already delivered', 400)
+
+            next_status = next_map.get(current)
+            if not next_status or next_status == current:
+                return error_response('Invalid delivery transition', 400)
+
+            if next_status == 'preparing':
+                order.sudo().action_set_preparing()
+            elif next_status == 'shipped':
+                order.sudo().action_set_shipped()
+            elif next_status == 'delivered':
+                order.sudo().action_set_delivered()
+
+            return json_response({'order': self._serialize_order(order.sudo(), full=True)})
+        except Exception as e:
+            _logger.exception('Error in order_delivery_next')
+            return error_response(str(e), 500)
+
+    @http.route('/api/pc/admin/order/<int:order_id>/delivery/next', type='http', auth='user', methods=['POST'], csrf=False)
+    def admin_order_delivery_next(self, order_id, **kwargs):
+        """Admin: advance delivery status for any order (requires group_system)."""
+        try:
+            if not request.env.user.has_group('base.group_system'):
+                return error_response('Forbidden', 403)
+
+            order = request.env['sale.order'].sudo().browse(order_id)
+            if not order.exists():
+                return error_response('Order not found', 404)
+
+            if order.state not in ['sale', 'done']:
+                return error_response('Order not confirmed', 400)
+
+            current = getattr(order, 'pc_delivery_status', 'processing') or 'processing'
+            next_map = {
+                'processing': 'preparing',
+                'preparing': 'shipped',
+                'shipped': 'delivered',
+            }
+
+            if current == 'delivered':
+                return error_response('Order already delivered', 400)
+
+            next_status = next_map.get(current)
+            if not next_status:
+                return error_response('Invalid delivery transition', 400)
+
+            if next_status == 'preparing':
+                order.sudo().action_set_preparing()
+            elif next_status == 'shipped':
+                order.sudo().action_set_shipped()
+            elif next_status == 'delivered':
+                order.sudo().action_set_delivered()
+
+            return json_response({'order': self._serialize_order(order.sudo(), full=True)})
+        except Exception as e:
+            _logger.exception('Error in admin_order_delivery_next')
+            return error_response(str(e), 500)
+
+    @http.route('/api/pc/admin/orders', type='http', auth='user', methods=['GET'], csrf=False)
+    def admin_orders(self, **kwargs):
+        """Admin: list all confirmed orders with delivery status."""
+        try:
+            if not request.env.user.has_group('base.group_system'):
+                return error_response('Forbidden', 403)
+
+            orders = request.env['sale.order'].sudo().search([
+                ('state', 'in', ['sale', 'done']),
+            ], order='date_order desc')
+
+            return json_response({
+                'orders': [self._serialize_order(o, full=True) for o in orders],
+                'total': len(orders),
+            })
+        except Exception as e:
+            _logger.exception('Error in admin_orders')
+            return error_response(str(e), 500)

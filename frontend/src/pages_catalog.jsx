@@ -51,15 +51,17 @@ const CatalogPage = ({ initialCategory }) => {
 
   return (
     <div style={catStyles.page}>
-      {/* Header */}
-      <div style={catStyles.pageHeader}>
-        <div style={catStyles.pageHeaderInner}>
-          <div style={catStyles.breadcrumb}>
-            <span style={{ color:'#9f9f9f', cursor:'pointer' }} onClick={() => setPage('home')}>{t('home_breadcrumb')}</span>
-            <span style={{ color:'#3c3c3c' }}> / </span>
-            <span style={{ color:'#ffffff' }}>{category === 'all' ? 'All Components' : getCategoryLabel(t, category)}</span>
-          </div>
-          <h1 style={catStyles.pageTitle}>{category === 'all' ? 'All Components' : getCategoryLabel(t, category)}</h1>
+      {/* Banner */}
+      <div style={catStyles.banner} className="rsp-banner">
+        <video autoPlay loop muted playsInline style={catStyles.bannerImg}>
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
+        <div style={catStyles.bannerOverlay} />
+        <div style={catStyles.bannerContent} className="rsp-banner-content">
+          <div style={catStyles.bannerEye} className="rsp-banner-eye">{t('cat_banner_eye')}</div>
+          <h1 style={catStyles.bannerTitle} className="rsp-banner-title">
+            {category === 'all' ? t('all_components') : getCategoryLabel(t, category)}
+          </h1>
         </div>
       </div>
 
@@ -68,27 +70,27 @@ const CatalogPage = ({ initialCategory }) => {
         <aside style={catStyles.sidebar} className="rsp-catalog-sidebar">
           {/* Category filter */}
           <div style={catStyles.filterGroup}>
-            <div style={catStyles.filterLabel}>CATEGORY</div>
+            <div style={catStyles.filterLabel}>{t('filter_category')}</div>
             {ALL_CATEGORIES.map(c => (
               <button key={c} style={{ ...catStyles.filterBtn, ...(category===c ? catStyles.filterBtnActive : {}) }}
                 onClick={() => { setCategory(c); setBrands([]); }}>
-                {c === 'all' ? 'All Components' : getCategoryLabel(t, c)}
+                {c === 'all' ? t('all_components') : getCategoryLabel(t, c)}
               </button>
             ))}
           </div>
 
           {/* Stock filter */}
           <div style={catStyles.filterGroup}>
-            <div style={catStyles.filterLabel}>AVAILABILITY</div>
+            <div style={catStyles.filterLabel}>{t('filter_availability')}</div>
             <label style={catStyles.checkRow}>
               <input type="checkbox" checked={inStockOnly} onChange={e=>setInStockOnly(e.target.checked)} style={{ accentColor:'#e8001d' }}/>
-              <span style={{ color:'#b8b8b8', fontSize:13 }}>In Stock Only</span>
+              <span style={{ color:'#b8b8b8', fontSize:13 }}>{t('filter_in_stock_only')}</span>
             </label>
           </div>
 
           {/* Price range — dual slider */}
           <div style={catStyles.filterGroup}>
-            <div style={catStyles.filterLabel}>PRICE RANGE</div>
+            <div style={catStyles.filterLabel}>{t('filter_price')}</div>
             <div style={{ display:'flex', gap:8, marginBottom:10 }}>
               <div style={catStyles.priceInput}>{formatPrice(priceRange[0])}</div>
               <span style={{ color:'#9f9f9f', alignSelf:'center' }}>—</span>
@@ -104,7 +106,7 @@ const CatalogPage = ({ initialCategory }) => {
 
           {/* Rating filter */}
           <div style={catStyles.filterGroup}>
-            <div style={catStyles.filterLabel}>NOTE MINIMUM</div>
+            <div style={catStyles.filterLabel}>{t('filter_min_rating')}</div>
             {[4, 3, 2].map(r => (
               <label key={r} style={catStyles.checkRow}>
                 <input type="radio" name="rating" checked={minRating === r}
@@ -116,14 +118,14 @@ const CatalogPage = ({ initialCategory }) => {
             ))}
             {minRating > 0 && (
               <button style={{ ...catStyles.filterBtn, color:'#9f9f9f', fontSize:11 }}
-                onClick={() => setMinRating(0)}>✕ Effacer</button>
+                onClick={() => setMinRating(0)}>✕ {t('clear_filter')}</button>
             )}
           </div>
 
           {/* Brand filter */}
           {availableBrands.length > 0 && (
             <div style={catStyles.filterGroup}>
-              <div style={catStyles.filterLabel}>BRAND</div>
+              <div style={catStyles.filterLabel}>{t('filter_brand')}</div>
               {availableBrands.map(b => (
                 <label key={b} style={catStyles.checkRow}>
                   <input type="checkbox" checked={brands.includes(b)} onChange={()=>toggleBrand(b)} style={{ accentColor:'#e8001d' }}/>
@@ -206,7 +208,7 @@ const CatalogProductCard = ({ product, onView, onAdd, onFav, isFav, onCompare, i
     : product.stock === 'out_of_stock' ? t('badge_out_of_stock') : null;
 
   return (
-    <div style={{ background:'#242424', border:`1px solid ${hov ? color : '#3c3c3c'}`, borderRadius:16, overflow:'hidden', display:'flex', flexDirection:'column', transition:'all 0.25s', position:'relative' }}
+    <div style={{ background:'#242424', border:`1px solid ${hov ? color : '#3c3c3c'}`, borderRadius:16, overflow:'hidden', display:'flex', flexDirection:'column', transition:'all 0.25s', position:'relative', transform: hov ? 'translateY(-4px)' : 'none' }}
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}>
 
       <button style={{ position:'absolute', top:14, left:14, background:'rgba(14,14,14,0.85)', border:'none', cursor:'pointer', width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', zIndex:1, color: isFav?'#e8001d':'#9f9f9f' }}
@@ -222,17 +224,17 @@ const CatalogProductCard = ({ product, onView, onAdd, onFav, isFav, onCompare, i
         </div>
       )}
 
-      <div style={{ height:190, background:`linear-gradient(135deg, ${color}14, #212121)`, overflow:'hidden', cursor:'pointer' }} onClick={onView}>
+      <div style={{ height:200, background:`linear-gradient(135deg, ${color}14, #212121)`, overflow:'hidden', cursor:'pointer' }} onClick={onView}>
         <ImageCarousel images={product.images} category={product.category} />
       </div>
 
-      <div style={{ padding:'18px', flex:1, display:'flex', flexDirection:'column' }} onClick={onView}>
+      <div style={{ padding:'20px', flex:1, display:'flex', flexDirection:'column' }} onClick={onView}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
           <div style={{ flex:1, minWidth:0, paddingRight:10 }}>
             <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label.toUpperCase()}</div>
-            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:15, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
+            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:20, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
           </div>
-          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:19, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
+          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
         </div>
 
 
@@ -256,7 +258,7 @@ const CatalogProductCard = ({ product, onView, onAdd, onFav, isFav, onCompare, i
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
             </button>
           )}
-          <button style={{ flex:1, padding:'11px', background:color, color:'#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor:'pointer', transition:'opacity 0.2s' }}
+          <button style={{ flex:1, padding:'12px', background:color, color:'#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor:'pointer', transition:'opacity 0.2s' }}
             onClick={e=>{e.stopPropagation();onAdd();}}
             onMouseEnter={e=>e.currentTarget.style.opacity='0.8'}
             onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
@@ -270,6 +272,7 @@ const CatalogProductCard = ({ product, onView, onAdd, onFav, isFav, onCompare, i
 
 // Product Detail Page
 const ProductDetailPage = ({ product }) => {
+  console.log('ProductDetailPage rendering', product);
   const { setPage, addToCart, toggleFav, favorites, addToBuild, currentUser, t, formatPrice } = React.useContext(window.AppContext);
   const [qty, setQty] = React.useState(1);
   const [selectedImage, setSelectedImage] = React.useState(0);
@@ -680,8 +683,18 @@ const ComparePage = () => {
 
 const catStyles = {
   page: { paddingTop:64 },
-  pageHeader: { background:'linear-gradient(135deg,#1a1a1a,#242424)', borderBottom:'1px solid #3c3c3c', padding:'40px 80px 32px' },
-  pageHeaderInner: {},
+
+  // Banner
+  banner: { position:'relative', height:320, overflow:'hidden', flexShrink:0 },
+  bannerImg: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 40%' },
+  bannerOverlay: {
+    position:'absolute', inset:0,
+    background:'linear-gradient(90deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.6) 55%, rgba(0,0,0,0.8) 100%)',
+  },
+  bannerContent: { position:'relative', zIndex:1, display:'flex', flexDirection:'column', justifyContent:'center', height:'100%', padding:'0 80px' },
+  bannerEye: { color:'#e8001d', fontSize:11, fontWeight:700, letterSpacing:'0.25em', marginBottom:10 },
+  bannerTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:38, color:'#ffffff', margin:'0 0 10px', lineHeight:1.15 },
+
   breadcrumb: { color:'#9f9f9f', fontSize:13, marginBottom:8, fontFamily:"'Space Grotesk',sans-serif" },
   pageTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:36, color:'#ffffff', margin:0 },
   layout: { display:'flex', gap:0 },
@@ -700,7 +713,7 @@ const catStyles = {
   toolbar: { display:'flex', alignItems:'center', gap:12, marginBottom:24, background:'#242424', border:'1px solid #3c3c3c', borderRadius:10, padding:'12px 16px' },
   searchInput: { background:'transparent', border:'none', outline:'none', color:'#ffffff', fontFamily:"'Space Grotesk',sans-serif", fontSize:14, flex:1, minWidth:0 },
   sortSelect: { background:'#2a2a2a', border:'1px solid #3c3c3c', color:'#c8c8c8', padding:'6px 10px', borderRadius:6, fontFamily:"'Space Grotesk',sans-serif", fontSize:13, outline:'none' },
-  grid: { display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:16 },
+  grid: { display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:20 },
   empty: { textAlign:'center', padding:'80px 20px' },
   card: { background:'#242424', border:'1px solid #3c3c3c', borderRadius:12, overflow:'hidden', display:'flex', flexDirection:'column', transition:'all 0.2s' },
   cardHov: { borderColor:'#444444', transform:'translateY(-2px)', boxShadow:'0 8px 30px rgba(0,0,0,0.1)' },

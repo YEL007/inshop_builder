@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Order List View ────────────────────────────────────────────── -->
+    <record id="view_pc_order_tree" model="ir.ui.view">
+        <field name="name">pc.sale.order.tree</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <tree decoration-muted="pc_delivery_status == 'delivered'"
+                  decoration-warning="pc_delivery_status == 'preparing'"
+                  decoration-info="pc_delivery_status == 'shipped'">
+                <field name="pc_delivery_status" string="Statut"
+                       widget="badge"
+                       decoration-muted="pc_delivery_status == 'processing'"
+                       decoration-warning="pc_delivery_status == 'preparing'"
+                       decoration-info="pc_delivery_status == 'shipped'"
+                       decoration-success="pc_delivery_status == 'delivered'"/>
+                <field name="name" string="Référence"/>
+                <field name="partner_id" string="Client"/>
+                <field name="date_order" string="Date" widget="date"/>
+                <field name="amount_total" string="Total" widget="monetary"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="state" string="État"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ── Order Form View ───────────────────────────────────────────── -->
+    <record id="view_pc_order_form" model="ir.ui.view">
+        <field name="name">pc.sale.order.form</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <form string="Commande InShop">
+                <header>
+                    <!-- Boutons d'avancement du statut livraison -->
+                    <button name="action_set_preparing"
+                            string="▶  Marquer En préparation"
+                            type="object"
+                            class="btn-primary"
+                            invisible="pc_delivery_status != 'processing'"/>
+                    <button name="action_set_shipped"
+                            string="▶  Marquer Expédiée"
+                            type="object"
+                            class="btn-primary"
+                            invisible="pc_delivery_status != 'preparing'"/>
+                    <button name="action_set_delivered"
+                            string="✓  Marquer Livrée"
+                            type="object"
+                            class="btn-success"
+                            invisible="pc_delivery_status != 'shipped'"/>
+                    <!-- Barre de statut livraison -->
+                    <field name="pc_delivery_status"
+                           widget="statusbar"
+                           statusbar_visible="processing,preparing,shipped,delivered"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Client">
+                            <field name="partner_id" readonly="1"/>
+                            <field name="partner_invoice_id" readonly="1"/>
+                            <field name="partner_shipping_id" readonly="1"/>
+                        </group>
+                        <group string="Commande">
+                            <field name="date_order" readonly="1"/>
+                            <field name="state" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="amount_untaxed" widget="monetary" readonly="1"/>
+                            <field name="amount_tax" widget="monetary" readonly="1"/>
+                            <field name="amount_total" widget="monetary" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Produits commandés">
+                            <field name="order_line" readonly="1">
+                                <tree>
+                                    <field name="product_id"/>
+                                    <field name="product_uom_qty" string="Qté"/>
+                                    <field name="price_unit" string="Prix unitaire" widget="monetary"/>
+                                    <field name="price_subtotal" string="Sous-total" widget="monetary"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Notes">
+                            <field name="note" placeholder="Notes internes sur la commande…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Order Kanban View (pipeline par statut) ───────────────────── -->
+    <record id="view_pc_order_kanban" model="ir.ui.view">
+        <field name="name">pc.sale.order.kanban</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="pc_delivery_status"
+                    quick_create="false"
+                    class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="amount_total"/>
+                <field name="currency_id"/>
+                <field name="date_order"/>
+                <field name="pc_delivery_status"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill"
+                             style="min-height:80px;">
+                            <div class="o_kanban_record_body">
+                                <strong>
+                                    <field name="name"/>
+                                </strong>
+                                <div class="text-muted o_text_overflow">
+                                    <field name="partner_id"/>
+                                </div>
+                                <div class="text-muted small">
+                                    <field name="date_order" widget="date"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_bottom">
+                                <div class="oe_kanban_bottom_left">
+                                    <span class="oe_kanban_amount fw-bold">
+                                        <field name="amount_total" widget="monetary"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ── Graph View (revenus par mois) ────────────────────────────── -->
+    <record id="view_pc_order_graph" model="ir.ui.view">
+        <field name="name">pc.sale.order.graph</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <graph string="Revenus InShop" type="bar">
+                <field name="date_order" interval="month" type="row"/>
+                <field name="amount_total" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- ── Pivot View ───────────────────────────────────────────────── -->
+    <record id="view_pc_order_pivot" model="ir.ui.view">
+        <field name="name">pc.sale.order.pivot</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse Commandes" display_quantity="true">
+                <field name="pc_delivery_status" type="row"/>
+                <field name="date_order" interval="month" type="col"/>
+                <field name="amount_total" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- ── Search View ──────────────────────────────────────────────── -->
+    <record id="view_pc_order_search" model="ir.ui.view">
+        <field name="name">pc.sale.order.search</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher commandes">
+                <field name="name" string="Référence"/>
+                <field name="partner_id" string="Client"/>
+                <separator/>
+                <filter string="Reçue" name="processing"
+                        domain="[('pc_delivery_status', '=', 'processing')]"/>
+                <filter string="En préparation" name="preparing"
+                        domain="[('pc_delivery_status', '=', 'preparing')]"/>
+                <filter string="Expédiée" name="shipped"
+                        domain="[('pc_delivery_status', '=', 'shipped')]"/>
+                <filter string="Livrée" name="delivered"
+                        domain="[('pc_delivery_status', '=', 'delivered')]"/>
+                <separator/>
+                <filter string="Ce mois" name="this_month"
+                        domain="[('date_order', '&gt;=', (context_today() + relativedelta(day=1)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Grouper par">
+                    <filter string="Statut livraison" name="group_delivery"
+                            context="{'group_by': 'pc_delivery_status'}"/>
+                    <filter string="Client" name="group_partner"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter string="Mois" name="group_month"
+                            context="{'group_by': 'date_order:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Actions ──────────────────────────────────────────────────── -->
+
+    <!-- Tableau de bord : pipeline kanban + graphiques -->
+    <record id="action_pc_dashboard" model="ir.actions.act_window">
+        <field name="name">Tableau de bord — InShop</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">kanban,graph,pivot</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_pc_order_kanban')}),
+            (0, 0, {'view_mode': 'graph',  'view_id': ref('view_pc_order_graph')}),
+            (0, 0, {'view_mode': 'pivot',  'view_id': ref('view_pc_order_pivot')})]"/>
+        <field name="domain">[('state', 'in', ['sale', 'done'])]</field>
+        <field name="search_view_id" ref="view_pc_order_search"/>
+        <field name="context">{'group_by': 'pc_delivery_status'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Aucune commande confirmée pour l'instant.
+            </p>
+        </field>
+    </record>
+
+    <!-- Liste des commandes -->
+    <record id="action_pc_orders" model="ir.actions.act_window">
+        <field name="name">Commandes InShop</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">tree,form,kanban</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree',   'view_id': ref('view_pc_order_tree')}),
+            (0, 0, {'view_mode': 'form',   'view_id': ref('view_pc_order_form')}),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_pc_order_kanban')})]"/>
+        <field name="domain">[('state', 'in', ['sale', 'done'])]</field>
+        <field name="search_view_id" ref="view_pc_order_search"/>
+        <field name="context">{'search_default_processing': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Aucune commande pour l'instant.
+            </p>
+            <p>Les commandes confirmées depuis le site InShop apparaîtront ici.</p>
+        </field>
+    </record>
+
+</odoo>

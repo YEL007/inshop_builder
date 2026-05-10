@@ -13,6 +13,8 @@ PC_CATEGORIES = [
     ('psu',         'Alimentation (PSU)'),
     ('cooling',     'Refroidissement'),
     ('case',        'Boîtier'),
+    # ── PC Portables ─────────────────────────────────────────────────────
+    ('laptop',      'PC Portable'),
     # ── Périphériques d'entrée ───────────────────────────────────────────
     ('keyboard',    'Clavier'),
     ('mouse',       'Souris'),
@@ -28,8 +30,9 @@ PC_CATEGORIES = [
     ('network',      'Carte réseau'),
 ]
 
-COMPONENT_CATEGORIES = {c[0] for c in PC_CATEGORIES[:8]}
-PERIPHERAL_CATEGORIES = {c[0] for c in PC_CATEGORIES[8:]}
+COMPONENT_CATEGORIES = {'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'cooling', 'case'}
+LAPTOP_CATEGORIES = {'laptop'}
+PERIPHERAL_CATEGORIES = {'keyboard', 'mouse', 'microphone', 'webcam', 'monitor', 'speaker', 'headset', 'usb', 'external_hdd', 'network'}
 
 
 class PcProductImage(models.Model):
@@ -51,6 +54,7 @@ class PcProductTemplate(models.Model):
         index=True,
     )
     pc_brand = fields.Char('Brand')
+    pc_is_only_one = fields.Boolean('Is Only One Component', default=False, help='If checked, this component is part of the Only One PC configurator.')
     pc_specs = fields.Text(
         'Specs (JSON)',
         default='{}',
@@ -119,6 +123,7 @@ class PcProductTemplate(models.Model):
             'specs': specs,
             'image': images[0] if images else None,
             'images': images,
+            'is_only_one': self.pc_is_only_one,
         }
 
     # ── Computed helpers used by the API controller ──────────────────────────
@@ -129,6 +134,7 @@ class PcProductTemplate(models.Model):
         products = self.search([
             ('pc_category', 'in', list(COMPONENT_CATEGORIES)),
             ('active', '=', True),
+            ('pc_is_only_one', '=', False),
         ])
         catalog = {}
         for p in products:
@@ -136,6 +142,30 @@ class PcProductTemplate(models.Model):
             catalog.setdefault(cat, [])
             catalog[cat].append(p.to_pc_dict())
         return catalog
+
+    @api.model
+    def get_only_one_catalog(self):
+        """Return Only One component products grouped by pc_category."""
+        products = self.search([
+            ('pc_category', 'in', list(COMPONENT_CATEGORIES)),
+            ('active', '=', True),
+            ('pc_is_only_one', '=', True),
+        ])
+        catalog = {}
+        for p in products:
+            cat = p.pc_category
+            catalog.setdefault(cat, [])
+            catalog[cat].append(p.to_pc_dict())
+        return catalog
+
+    @api.model
+    def get_laptops(self):
+        """Return laptop products as a flat list."""
+        products = self.search([
+            ('pc_category', '=', 'laptop'),
+            ('active', '=', True),
+        ])
+        return [p.to_pc_dict() for p in products]
 
     @api.model
     def get_peripherals(self):

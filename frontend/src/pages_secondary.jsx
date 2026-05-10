@@ -6,21 +6,135 @@ const ProductCard = window.ProductCard;
 
 // pages_secondary.jsx — Pre-Built, Peripherals, Cart, User Space
 
+
+const SharedSidebar = ({ 
+  inStockOnly, setInStockOnly, 
+  priceRange, setPriceRange, minRating, setMinRating, 
+  brands, setBrands, availableBrands, maxPrice = 5000, priceStep = 100 
+}) => {
+  const { t, formatPrice } = React.useContext(window.AppContext);
+  const toggleBrand = (b) => setBrands(prev => prev.includes(b) ? prev.filter(x=>x!==b) : [...prev, b]);
+  
+  return (
+    <aside style={secStyles.sidebar} className="rsp-catalog-sidebar">
+
+      <div style={secStyles.filterGroup}>
+        <div style={secStyles.filterLabel}>{t('filter_availability')}</div>
+        <label style={secStyles.checkRow}>
+          <input type="checkbox" checked={inStockOnly} onChange={e=>setInStockOnly(e.target.checked)} style={{ accentColor:'#e8001d' }}/>
+          <span style={{ color:'#b8b8b8', fontSize:13 }}>{t('filter_in_stock_only')}</span>
+        </label>
+      </div>
+
+      <div style={secStyles.filterGroup}>
+        <div style={secStyles.filterLabel}>{t('filter_price')}</div>
+        <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+          <div style={secStyles.priceInput}>{formatPrice(priceRange[0])}</div>
+          <span style={{ color:'#9f9f9f', alignSelf:'center' }}>—</span>
+          <div style={secStyles.priceInput}>{formatPrice(priceRange[1])}</div>
+        </div>
+        <input type="range" min={0} max={maxPrice} step={priceStep} value={priceRange[0]}
+          onChange={e => setPriceRange([Math.min(+e.target.value, priceRange[1]-priceStep), priceRange[1]])}
+          style={{ width:'100%', accentColor:'#e8001d', marginBottom:6 }}/>
+        <input type="range" min={0} max={maxPrice} step={priceStep} value={priceRange[1]}
+          onChange={e => setPriceRange([priceRange[0], Math.max(+e.target.value, priceRange[0]+priceStep)])}
+          style={{ width:'100%', accentColor:'#e8001d' }}/>
+      </div>
+
+      <div style={secStyles.filterGroup}>
+        <div style={secStyles.filterLabel}>{t('filter_min_rating')}</div>
+        {[4, 3, 2].map(r => (
+          <label key={r} style={secStyles.checkRow}>
+            <input type="radio" name="rating" checked={minRating === r}
+              onChange={() => setMinRating(minRating === r ? 0 : r)}
+              style={{ accentColor:'#e8001d' }}/>
+            <span style={{ color:'#e8001d', fontSize:12 }}>{'★'.repeat(r)}{'☆'.repeat(5-r)}</span>
+            <span style={{ color:'#a8a8a8', fontSize:11 }}>&amp; +</span>
+          </label>
+        ))}
+        {minRating > 0 && (
+          <button style={{ ...secStyles.filterBtn, color:'#9f9f9f', fontSize:11, padding:0, marginTop:8 }}
+            onClick={() => setMinRating(0)}>✕ {t('clear_filter')}</button>
+        )}
+      </div>
+
+      {availableBrands.length > 0 && (
+        <div style={secStyles.filterGroup}>
+          <div style={secStyles.filterLabel}>{t('filter_brand')}</div>
+          {availableBrands.map(b => (
+            <label key={b} style={secStyles.checkRow}>
+              <input type="checkbox" checked={brands.includes(b)} onChange={()=>toggleBrand(b)} style={{ accentColor:'#e8001d' }}/>
+              <span style={{ color:'#b8b8b8', fontSize:13 }}>{b}</span>
+            </label>
+          ))}
+        </div>
+      )}
+    </aside>
+  );
+};
+
 // ─── PRE-BUILT PCs ───────────────────────────────────────────────────────────
 const PrebuiltPage = () => {
-  const { setPage, addToCart, t, formatPrice } = React.useContext(window.AppContext);
+  const { setPage, addToCart, toggleFav, favorites, t, formatPrice } = React.useContext(window.AppContext);
   const tierColors = { Budget: '#888888', 'Mid-Range': '#909090', 'High-End': '#333333', Flagship: '#ffffff' };
+  const [search, setSearch] = React.useState('');
+  const [inStockOnly, setInStockOnly] = React.useState(false);
+  const [priceRange, setPriceRange] = React.useState([0, 5000]);
+  const [minRating, setMinRating] = React.useState(0);
+  const [brands, setBrands] = React.useState([]);
+  const [sortBy, setSortBy] = React.useState('featured');
+
+  const filtered = React.useMemo(() => {
+    let prods = window.PREBUILTS || [];
+    if (search) prods = prods.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.brand?.toLowerCase().includes(search.toLowerCase()));
+    if (inStockOnly) prods = prods.filter(p => p.stock !== 'out_of_stock');
+    if (brands.length) prods = prods.filter(p => brands.includes(p.brand));
+    prods = prods.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+    if (minRating > 0) prods = prods.filter(p => (p.rating || 0) >= minRating);
+    if (sortBy === 'price_asc') prods = [...prods].sort((a,b) => a.price - b.price);
+    else if (sortBy === 'price_desc') prods = [...prods].sort((a,b) => b.price - a.price);
+    else if (sortBy === 'rating') prods = [...prods].sort((a,b) => (b.rating||0) - (a.rating||0));
+    else if (sortBy === 'reviews') prods = [...prods].sort((a,b) => (b.reviews||0) - (a.reviews||0));
+    return prods;
+  }, [search, inStockOnly, priceRange, minRating, brands, sortBy]);
+
+  const availableBrands = React.useMemo(() => [...new Set((window.PREBUILTS||[]).map(p => p.brand).filter(Boolean))].sort(), []);
+
 
   return (
     <div style={secStyles.page}>
-      <div style={secStyles.pageHeader}>
-        <div style={secStyles.headerEye}>READY TO SHIP</div>
-        <h1 style={secStyles.pageTitle}>Pre-Built PCs</h1>
-        <p style={secStyles.pageDesc}>Professionally assembled, tested, and ready to go.</p>
+      {/* Prebuilt Banner */}
+      <div style={secStyles.heroBanner} className="rsp-banner">
+        <video autoPlay loop muted playsInline style={secStyles.heroBannerImg}>
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
+        <div style={secStyles.heroBannerOverlay} />
+        <div style={secStyles.heroBannerContent} className="rsp-banner-content">
+          <div style={secStyles.headerEye} className="rsp-banner-eye">{t('prebuilt_banner_eye')}</div>
+          <h1 style={secStyles.pageTitle} className="rsp-banner-title">{t('prebuilt_title')}</h1>
+          <p style={secStyles.pageDesc}>{t('prebuilt_banner_desc')}</p>
+        </div>
       </div>
 
-      <div style={secStyles.pbGrid} className="rsp-pb-grid">
-        {window.PREBUILTS.map(pc => {
+      <div style={secStyles.layout} className="rsp-catalog">
+        <SharedSidebar inStockOnly={inStockOnly} setInStockOnly={setInStockOnly} priceRange={priceRange} setPriceRange={setPriceRange} minRating={minRating} setMinRating={setMinRating} brands={brands} setBrands={setBrands} availableBrands={availableBrands} maxPrice={5000} priceStep={100} />
+        <main style={secStyles.main}>
+          <div style={secStyles.toolbar}>
+            <input placeholder={t("search_in_results") || "Rechercher..."} value={search} onChange={e=>setSearch(e.target.value)} style={secStyles.searchInput} />
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginLeft:'auto' }}>
+              <span style={{ color:'#9f9f9f', fontSize:13 }}>{t('products_count', filtered.length) || `${filtered.length} produits`}</span>
+              <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={secStyles.sortSelect}>
+                {[["featured",t("sort_featured")||"En vedette"],["price_asc",t("sort_price_asc")||"Prix croissant"],["price_desc",t("sort_price_desc")||"Prix décroissant"],["rating",t("sort_rating")||"Meilleures notes"],["reviews",t("sort_reviews")||"Plus commentés"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={secStyles.pbGrid} className="rsp-pb-grid">
+            {filtered.length === 0 ? (
+              <div style={secStyles.empty}>
+                <div style={{ fontSize:40, marginBottom:12, opacity:0.3 }}>🔍</div>
+                <div style={{ color:'#a8a8a8' }}>{t('no_products') || 'Aucun produit'}</div>
+              </div>
+            ) : filtered.map(pc => {
           const color = tierColors[pc.tier] || '#e8001d';
           return (
             <div key={pc.id} style={{ ...secStyles.pbCard, cursor:'pointer' }}
@@ -28,6 +142,10 @@ const PrebuiltPage = () => {
               onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.transform = 'translateY(-4px)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = '#3c3c3c'; e.currentTarget.style.transform = 'none'; }}>
               {pc.badge && <div style={{ ...secStyles.pbBadge, background: color + '20', color }}>{pc.badge}</div>}
+              <button style={{ position:'absolute', top:14, left:14, background:'rgba(14,14,14,0.85)', border:'none', cursor:'pointer', width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', zIndex:1, color: favorites.has(pc.id)?'#e8001d':'#9f9f9f' }}
+                onClick={e => { e.stopPropagation(); toggleFav(pc.id); }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={favorites.has(pc.id)?'#e8001d':'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
               {/* Visual */}
               <div style={{ ...secStyles.pbVisual, background: `linear-gradient(135deg, ${color}10, #242424)` }}>
                 <svg width="120" height="160" viewBox="0 0 120 160" fill="none">
@@ -85,7 +203,9 @@ const PrebuiltPage = () => {
               </div>
             </div>
           );
-        })}
+            })}
+          </div>
+        </main>
       </div>
     </div>
   );
@@ -93,7 +213,7 @@ const PrebuiltPage = () => {
 
 // ─── PRE-BUILT DETAIL PAGE ──────────────────────────────────────────────────
 const PrebuiltDetailPage = ({ product: pc }) => {
-  const { setPage, addToCart, t, formatPrice } = React.useContext(window.AppContext);
+  const { setPage, addToCart, toggleFav, favorites, t, formatPrice } = React.useContext(window.AppContext);
   const [qty, setQty] = React.useState(1);
   const tierColors = { Budget: '#888888', 'Mid-Range': '#909090', 'High-End': '#333333', Flagship: '#ffffff' };
   const color = tierColors[pc.tier] || '#e8001d';
@@ -111,7 +231,7 @@ const PrebuiltDetailPage = ({ product: pc }) => {
           onMouseEnter={e=>{e.currentTarget.style.borderColor='#e8001d';e.currentTarget.style.color='#ffffff';}}
           onMouseLeave={e=>{e.currentTarget.style.borderColor='#3c3c3c';e.currentTarget.style.color='#9f9f9f';}}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          Back
+          {t('back')}
         </button>
         <h2 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:20, color:'#ffffff', margin:0 }}>{pc.name}</h2>
       </div>
@@ -188,45 +308,390 @@ const PrebuiltDetailPage = ({ product: pc }) => {
               onClick={() => setQty(q => q + 1)}>+</button>
           </div>
 
-          {/* Add to Cart */}
-          <button style={{ width:'100%', padding:'14px', background:'#e8001d', color:'#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer', transition:'background 0.2s', marginBottom:12 }}
-            onClick={() => { for (let i = 0; i < qty; i++) addToCart({ ...pc, category: 'prebuilt' }); }}
-            onMouseEnter={e => e.currentTarget.style.background = '#2a2a2a'}
-            onMouseLeave={e => e.currentTarget.style.background = '#e8001d'}>
-            {t('prebuilt_add_cart')} — {formatPrice(pc.price * qty)}
-          </button>
+          {/* Add to Cart + Fav */}
+          <div style={{ display:'flex', gap:10, marginBottom:12 }}>
+            <button style={{ flex:1, padding:'14px', background:'#e8001d', color:'#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer', transition:'background 0.2s' }}
+              onClick={() => { for (let i = 0; i < qty; i++) addToCart({ ...pc, category: 'prebuilt' }); }}
+              onMouseEnter={e => e.currentTarget.style.background = '#a80015'}
+              onMouseLeave={e => e.currentTarget.style.background = '#e8001d'}>
+              {t('prebuilt_add_cart')} — {formatPrice(pc.price * qty)}
+            </button>
+            <button style={{ width:50, height:50, border:`1px solid ${favorites.has(pc.id)?'#e8001d':'#3c3c3c'}`, background:'transparent', borderRadius:8, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color: favorites.has(pc.id)?'#e8001d':'#9f9f9f', flexShrink:0, transition:'all 0.2s' }}
+              onClick={() => toggleFav(pc.id)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={favorites.has(pc.id)?'#e8001d':'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Components / Specs table */}
-      {componentEntries.length > 0 && (
-        <div style={{ borderTop:'1px solid #3c3c3c', paddingTop:48, marginBottom:48 }}>
-          <h2 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#ffffff', marginBottom:24 }}>Components Included</h2>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, border:'1px solid #3c3c3c', borderRadius:10, overflow:'hidden' }}>
-            {componentEntries.map(([key, val], i) => (
-              <div key={key} style={{ display:'grid', gridTemplateColumns:'1fr 1fr', borderBottom: i < componentEntries.length - 1 ? '1px solid #242424' : 'none' }}>
-                <div style={{ padding:'12px 20px', color:'#9f9f9f', fontSize:13, background:'#212121', fontFamily:"'DM Mono',monospace", textTransform:'capitalize' }}>{key.replace(/_/g, ' ')}</div>
-                <div style={{ padding:'12px 20px', color:'#ffffff', fontSize:13, background:'#242424', fontFamily:"'DM Mono',monospace" }}>{Array.isArray(val) ? val.join(', ') : String(val)}</div>
-              </div>
-            ))}
+      {/* Technical Specifications */}
+      {(() => {
+        const SPEC_KEYS = ['cpu','gpu','ram','storage','psu','case','cooling'];
+        const specRows = SPEC_KEYS.map(k => ({ key: k, label: t(`spec_${k}`), val: pc[k] || (pc.specs && pc.specs[k]) })).filter(r => r.val);
+        if (!specRows.length) return null;
+        return (
+          <div style={{ borderTop:'1px solid #3c3c3c', paddingTop:48, marginBottom:48 }}>
+            <h2 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#ffffff', marginBottom:24 }}>{t('technical_specs')}</h2>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, border:'1px solid #3c3c3c', borderRadius:10, overflow:'hidden' }}>
+              {specRows.map((row, i) => (
+                <div key={row.key} style={{ display:'grid', gridTemplateColumns:'1fr 1fr', borderBottom: i < specRows.length - 1 ? '1px solid #242424' : 'none' }}>
+                  <div style={{ padding:'12px 20px', color:'#9f9f9f', fontSize:13, background:'#212121', fontFamily:"'DM Mono',monospace" }}>{row.label}</div>
+                  <div style={{ padding:'12px 20px', color:'#ffffff', fontSize:13, background:'#242424', fontFamily:"'DM Mono',monospace" }}>{String(row.val)}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+    </div>
+  );
+};
 
-      {/* Specs if any */}
-      {pc.specs && Object.keys(pc.specs).length > 0 && (
-        <div style={{ borderTop:'1px solid #3c3c3c', paddingTop:48, marginBottom:48 }}>
-          <h2 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#ffffff', marginBottom:24 }}>Technical Specifications</h2>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, border:'1px solid #3c3c3c', borderRadius:10, overflow:'hidden' }}>
-            {Object.entries(pc.specs).map(([key, val], i) => (
-              <div key={key} style={{ display:'grid', gridTemplateColumns:'1fr 1fr', borderBottom:'1px solid #242424' }}>
-                <div style={{ padding:'12px 20px', color:'#9f9f9f', fontSize:13, background:'#212121', fontFamily:"'DM Mono',monospace" }}>{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</div>
-                <div style={{ padding:'12px 20px', color:'#ffffff', fontSize:13, background:'#242424', fontFamily:"'DM Mono',monospace" }}>{Array.isArray(val) ? val.join(', ') : String(val)}</div>
+// ─── ONLY ONE PC PAGE ────────────────────────────────────────────────────────
+const OnlyOnePcPage = () => {
+  const { setPage, addToCart, toggleFav, favorites, t, formatPrice } = React.useContext(window.AppContext);
+  const tierColors = { Budget: '#888888', 'Mid-Range': '#909090', 'High-End': '#333333', Flagship: '#ffffff' };
+  const [search, setSearch] = React.useState('');
+  const [inStockOnly, setInStockOnly] = React.useState(false);
+  const [priceRange, setPriceRange] = React.useState([0, 15000]);
+  const [minRating, setMinRating] = React.useState(0);
+  const [brands, setBrands] = React.useState([]);
+  const [sortBy, setSortBy] = React.useState('featured');
+
+  const filtered = React.useMemo(() => {
+    let prods = window.ONLYONEPCS || [];
+    if (search) prods = prods.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.brand?.toLowerCase().includes(search.toLowerCase()));
+    if (inStockOnly) prods = prods.filter(p => p.stock !== 'out_of_stock');
+    if (brands.length) prods = prods.filter(p => brands.includes(p.brand));
+    prods = prods.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+    if (minRating > 0) prods = prods.filter(p => (p.rating || 0) >= minRating);
+    if (sortBy === 'price_asc') prods = [...prods].sort((a,b) => a.price - b.price);
+    else if (sortBy === 'price_desc') prods = [...prods].sort((a,b) => b.price - a.price);
+    else if (sortBy === 'rating') prods = [...prods].sort((a,b) => (b.rating||0) - (a.rating||0));
+    else if (sortBy === 'reviews') prods = [...prods].sort((a,b) => (b.reviews||0) - (a.reviews||0));
+    return prods;
+  }, [search, inStockOnly, priceRange, minRating, brands, sortBy]);
+
+  const availableBrands = React.useMemo(() => [...new Set((window.ONLYONEPCS||[]).map(p => p.brand).filter(Boolean))].sort(), []);
+
+  return (
+    <div style={secStyles.page}>
+      <div style={secStyles.heroBanner} className="rsp-banner">
+        <video autoPlay loop muted playsInline style={secStyles.heroBannerImg}>
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
+        <div style={secStyles.heroBannerOverlay} />
+        <div style={secStyles.heroBannerContent} className="rsp-banner-content">
+          <div style={secStyles.headerEye} className="rsp-banner-eye">UNIQUE BUILDS</div>
+          <h1 style={secStyles.pageTitle} className="rsp-banner-title">{t('nav_onlyonepc')}</h1>
+          <p style={secStyles.pageDesc}>Des créations uniques et des configurations sur mesure.</p>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, borderBottom: '1px solid #2a2a2a', marginBottom: 24 }}>
+        <button onClick={() => setPage('onlyonepc')}
+          style={{ padding: '16px 24px', background: 'transparent', border: 'none', borderBottom: '2px solid #e8001d', color: '#ffffff', fontFamily: "'Space Grotesk',sans-serif", fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+          Configurations Uniques
+        </button>
+        <button onClick={() => setPage('onlyone_builder')}
+          style={{ padding: '16px 24px', background: 'transparent', border: 'none', borderBottom: '2px solid transparent', color: '#9f9f9f', fontFamily: "'Space Grotesk',sans-serif", fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'color 0.2s' }}
+          onMouseEnter={e=>e.currentTarget.style.color='#ffffff'} onMouseLeave={e=>e.currentTarget.style.color='#9f9f9f'}>
+          Configurateur Sur Mesure
+        </button>
+      </div>
+
+      <div style={secStyles.layout} className="rsp-catalog">
+        <SharedSidebar inStockOnly={inStockOnly} setInStockOnly={setInStockOnly} priceRange={priceRange} setPriceRange={setPriceRange} minRating={minRating} setMinRating={setMinRating} brands={brands} setBrands={setBrands} availableBrands={availableBrands} maxPrice={15000} priceStep={500} />
+        <main style={secStyles.main}>
+          <div style={secStyles.toolbar}>
+            <input placeholder={t("search_in_results") || "Rechercher..."} value={search} onChange={e=>setSearch(e.target.value)} style={secStyles.searchInput} />
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginLeft:'auto' }}>
+              <span style={{ color:'#9f9f9f', fontSize:13 }}>{t('products_count', filtered.length) || `${filtered.length} produits`}</span>
+              <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={secStyles.sortSelect}>
+                {[["featured",t("sort_featured")||"En vedette"],["price_asc",t("sort_price_asc")||"Prix croissant"],["price_desc",t("sort_price_desc")||"Prix décroissant"],["rating",t("sort_rating")||"Meilleures notes"],["reviews",t("sort_reviews")||"Plus commentés"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={secStyles.pbGrid} className="rsp-pb-grid">
+            {filtered.length === 0 ? (
+              <div style={secStyles.empty}>
+                <div style={{ fontSize:40, marginBottom:12, opacity:0.3 }}>🔍</div>
+                <div style={{ color:'#a8a8a8' }}>{t('no_products') || 'Aucun produit'}</div>
               </div>
+            ) : filtered.map(pc => {
+          const color = tierColors[pc.tier] || '#6c5ce7';
+          return (
+            <div key={pc.id} style={{ ...secStyles.pbCard, cursor:'pointer' }}
+              onClick={() => setPage('onlyonepc-detail', { product: pc })}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.transform = 'translateY(-4px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#3c3c3c'; e.currentTarget.style.transform = 'none'; }}>
+              {pc.badge && <div style={{ ...secStyles.pbBadge, background: color + '20', color }}>{pc.badge}</div>}
+              <button style={{ position:'absolute', top:14, left:14, background:'rgba(14,14,14,0.85)', border:'none', cursor:'pointer', width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', zIndex:1, color: favorites.has(pc.id)?'#e8001d':'#9f9f9f' }}
+                onClick={e => { e.stopPropagation(); toggleFav(pc.id); }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={favorites.has(pc.id)?'#e8001d':'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+              {/* Visual - Premium Aquarium Case */}
+              <div style={{ ...secStyles.pbVisual, background: `linear-gradient(135deg, ${color}15, #121212)` }}>
+                <svg width="140" height="140" viewBox="0 0 160 140" fill="none" style={{ filter: `drop-shadow(0 0 10px ${color}40)` }}>
+                  {/* Base Chassis - Dual Chamber Width */}
+                  <rect x="10" y="10" width="140" height="120" rx="4" fill="#181818" stroke={color} strokeWidth="1" />
+                  
+                  {/* Front Glass Panel (Left) */}
+                  <path d="M10 14 h40 v112 h-40 z" fill="#2a2a2a" opacity="0.3" stroke={color} strokeWidth="0.5" />
+                  
+                  {/* Side Glass Panel (Right) */}
+                  <path d="M50 14 h90 v112 h-90 z" fill="#202020" opacity="0.4" stroke={color} strokeWidth="0.5" />
+
+                  {/* Side Fans (Vertical Stack next to Motherboard) */}
+                  {[30, 65, 100].map((cy, i) => (
+                    <g key={`sf-${i}`}>
+                      <rect x="55" y={cy-15} width="20" height="30" rx="2" fill="#111" stroke={color} strokeWidth="0.5" />
+                      <circle cx="65" cy={cy} r="12" fill={color} opacity="0.4" />
+                      <circle cx="65" cy={cy} r="4" fill="#444" />
+                    </g>
+                  ))}
+
+                  {/* Bottom Fans */}
+                  {[85, 115, 145].map((cx, i) => (
+                    <g key={`bf-${i}`}>
+                      <rect x={cx-14} y="110" width="28" height="12" rx="2" fill="#111" stroke={color} strokeWidth="0.5" />
+                      <circle cx={cx} cy="116" r="5" fill={color} opacity="0.4" />
+                    </g>
+                  ))}
+
+                  {/* Top Fans (Radiator) */}
+                  <rect x="55" y="15" width="80" height="15" rx="2" fill="#151515" />
+                  {[70, 95, 120].map((cx, i) => (
+                    <g key={`tf-${i}`}>
+                      <circle cx={cx} cy="22.5" r="5" fill={color} opacity="0.6" />
+                    </g>
+                  ))}
+
+                  {/* Motherboard & CPU Block */}
+                  <rect x="85" y="35" width="50" height="60" rx="2" fill="#1a1a1a" stroke="#333" strokeWidth="1" />
+                  <rect x="100" y="45" width="20" height="20" rx="10" fill="none" stroke={color} strokeWidth="1.5" />
+                  <circle cx="110" cy="55" r="6" fill={color} opacity="0.8" />
+                  
+                  {/* AIO Tubes */}
+                  <path d="M110 45 Q 110 30, 95 30" fill="none" stroke="#444" strokeWidth="2" />
+                  <path d="M115 45 Q 120 30, 110 30" fill="none" stroke="#444" strokeWidth="2" />
+
+                  {/* RAM RGB */}
+                  <rect x="125" y="42" width="3" height="26" fill={color} opacity="0.7" />
+                  <rect x="130" y="42" width="3" height="26" fill={color} opacity="0.7" />
+
+                  {/* Massive GPU (Vertical Mount) */}
+                  <rect x="80" y="75" width="60" height="25" rx="2" fill="#222" stroke={color} strokeWidth="0.8" />
+                  <rect x="82" y="77" width="56" height="5" fill="#333" />
+                  <rect x="85" y="85" width="50" height="10" fill={color} opacity="0.2" />
+                  <text x="110" y="93" fill={color} fontSize="8" fontWeight="bold" textAnchor="middle" opacity="0.8">RTX</text>
+
+                  {/* Custom Cables (Lian Li Strimer style) */}
+                  <path d="M140 85 Q 145 60, 135 60" fill="none" stroke={color} strokeWidth="2" opacity="0.6" />
+                  <path d="M140 88 Q 148 65, 135 65" fill="none" stroke={color} strokeWidth="2" opacity="0.6" />
+                </svg>
+              </div>
+
+              <div style={secStyles.pbBody}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div>
+                    <div style={{ ...secStyles.pbTier, color }}>{pc.tier.toUpperCase()}</div>
+                    <div style={secStyles.pbName}>{pc.name}</div>
+                  </div>
+                  <div style={secStyles.pbPrice}>{formatPrice(pc.price)}</div>
+                </div>
+
+                <div style={secStyles.pbPerf}>
+                  <div style={secStyles.pbPerfItem}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                    <span style={{ color: '#b8b8b8', fontSize: 12 }}>{pc.gaming}</span>
+                  </div>
+                  <div style={secStyles.pbPerfItem}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></svg>
+                    <span style={{ color: '#b8b8b8', fontSize: 12 }}>{pc.workflow}</span>
+                  </div>
+                </div>
+
+                <div style={secStyles.pbRating}>
+                  <span style={{ color: '#e8001d' }}>{'★'.repeat(Math.round(pc.rating))}</span>
+                  <span style={{ color: '#9f9f9f', marginLeft: 6, fontSize: 12 }}>{pc.rating} ({pc.reviews} reviews)</span>
+                </div>
+
+                <button style={{ ...secStyles.pbAddBtn, background: color }}
+                  onClick={() => addToCart({ ...pc, category: 'onlyonepc', price: pc.price })}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+                  {t('prebuilt_add_cart')} — {formatPrice(pc.price)}
+                </button>
+              </div>
+            </div>
+          );
+            })}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+// ─── ONLY ONE PC DETAIL PAGE ────────────────────────────────────────────────
+const OnlyOnePcDetailPage = ({ product: pc }) => {
+  const { setPage, addToCart, toggleFav, favorites, t, formatPrice } = React.useContext(window.AppContext);
+  const tierColors = { Budget: '#888888', 'Mid-Range': '#909090', 'High-End': '#333333', Flagship: '#ffffff' };
+  const color = tierColors[pc.tier] || '#6c5ce7';
+
+  return (
+    <div style={{ paddingTop: 64, padding: '64px 80px' }} className="rsp-cart-pad">
+      {/* Back button + Name */}
+      <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:32 }}>
+        <button onClick={() => setPage('onlyonepc')}
+          style={{ background:'#242424', border:'1px solid #3c3c3c', borderRadius:8, color:'#9f9f9f', cursor:'pointer', padding:'8px 14px', display:'flex', alignItems:'center', gap:6, fontFamily:"'Space Grotesk',sans-serif", fontSize:13, transition:'all 0.15s' }}
+          onMouseEnter={e=>{e.currentTarget.style.borderColor='#e8001d';e.currentTarget.style.color='#ffffff';}}
+          onMouseLeave={e=>{e.currentTarget.style.borderColor='#3c3c3c';e.currentTarget.style.color='#9f9f9f';}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          {t('back')}
+        </button>
+        <h2 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:20, color:'#ffffff', margin:0 }}>{pc.name}</h2>
+      </div>
+
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:48, marginBottom:64 }}>
+        {/* Visual */}
+        <div style={{ background:`linear-gradient(135deg, ${color}10, #242424)`, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', minHeight:400, position:'relative' }}>
+          {pc.badge && <div style={{ position:'absolute', top:20, left:20, background: color + '20', color, fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:5, letterSpacing:'0.1em', zIndex:1 }}>{pc.badge}</div>}
+          <svg width="240" height="240" viewBox="0 0 160 140" fill="none" style={{ filter: `drop-shadow(0 0 20px ${color}50)` }}>
+            {/* Base Chassis - Dual Chamber Width */}
+            <rect x="10" y="10" width="140" height="120" rx="4" fill="#181818" stroke={color} strokeWidth="1.5" />
+            
+            {/* Front Glass Panel (Left) */}
+            <path d="M10 14 h40 v112 h-40 z" fill="#2a2a2a" opacity="0.3" stroke={color} strokeWidth="0.8" />
+            
+            {/* Side Glass Panel (Right) */}
+            <path d="M50 14 h90 v112 h-90 z" fill="#202020" opacity="0.4" stroke={color} strokeWidth="0.8" />
+
+            {/* Side Fans (Vertical Stack next to Motherboard) */}
+            {[30, 65, 100].map((cy, i) => (
+              <g key={`sf-${i}`}>
+                <rect x="55" y={cy-15} width="20" height="30" rx="2" fill="#111" stroke={color} strokeWidth="0.5" />
+                <circle cx="65" cy={cy} r="12" fill={color} opacity="0.4" />
+                <circle cx="65" cy={cy} r="4" fill="#444" />
+              </g>
             ))}
+
+            {/* Bottom Fans */}
+            {[85, 115, 145].map((cx, i) => (
+              <g key={`bf-${i}`}>
+                <rect x={cx-14} y="110" width="28" height="12" rx="2" fill="#111" stroke={color} strokeWidth="0.5" />
+                <circle cx={cx} cy="116" r="5" fill={color} opacity="0.4" />
+              </g>
+            ))}
+
+            {/* Top Fans (Radiator) */}
+            <rect x="55" y="15" width="80" height="15" rx="2" fill="#151515" />
+            {[70, 95, 120].map((cx, i) => (
+              <g key={`tf-${i}`}>
+                <circle cx={cx} cy="22.5" r="5" fill={color} opacity="0.6" />
+              </g>
+            ))}
+
+            {/* Motherboard & CPU Block */}
+            <rect x="85" y="35" width="50" height="60" rx="2" fill="#1a1a1a" stroke="#333" strokeWidth="1" />
+            <rect x="100" y="45" width="20" height="20" rx="10" fill="none" stroke={color} strokeWidth="1.5" />
+            <circle cx="110" cy="55" r="6" fill={color} opacity="0.8" />
+            
+            {/* AIO Tubes */}
+            <path d="M110 45 Q 110 30, 95 30" fill="none" stroke="#444" strokeWidth="2" />
+            <path d="M115 45 Q 120 30, 110 30" fill="none" stroke="#444" strokeWidth="2" />
+
+            {/* RAM RGB */}
+            <rect x="125" y="42" width="3" height="26" fill={color} opacity="0.7" />
+            <rect x="130" y="42" width="3" height="26" fill={color} opacity="0.7" />
+
+            {/* Massive GPU (Vertical Mount) */}
+            <rect x="80" y="75" width="60" height="25" rx="2" fill="#222" stroke={color} strokeWidth="0.8" />
+            <rect x="82" y="77" width="56" height="5" fill="#333" />
+            <rect x="85" y="85" width="50" height="10" fill={color} opacity="0.2" />
+            <text x="110" y="93" fill={color} fontSize="8" fontWeight="bold" textAnchor="middle" opacity="0.8">RTX</text>
+
+            {/* Custom Cables (Lian Li Strimer style) */}
+            <path d="M140 85 Q 145 60, 135 60" fill="none" stroke={color} strokeWidth="2" opacity="0.6" />
+            <path d="M140 88 Q 148 65, 135 65" fill="none" stroke={color} strokeWidth="2" opacity="0.6" />
+          </svg>
+        </div>
+
+        {/* Info */}
+        <div style={{ display:'flex', flexDirection:'column' }}>
+          <div style={{ display:'inline-block', fontSize:10, fontWeight:700, padding:'3px 10px', borderRadius:5, letterSpacing:'0.1em', marginBottom:12, width:'fit-content', background: color + '20', color }}>
+            {pc.tier.toUpperCase()} ONLY ONE PC
+          </div>
+          <h1 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:28, color:'#ffffff', margin:'0 0 12px 0', lineHeight:1.3 }}>{pc.name}</h1>
+
+          <div style={{ display:'flex', alignItems:'center', marginBottom:20 }}>
+            <span style={{ color:'#e8001d' }}>{'★'.repeat(Math.round(pc.rating))}</span>
+            <span style={{ color:'#ffffff', fontWeight:600, marginLeft:6 }}>{pc.rating}</span>
+            <span style={{ color:'#9f9f9f', marginLeft:4 }}>({pc.reviews} reviews)</span>
+          </div>
+
+          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:40, color:'#ffffff', marginBottom:16 }}>{formatPrice(pc.price)}</div>
+
+          {/* Performance indicators */}
+          <div style={{ display:'flex', gap:20, marginBottom:24 }}>
+            <div style={{ background:'#242424', border:'1px solid #3c3c3c', borderRadius:10, padding:'14px 20px', flex:1 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                <span style={{ color:'#9f9f9f', fontSize:11, fontWeight:600, letterSpacing:'0.1em' }}>GAMING</span>
+              </div>
+              <div style={{ color:'#ffffff', fontSize:14, fontWeight:600 }}>{pc.gaming}</div>
+            </div>
+            <div style={{ background:'#242424', border:'1px solid #3c3c3c', borderRadius:10, padding:'14px 20px', flex:1 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></svg>
+                <span style={{ color:'#9f9f9f', fontSize:11, fontWeight:600, letterSpacing:'0.1em' }}>WORKFLOW</span>
+              </div>
+              <div style={{ color:'#ffffff', fontSize:14, fontWeight:600 }}>{pc.workflow}</div>
+            </div>
+          </div>
+
+          {/* Stock */}
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:24 }}>
+            <div style={{ width:8, height:8, borderRadius:'50%', background:'#909090' }}/>
+            <span style={{ color:'#909090', fontSize:14 }}>Unique Build — Ready to Ship</span>
+          </div>
+
+          {/* Add to Cart + Fav */}
+          <div style={{ display:'flex', gap:10, marginBottom:12 }}>
+            <button style={{ flex:1, padding:'14px', background:'#e8001d', color:'#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer', transition:'background 0.2s' }}
+              onClick={() => { addToCart({ ...pc, category: 'onlyonepc' }); }}
+              onMouseEnter={e => e.currentTarget.style.background = '#a80015'}
+              onMouseLeave={e => e.currentTarget.style.background = '#e8001d'}>
+              {t('prebuilt_add_cart')} — {formatPrice(pc.price)}
+            </button>
+            <button style={{ width:50, height:50, border:`1px solid ${favorites.has(pc.id)?'#e8001d':'#3c3c3c'}`, background:'transparent', borderRadius:8, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color: favorites.has(pc.id)?'#e8001d':'#9f9f9f', flexShrink:0, transition:'all 0.2s' }}
+              onClick={() => toggleFav(pc.id)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={favorites.has(pc.id)?'#e8001d':'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Technical Specifications */}
+      {(() => {
+        const SPEC_KEYS = ['cpu','gpu','ram','storage','psu','case','cooling'];
+        const specRows = SPEC_KEYS.map(k => ({ key: k, label: t(`spec_${k}`), val: pc[k] || (pc.specs && pc.specs[k]) })).filter(r => r.val);
+        if (!specRows.length) return null;
+        return (
+          <div style={{ borderTop:'1px solid #3c3c3c', paddingTop:48, marginBottom:48 }}>
+            <h2 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#ffffff', marginBottom:24 }}>{t('technical_specs')}</h2>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, border:'1px solid #3c3c3c', borderRadius:10, overflow:'hidden' }}>
+              {specRows.map((row, i) => (
+                <div key={row.key} style={{ display:'grid', gridTemplateColumns:'1fr 1fr', borderBottom: i < specRows.length - 1 ? '1px solid #242424' : 'none' }}>
+                  <div style={{ padding:'12px 20px', color:'#9f9f9f', fontSize:13, background:'#212121', fontFamily:"'DM Mono',monospace" }}>{row.label}</div>
+                  <div style={{ padding:'12px 20px', color:'#ffffff', fontSize:13, background:'#242424', fontFamily:"'DM Mono',monospace" }}>{String(row.val)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
@@ -285,9 +750,31 @@ const PeripheralsPage = () => {
   const PERI_GROUPS = getPeriGroups(t);
   const [activeGroup, setActiveGroup] = React.useState('input');
   const [activeTab, setActiveTab] = React.useState('mouse');
+  const [search, setSearch] = React.useState('');
+  const [inStockOnly, setInStockOnly] = React.useState(false);
+  const [priceRange, setPriceRange] = React.useState([0, 2000]);
+  const [minRating, setMinRating] = React.useState(0);
+  const [brands, setBrands] = React.useState([]);
+  const [sortBy, setSortBy] = React.useState('featured');
 
   const currentGroup = PERI_GROUPS.find(g => g.id === activeGroup);
-  const products = window.PERIPHERALS_DATA[activeTab] || [];
+  
+  const filtered = React.useMemo(() => {
+    let prods = window.PERIPHERALS_DATA[activeTab] || [];
+    if (search) prods = prods.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.brand?.toLowerCase().includes(search.toLowerCase()));
+    if (inStockOnly) prods = prods.filter(p => p.stock !== 'out_of_stock');
+    if (brands.length) prods = prods.filter(p => brands.includes(p.brand));
+    prods = prods.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+    if (minRating > 0) prods = prods.filter(p => (p.rating || 0) >= minRating);
+    if (sortBy === 'price_asc') prods = [...prods].sort((a,b) => a.price - b.price);
+    else if (sortBy === 'price_desc') prods = [...prods].sort((a,b) => b.price - a.price);
+    else if (sortBy === 'rating') prods = [...prods].sort((a,b) => (b.rating||0) - (a.rating||0));
+    else if (sortBy === 'reviews') prods = [...prods].sort((a,b) => (b.reviews||0) - (a.reviews||0));
+    return prods;
+  }, [activeTab, search, inStockOnly, priceRange, minRating, brands, sortBy]);
+
+  const availableBrands = React.useMemo(() => [...new Set((window.PERIPHERALS_DATA[activeTab]||[]).map(p => p.brand).filter(Boolean))].sort(), [activeTab]);
+
 
   const handleGroupSwitch = (gid) => {
     setActiveGroup(gid);
@@ -297,11 +784,17 @@ const PeripheralsPage = () => {
 
   return (
     <div style={secStyles.page}>
-      {/* Header */}
-      <div style={secStyles.pageHeader}>
-        <div style={secStyles.headerEye}>COMPLÉTEZ VOTRE SETUP</div>
-        <h1 style={secStyles.pageTitle}>Périphériques</h1>
-        <p style={secStyles.pageDesc}>Entrée, sortie, mixte — tout ce qui se connecte à votre PC.</p>
+      {/* Peripherals Banner */}
+      <div style={secStyles.heroBanner}>
+        <video autoPlay loop muted playsInline style={secStyles.heroBannerImg}>
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
+        <div style={secStyles.heroBannerOverlay} />
+        <div style={secStyles.heroBannerContent}>
+          <div style={secStyles.headerEye}>COMPLÉTEZ VOTRE SETUP</div>
+          <h1 style={{ ...secStyles.pageTitle, margin:'0 0 8px' }}>Périphériques</h1>
+          <p style={{ ...secStyles.pageDesc, margin:0 }}>Entrée, sortie, mixte — tout ce qui se connecte à votre PC.</p>
+        </div>
       </div>
 
       {/* Group tabs */}
@@ -319,24 +812,37 @@ const PeripheralsPage = () => {
         ))}
       </div>
 
-      <div style={{ padding: '0 48px' }}>
-        {/* Sub-tabs */}
-        <div style={periStyles.subTabs}>
-          {currentGroup.tabs.map(t => (
-            <button key={t.key}
-              style={{ ...periStyles.subTab, ...(activeTab === t.key ? periStyles.subTabActive : {}) }}
-              onClick={() => setActiveTab(t.key)}>
-              {t.label}
-              <span style={{ ...periStyles.subTabCount, color: activeTab === t.key ? '#1a1a1a' : '#9f9f9f' }}>
-                {(window.PERIPHERALS_DATA[t.key] || []).length}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Product grid */}
-        <div style={periStyles.grid} className="rsp-grid-3">
-          {products.map(p => (
+      <div style={secStyles.layout} className="rsp-catalog">
+        <SharedSidebar inStockOnly={inStockOnly} setInStockOnly={setInStockOnly} priceRange={priceRange} setPriceRange={setPriceRange} minRating={minRating} setMinRating={setMinRating} brands={brands} setBrands={setBrands} availableBrands={availableBrands} maxPrice={2000} priceStep={50} />
+        <main style={secStyles.main}>
+          <div style={secStyles.toolbar}>
+            <input placeholder={t("search_in_results") || "Rechercher..."} value={search} onChange={e=>setSearch(e.target.value)} style={secStyles.searchInput} />
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginLeft:'auto' }}>
+              <span style={{ color:'#9f9f9f', fontSize:13 }}>{t('products_count', filtered.length) || `${filtered.length} produits`}</span>
+              <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={secStyles.sortSelect}>
+                {[["featured",t("sort_featured")||"En vedette"],["price_asc",t("sort_price_asc")||"Prix croissant"],["price_desc",t("sort_price_desc")||"Prix décroissant"],["rating",t("sort_rating")||"Meilleures notes"],["reviews",t("sort_reviews")||"Plus commentés"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={periStyles.subTabs}>
+            {currentGroup.tabs.map(t => (
+              <button key={t.key}
+                style={{ ...periStyles.subTab, ...(activeTab === t.key ? periStyles.subTabActive : {}) }}
+                onClick={() => { setActiveTab(t.key); setBrands([]); }}>
+                {t.label}
+                <span style={{ ...periStyles.subTabCount, color: activeTab === t.key ? '#1a1a1a' : '#9f9f9f' }}>
+                  {(window.PERIPHERALS_DATA[t.key] || []).length}
+                </span>
+              </button>
+            ))}
+          </div>
+          <div style={periStyles.grid} className="rsp-grid-3">
+            {filtered.length === 0 ? (
+              <div style={secStyles.empty}>
+                <div style={{ fontSize:40, marginBottom:12, opacity:0.3 }}>🔍</div>
+                <div style={{ color:'#a8a8a8' }}>{t('no_products') || 'Aucun produit'}</div>
+              </div>
+            ) : filtered.map(p => (
             <PeriProductCard key={p.id} product={p}
               visual={PERI_VISUALS[p.category]}
               onAdd={() => addToCart(p)}
@@ -344,7 +850,8 @@ const PeripheralsPage = () => {
               onView={() => setPage('product', { product: p })}
               isFav={favorites.has(p.id)} />
           ))}
-        </div>
+          </div>
+        </main>
       </div>
     </div>
   );
@@ -361,7 +868,7 @@ const PeriProductCard = ({ product, visual, onAdd, onFav, onView, isFav }) => {
     : product.stock === 'out_of_stock' ? t('badge_out_of_stock') : null;
 
   return (
-    <div style={{ background:'#242424', border:`1px solid ${hov ? color : '#3c3c3c'}`, borderRadius:16, overflow:'hidden', display:'flex', flexDirection:'column', transition:'all 0.25s', position:'relative' }}
+    <div style={{ background:'#242424', border:`1px solid ${hov ? color : '#3c3c3c'}`, borderRadius:16, overflow:'hidden', display:'flex', flexDirection:'column', transition:'all 0.25s', position:'relative', transform: hov ? 'translateY(-4px)' : 'none' }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
 
       <button style={{ position:'absolute', top:14, left:14, background:'rgba(14,14,14,0.85)', border:'none', cursor:'pointer', width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', zIndex:1, color: isFav?'#e8001d':'#9f9f9f' }}
@@ -377,17 +884,17 @@ const PeriProductCard = ({ product, visual, onAdd, onFav, onView, isFav }) => {
         </div>
       )}
 
-      <div style={{ height:190, background:`linear-gradient(135deg, ${color}14, #212121)`, overflow:'hidden', cursor:'pointer' }} onClick={onView}>
+      <div style={{ height:200, background:`linear-gradient(135deg, ${color}14, #212121)`, overflow:'hidden', cursor:'pointer' }} onClick={onView}>
         <ImageCarousel images={product.images} category={product.category} />
       </div>
 
-      <div style={{ padding:'18px', flex:1, display:'flex', flexDirection:'column' }} onClick={onView}>
+      <div style={{ padding:'20px', flex:1, display:'flex', flexDirection:'column' }} onClick={onView}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
           <div style={{ flex:1, minWidth:0, paddingRight:10 }}>
             <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label.toUpperCase()}</div>
-            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:15, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
+            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:20, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
           </div>
-          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:19, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
+          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
         </div>
 
 
@@ -404,7 +911,7 @@ const PeriProductCard = ({ product, visual, onAdd, onFav, onView, isFav }) => {
           </div>
         </div>
 
-        <button style={{ width:'100%', padding:'11px', background:color, color:'#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor:'pointer', transition:'opacity 0.2s', marginTop:'auto' }}
+        <button style={{ width:'100%', padding:'12px', background:color, color:'#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor:'pointer', transition:'opacity 0.2s', marginTop:'auto' }}
           onClick={e => { e.stopPropagation(); onAdd(); }}
           onMouseEnter={e => e.currentTarget.style.opacity='0.8'}
           onMouseLeave={e => e.currentTarget.style.opacity='1'}>
@@ -516,10 +1023,14 @@ const CartPage = () => {
 
 // ─── USER SPACE ───────────────────────────────────────────────────────────────
 const ODOO_STATUS_MAP = { draft:'processing', sent:'processing', sale:'processing', done:'delivered', cancel:'cancelled' };
-const STATUS_COLORS = { delivered:'#55efc4', shipped:'#74b9ff', processing:'#fdcb6e', cancelled:'#cc4444' };
+const STATUS_COLORS = { delivered:'#55efc4', shipped:'#74b9ff', preparing:'#a29bfe', processing:'#fdcb6e', cancelled:'#cc4444' };
+const STATUS_LABELS = { processing:'Reçue', preparing:'En préparation', shipped:'Expédiée', delivered:'Livrée', cancelled:'Annulée' };
 
 const ORDER_TIMELINE_STEPS = ['Reçue', 'Préparation', 'Expédiée', 'Livrée'];
-const STATE_TO_STEP = { draft: 1, sent: 1, sale: 2, done: 4, cancel: 0 };
+const STATE_TO_STEP = {
+  draft: 1, sent: 1, sale: 1, done: 4, cancel: 0,
+  processing: 1, preparing: 2, shipped: 3, delivered: 4,
+};
 
 const OrderTimeline = ({ state }) => {
   const doneSteps = STATE_TO_STEP[state] ?? 1;
@@ -596,7 +1107,7 @@ const LoginTile = ({ label, accentColor, imgSrc }) => (
 const AuthForm = ({ onSuccess }) => {
   const { t } = React.useContext(window.AppContext);
   const [mode, setMode] = React.useState('login');
-  const [form, setForm] = React.useState({ name:'', email:'', password:'' });
+  const [form, setForm] = React.useState({ name:'', email:'', password:'', phone:'', address:'' });
   const [error, setError] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -606,11 +1117,22 @@ const AuthForm = ({ onSuccess }) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError('Adresse email invalide'); return; }
     setError(''); setLoading(true);
     try {
-      const res = mode === 'login'
-        ? await window.PcApi.login(form.email, form.password)
-        : await window.PcApi.register(form.name, form.email, form.password);
-      if (res.uid) onSuccess({ authenticated:true, uid:res.uid, name:res.name, email:res.email });
-      else setError('Authentification échouée');
+      if (mode === 'login') {
+        const res = await window.PcApi.login(form.email, form.password);
+        if (res.uid) onSuccess({ authenticated:true, uid:res.uid, name:res.name, email:res.email, phone:res.phone||'', street:res.street||'' });
+        else setError(t('auth_error_default_login'));
+      } else {
+        // Registration: backend returns {created, uid, name, email} WITHOUT touching the session.
+        // We then call login separately so the admin session is never overwritten.
+        const reg = await window.PcApi.register(form.name, form.email, form.password, form.phone, form.address);
+        if (reg.created || reg.uid) {
+          const login = await window.PcApi.login(form.email, form.password);
+          if (login.uid) onSuccess({ authenticated:true, uid:login.uid, name:login.name, email:login.email, phone:login.phone||'', street:login.street||'' });
+          else setError('Inscription réussie — veuillez vous connecter.');
+        } else {
+          setError(t('auth_error_default_register'));
+        }
+      }
     } catch (e) {
       setError(e.message || (mode === 'login' ? t('auth_error_default_login') : t('auth_error_default_register')));
     } finally { setLoading(false); }
@@ -634,11 +1156,23 @@ const AuthForm = ({ onSuccess }) => {
       </p>
 
       {mode === 'register' && (
-        <div style={{ marginBottom:20 }}>
-          <label style={{ display:'block', color:'#b8b8b8', fontSize:11, fontWeight:700, letterSpacing:'0.13em', marginBottom:8 }}>NOM COMPLET</label>
-          <input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Jean Dupont" style={authInp}
-            onFocus={e=>e.target.style.borderColor='#e8001d'} onBlur={e=>e.target.style.borderColor='transparent'} />
-        </div>
+        <>
+          <div style={{ marginBottom:20 }}>
+            <label style={{ display:'block', color:'#b8b8b8', fontSize:11, fontWeight:700, letterSpacing:'0.13em', marginBottom:8 }}>NOM COMPLET</label>
+            <input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Jean Dupont" style={authInp}
+              onFocus={e=>e.target.style.borderColor='#e8001d'} onBlur={e=>e.target.style.borderColor='transparent'} />
+          </div>
+          <div style={{ marginBottom:20 }}>
+            <label style={{ display:'block', color:'#b8b8b8', fontSize:11, fontWeight:700, letterSpacing:'0.13em', marginBottom:8 }}>TÉLÉPHONE</label>
+            <input type="tel" value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder="+225 01 02 03 04" style={authInp}
+              onFocus={e=>e.target.style.borderColor='#e8001d'} onBlur={e=>e.target.style.borderColor='transparent'} />
+          </div>
+          <div style={{ marginBottom:20 }}>
+            <label style={{ display:'block', color:'#b8b8b8', fontSize:11, fontWeight:700, letterSpacing:'0.13em', marginBottom:8 }}>ADRESSE</label>
+            <input value={form.address} onChange={e=>set('address',e.target.value)} placeholder="123 Rue du Commerce, Abidjan" style={authInp}
+              onFocus={e=>e.target.style.borderColor='#e8001d'} onBlur={e=>e.target.style.borderColor='transparent'} />
+          </div>
+        </>
       )}
 
       <div style={{ marginBottom:20 }}>
@@ -752,12 +1286,13 @@ const ProfileTab = ({ currentUser, setCurrentUser }) => {
 };
 
 const UserPage = ({ initialTab }) => {
-  const { favorites, setPage, addToCart, toggleFav, currentUser, setCurrentUser, t, formatPrice } = React.useContext(window.AppContext);
+  const { favorites, setPage, addToCart, toggleFav, currentUser, setCurrentUser, t, formatPrice, catalogError } = React.useContext(window.AppContext);
   const [tab, setTab] = React.useState(initialTab || 'orders');
   const [orders, setOrders] = React.useState([]);
   const [ordersLoading, setOrdersLoading] = React.useState(false);
   const [shareMsg, setShareMsg] = React.useState(null);
-  const tabs = ['orders', 'favorites', 'profile', 'settings'];
+  const guestMode = !currentUser && !!catalogError;
+  const tabs = guestMode ? ['favorites', 'settings'] : ['orders', 'favorites', 'profile', 'settings'];
 
   // Load shared favorites from URL on mount
   React.useEffect(() => {
@@ -782,6 +1317,10 @@ const UserPage = ({ initialTab }) => {
 
   React.useEffect(() => { loadOrders(); }, [currentUser]);
 
+  React.useEffect(() => {
+    if (guestMode && !['favorites', 'settings'].includes(tab)) setTab('favorites');
+  }, [guestMode]);
+
   const handleLogout = async () => {
     try { await window.PcApi.logout(); } catch(_) {}
     setCurrentUser(null);
@@ -798,7 +1337,7 @@ const UserPage = ({ initialTab }) => {
     settings: t('settings_tab'),
   };
 
-  if (!currentUser) {
+  if (!currentUser && !catalogError) {
     return (
       <div style={{ position:'fixed', inset:0, zIndex:5, overflowY:'auto', display:'flex', alignItems:'flex-start', justifyContent:'center' }}>
         <StarBg />
@@ -817,22 +1356,32 @@ const UserPage = ({ initialTab }) => {
 
   return (
     <div style={secStyles.page}>
+      {guestMode && (
+        <div style={{ background:'#1c1400', borderBottom:'1px solid #4a3800', padding:'10px 80px', display:'flex', alignItems:'center', gap:10 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fdcb6e" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span style={{ color:'#fdcb6e', fontSize:13, fontFamily:"'Space Grotesk',sans-serif" }}>
+            Mode hors-ligne — Commandes et profil indisponibles. Connectez-vous une fois le serveur accessible.
+          </span>
+        </div>
+      )}
       <div style={secStyles.pageHeader}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:20 }}>
             <div style={secStyles.avatarLg}>{avatarInitial}</div>
             <div>
-              <div style={secStyles.headerEye}>{t('my_account').toUpperCase()}</div>
-              <h1 style={{ ...secStyles.pageTitle, margin:0 }}>{currentUser.name}</h1>
-              <div style={{ color:'#9f9f9f', fontSize:13, marginTop:2 }}>{currentUser.email}</div>
+              <div style={secStyles.headerEye}>{guestMode ? 'INVITÉ' : t('my_account').toUpperCase()}</div>
+              <h1 style={{ ...secStyles.pageTitle, margin:0 }}>{guestMode ? 'Mode hors-ligne' : currentUser.name}</h1>
+              {!guestMode && <div style={{ color:'#9f9f9f', fontSize:13, marginTop:2 }}>{currentUser.email}</div>}
             </div>
           </div>
-          <button style={{ background:'transparent', border:'1px solid #3c3c3c', borderRadius:8, color:'#9f9f9f', cursor:'pointer', padding:'9px 20px', fontFamily:"'Space Grotesk',sans-serif", fontSize:13, transition:'all 0.15s' }}
-            onClick={handleLogout}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor='#cc4444';e.currentTarget.style.color='#cc4444';}}
-            onMouseLeave={e=>{e.currentTarget.style.borderColor='#3c3c3c';e.currentTarget.style.color='#9f9f9f';}}>
-            {t('logout')}
-          </button>
+          {!guestMode && (
+            <button style={{ background:'transparent', border:'1px solid #3c3c3c', borderRadius:8, color:'#9f9f9f', cursor:'pointer', padding:'9px 20px', fontFamily:"'Space Grotesk',sans-serif", fontSize:13, transition:'all 0.15s' }}
+              onClick={handleLogout}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor='#cc4444';e.currentTarget.style.color='#cc4444';}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor='#3c3c3c';e.currentTarget.style.color='#9f9f9f';}}>
+              {t('logout')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -848,7 +1397,7 @@ const UserPage = ({ initialTab }) => {
 
       <div style={{ padding:'40px 80px' }}>
         {/* ORDERS */}
-        {tab === 'orders' && (
+        {tab === 'orders' && !guestMode && (
           <div>
             <h2 style={secStyles.tabTitle}>{t('my_orders')}</h2>
             {ordersLoading ? (
@@ -862,8 +1411,9 @@ const UserPage = ({ initialTab }) => {
                 <button style={secStyles.addBtn} onClick={() => setPage('catalog')}>{t('browse_catalog')} →</button>
               </div>
             ) : orders.map(order => {
-              const status = ODOO_STATUS_MAP[order.state] || 'processing';
+              const status = order.pc_delivery_status || ODOO_STATUS_MAP[order.state] || 'processing';
               const statusColor = STATUS_COLORS[status] || '#fdcb6e';
+              const statusLabel = STATUS_LABELS[status] || status;
               return (
                 <div key={order.id} style={secStyles.orderCard}>
                   <div style={secStyles.orderHeader}>
@@ -873,15 +1423,15 @@ const UserPage = ({ initialTab }) => {
                     </div>
                     <div style={{ display:'flex', alignItems:'center', gap:20 }}>
                       <div style={{ ...secStyles.statusBadge, background: statusColor+'20', color: statusColor }}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                        {statusLabel}
                       </div>
                       <div style={{ color:'#e8001d', fontWeight:700, fontSize:18, fontFamily:"'Space Grotesk',sans-serif" }}>
                         {formatPrice(Number(order.total||0))}
                       </div>
                     </div>
                   </div>
-                  {/* Tracking timeline */}
-                  <OrderTimeline state={order.state} />
+                  {/* Tracking timeline uses pc_delivery_status when available */}
+                  <OrderTimeline state={order.pc_delivery_status || order.state} />
                   <div style={secStyles.orderItems}>
                     {(order.items||[]).map((item, i) => (
                       <div key={i} style={secStyles.orderItemRow}>
@@ -945,7 +1495,7 @@ const UserPage = ({ initialTab }) => {
         )}
 
         {/* PROFILE */}
-        {tab === 'profile' && (
+        {tab === 'profile' && !guestMode && (
           <ProfileTab currentUser={currentUser} setCurrentUser={setCurrentUser} />
         )}
 
@@ -962,9 +1512,11 @@ const UserPage = ({ initialTab }) => {
                 <Toggle />
               </div>
             ))}
-            <div style={secStyles.dangerZone}>
-              <button style={secStyles.deleteBtn} onClick={handleLogout}>{t('logout')}</button>
-            </div>
+            {!guestMode && (
+              <div style={secStyles.dangerZone}>
+                <button style={secStyles.deleteBtn} onClick={handleLogout}>{t('logout')}</button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -983,14 +1535,14 @@ const Toggle = () => {
 };
 
 const periStyles = {
-  groupBar: { display: 'flex', gap: 12, padding: '24px 48px', borderBottom: '1px solid #333333' },
+  groupBar: { display: 'flex', gap: 12, padding: '24px 48px', borderBottom: '1px solid #333333', overflowX:'auto', whiteSpace:'nowrap' },
   groupBtn: {
     display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px',
     background: '#242424', border: '1px solid #3c3c3c', borderRadius: 10,
-    cursor: 'pointer', transition: 'all 0.15s', flex: 1, textAlign: 'left',
+    cursor: 'pointer', transition: 'all 0.15s', flexShrink:0, textAlign: 'left',
   },
   groupBtnActive: { background: '#e8001d', borderColor: '#e8001d' },
-  subTabs: { display: 'flex', gap: 4, padding: '20px 0 0', marginBottom: 24 },
+  subTabs: { display: 'flex', gap: 4, padding: '20px 0 0', marginBottom: 24, overflowX:'auto', whiteSpace:'nowrap' },
   subTab: {
     display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px',
     background: 'transparent', border: '1px solid #3c3c3c', borderRadius: 8,
@@ -999,7 +1551,7 @@ const periStyles = {
   },
   subTabActive: { background: '#333333', borderColor: '#e8001d', color: '#ffffff' },
   subTabCount: { background: '#333333', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10, minWidth: 18, textAlign: 'center' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, paddingBottom: 60 },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20, paddingBottom: 60 },
   card: { background: '#242424', border: '1px solid #333333', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'all 0.2s' },
   cardHov: { borderColor: '#444444', transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(0,0,0,0.1)' },
   cardImg: { height: 150, background: '#212121', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: 'pointer' },
@@ -1018,6 +1570,27 @@ const periStyles = {
 
 const secStyles = {
   page: { paddingTop: 64 },
+  layout: { display:'flex', gap:0 },
+  sidebar: { width:240, flexShrink:0, padding:'28px 24px', borderRight:'1px solid #3c3c3c', minHeight:'100vh', background:'#1a1a1a' },
+  filterGroup: { marginBottom:28 },
+  filterLabel: { color:'#9f9f9f', fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:10 },
+  filterBtn: { display:'block', width:'100%', textAlign:'left', background:'none', border:'none', padding:'6px 10px', borderRadius:6, color:'#a8a8a8', fontSize:13, cursor:'pointer', transition:'all 0.15s', fontFamily:"'Space Grotesk',sans-serif" },
+  filterBtnActive: { background:'#2a2a2a', color:'#ffffff', borderLeft:'2px solid #e8001d', paddingLeft:8 },
+  checkRow: { display:'flex', alignItems:'center', gap:8, marginBottom:8, cursor:'pointer' },
+  priceInput: { background:'#242424', border:'1px solid #3c3c3c', borderRadius:6, padding:'4px 8px', color:'#c8c8c8', fontSize:12, minWidth:60, textAlign:'center' },
+  
+  main: { flex:1, minWidth:0, padding:'28px 32px' },
+  toolbar: { display:'flex', alignItems:'center', gap:12, marginBottom:24, background:'#242424', border:'1px solid #3c3c3c', borderRadius:10, padding:'12px 16px' },
+  searchInput: { background:'transparent', border:'none', outline:'none', color:'#ffffff', fontFamily:"'Space Grotesk',sans-serif", fontSize:14, flex:1, minWidth:0 },
+  sortSelect: { background:'#2a2a2a', border:'1px solid #3c3c3c', color:'#c8c8c8', padding:'6px 10px', borderRadius:6, fontFamily:"'Space Grotesk',sans-serif", fontSize:13, outline:'none' },
+
+
+  // Hero banner (prebuilt & peripherals)
+  heroBanner: { position:'relative', height:320, overflow:'hidden', flexShrink:0, display:'flex', alignItems:'center' },
+  heroBannerImg: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 25%', filter: 'brightness(0.9)' },
+  heroBannerOverlay: { position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.85) 100%)' },
+  heroBannerContent: { position:'relative', zIndex:2, width:'100%', padding:'0 80px' },
+
 pageHeader: { background: 'linear-gradient(135deg,#1a1a1a,#242424)', borderBottom: '1px solid #3c3c3c', padding: '48px 80px 36px' },
 headerEye: { color: '#e8001d', fontSize: 11, fontWeight: 600, letterSpacing: '0.2em', marginBottom: 8 },
 pageTitle: { fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 36, color: '#ffffff', margin: '0 0 8px' },
@@ -1075,4 +1648,4 @@ dangerZone: { marginTop: 32, padding: 20, border: '1px solid #cc444430', borderR
 deleteBtn: { background: 'transparent', border: '1px solid #cc4444', color: '#cc4444', borderRadius: 7, padding: '8px 20px', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontSize: 13, fontWeight: 600 },
 };
 
-Object.assign(window, { PrebuiltPage, PrebuiltDetailPage, PeripheralsPage, CartPage, UserPage });
+Object.assign(window, { PrebuiltPage, PrebuiltDetailPage, OnlyOnePcPage, OnlyOnePcDetailPage, PeripheralsPage, CartPage, UserPage });

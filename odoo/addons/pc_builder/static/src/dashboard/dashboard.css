@@ -1,0 +1,368 @@
+/* ── InShop PC Builder Dashboard ───────────────────────── */
+
+.pc_dashboard {
+    background: #111111;
+    min-height: 100vh;
+    padding: 28px 32px;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: #e8e8e8;
+}
+
+/* Loading */
+.pc_loading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 80px 40px;
+    color: #9f9f9f;
+    font-size: 14px;
+}
+.pc_spinner {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #333;
+    border-top-color: #e8001d;
+    border-radius: 50%;
+    animation: pc_spin 0.7s linear infinite;
+}
+@keyframes pc_spin { to { transform: rotate(360deg); } }
+
+/* ── Stat Cards ─────────────────────────────────────────── */
+.pc_stats_row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.pc_stat_card {
+    background: #1c1c1c;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 22px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: border-color 0.15s;
+}
+.pc_stat_card:hover { border-color: #3a3a3a; }
+
+/* Clickable stat cards */
+.pc_stat_clickable {
+    cursor: pointer;
+    user-select: none;
+}
+.pc_stat_clickable:hover {
+    border-color: #e8001d;
+    background: #211616;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(232, 0, 29, 0.08);
+}
+.pc_stat_clickable:active {
+    transform: translateY(0);
+    background: #1a1212;
+}
+
+.pc_stat_icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.pc_icon_preparing { background: rgba(162, 155, 254, 0.12); color: #a29bfe; }
+.pc_icon_processing { background: rgba(253, 203, 110, 0.12); color: #fdcb6e; }
+.pc_icon_shipped    { background: rgba(116, 185, 255, 0.12); color: #74b9ff; }
+.pc_icon_revenue    { background: rgba(232,   0,  29, 0.12); color: #e8001d; }
+
+.pc_stat_body { flex: 1; }
+
+.pc_stat_label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: #6a6a6a;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.pc_stat_value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.pc_stat_sub {
+    font-size: 11px;
+    color: #5a5a5a;
+}
+
+/* ── Dashboard Body ─────────────────────────────────────── */
+.pc_dashboard_body {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+/* ── Panels ─────────────────────────────────────────────── */
+.pc_panel {
+    background: #1c1c1c;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.pc_panel_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid #232323;
+}
+
+.pc_panel_title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.pc_item_count {
+    font-size: 10px;
+    font-weight: 700;
+    color: #e8001d;
+    background: rgba(232, 0, 29, 0.1);
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.1em;
+}
+
+/* ── Queue Panel ────────────────────────────────────────── */
+.pc_queue_list {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pc_queue_card {
+    background: #161616;
+    border: 1px solid #272727;
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+.pc_queue_card:hover {
+    border-color: #e8001d;
+    background: #1e1010;
+}
+
+.pc_queue_top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.pc_order_ref {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e8001d;
+    font-family: 'DM Mono', 'Courier New', monospace;
+}
+
+.pc_status_tag {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+.pc_status_processing { background: rgba(253,203,110,0.15); color: #fdcb6e; }
+.pc_status_preparing  { background: rgba(162,155,254,0.15); color: #a29bfe; }
+.pc_status_shipped    { background: rgba(116,185,255,0.15); color: #74b9ff; }
+.pc_status_delivered  { background: rgba( 85,239,196,0.15); color: #55efc4; }
+
+.pc_queue_client {
+    font-size: 13px;
+    font-weight: 600;
+    color: #d0d0d0;
+    margin-bottom: 10px;
+}
+
+.pc_queue_bottom {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.pc_queue_date, .pc_queue_prio {
+    font-size: 10px;
+    color: #5a5a5a;
+    line-height: 1.5;
+}
+
+.pc_queue_amount {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    font-family: 'DM Mono', monospace;
+}
+.pc_currency { font-size: 13px; color: #9f9f9f; }
+
+.pc_empty_state {
+    padding: 32px;
+    text-align: center;
+    color: #4a4a4a;
+    font-size: 13px;
+}
+
+/* ── Log Panel / Table ──────────────────────────────────── */
+.pc_panel_actions {
+    display: flex;
+    gap: 8px;
+}
+
+.pc_icon_btn {
+    width: 32px;
+    height: 32px;
+    background: #242424;
+    border: 1px solid #333;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #9f9f9f;
+    transition: all 0.15s;
+}
+.pc_icon_btn:hover { border-color: #e8001d; color: #ffffff; }
+
+.pc_log_table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.pc_log_table thead th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #4a4a4a;
+    border-bottom: 1px solid #232323;
+    background: #161616;
+}
+
+.pc_log_row {
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.pc_log_row:hover { background: #212121; }
+.pc_log_row:hover .pc_order_ref { color: #ff2040; }
+
+.pc_log_table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #1e1e1e;
+    vertical-align: middle;
+}
+
+.pc_log_client {
+    font-size: 13px;
+    font-weight: 600;
+    color: #d0d0d0;
+}
+
+.pc_log_tier {
+    font-size: 10px;
+    color: #5a5a5a;
+    margin-top: 2px;
+}
+
+.pc_log_ts {
+    font-size: 11px;
+    color: #7a7a7a;
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+}
+
+.pc_cargo_tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    background: #252525;
+    color: #c0c0c0;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'DM Mono', monospace;
+}
+
+.pc_cargo_extra {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    background: #2a2a2a;
+    color: #7a7a7a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-left: 4px;
+    cursor: default;
+}
+
+/* ── Pagination ─────────────────────────────────────────── */
+.pc_pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-top: 1px solid #232323;
+}
+
+.pc_page_info {
+    font-size: 11px;
+    color: #5a5a5a;
+}
+
+.pc_page_btns { display: flex; gap: 8px; }
+
+.pc_page_btn {
+    padding: 7px 18px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid #333;
+    background: #242424;
+    color: #9f9f9f;
+    font-family: inherit;
+}
+.pc_page_btn:hover:not(:disabled) { border-color: #555; color: #ffffff; }
+.pc_page_btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.pc_page_btn_next {
+    background: #e8001d;
+    border-color: #e8001d;
+    color: #ffffff;
+}
+.pc_page_btn_next:hover:not(:disabled) { background: #c0001a; border-color: #c0001a; }
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 1100px) {
+    .pc_stats_row { grid-template-columns: repeat(2, 1fr); }
+    .pc_dashboard_body { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+    .pc_stats_row { grid-template-columns: 1fr; }
+    .pc_dashboard { padding: 16px; }
+}

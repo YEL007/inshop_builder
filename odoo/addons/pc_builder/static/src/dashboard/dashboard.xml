@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="pc_builder.Dashboard">
+  <div class="pc_dashboard">
+
+    <!-- Loading -->
+    <t t-if="state.loading">
+      <div class="pc_loading">
+        <div class="pc_spinner"/>
+        <span>Chargement du tableau de bord…</span>
+      </div>
+    </t>
+
+    <t t-else="">
+
+      <!-- ── STAT CARDS ───────────────────────────────────── -->
+      <div class="pc_stats_row">
+
+        <div class="pc_stat_card pc_stat_clickable" t-on-click="() => this.filterByStatus('preparing')">
+          <div class="pc_stat_icon pc_icon_preparing">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+          <div class="pc_stat_body">
+            <div class="pc_stat_label">EN PRÉPARATION</div>
+            <div class="pc_stat_value"><t t-esc="state.counts.preparing"/></div>
+          </div>
+        </div>
+
+        <div class="pc_stat_card pc_stat_clickable" t-on-click="() => this.filterByStatus('processing')">
+          <div class="pc_stat_icon pc_icon_processing">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+          </div>
+          <div class="pc_stat_body">
+            <div class="pc_stat_label">EN TRAITEMENT</div>
+            <div class="pc_stat_value"><t t-esc="state.counts.processing"/></div>
+            <div class="pc_stat_sub">Stable throughput</div>
+          </div>
+        </div>
+
+        <div class="pc_stat_card pc_stat_clickable" t-on-click="() => this.filterByStatus('shipped')">
+          <div class="pc_stat_icon pc_icon_shipped">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+          </div>
+          <div class="pc_stat_body">
+            <div class="pc_stat_label">EXPÉDIÉ</div>
+            <div class="pc_stat_value"><t t-esc="state.counts.shipped"/></div>
+            <div class="pc_stat_sub">98% Arrival efficiency</div>
+          </div>
+        </div>
+
+        <div class="pc_stat_card pc_stat_clickable" t-on-click="() => this.openAllOrders()">
+          <div class="pc_stat_icon pc_icon_revenue">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v8M9 10h4.5a1.5 1.5 0 0 1 0 3H9v3h6"/>
+            </svg>
+          </div>
+          <div class="pc_stat_body">
+            <div class="pc_stat_label">VALEUR FLOTTE</div>
+            <div class="pc_stat_value"><t t-esc="fmtAmount(state.totalRevenue)"/> €</div>
+            <div class="pc_stat_sub">Real-time valuation</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── BODY: Queue + Registre ──────────────────────── -->
+      <div class="pc_dashboard_body">
+
+        <!-- Queue Prioritaire -->
+        <div class="pc_panel pc_queue_panel">
+          <div class="pc_panel_header">
+            <h3 class="pc_panel_title">Queue Prioritaire</h3>
+            <span class="pc_item_count"><t t-esc="state.priorityOrders.length"/> ITEMS</span>
+          </div>
+
+          <div class="pc_queue_list">
+            <t t-if="!state.priorityOrders.length">
+              <div class="pc_empty_state">Aucune commande en attente</div>
+            </t>
+            <t t-foreach="state.priorityOrders.slice(0,6)" t-as="order" t-key="order.id">
+              <div class="pc_queue_card" t-on-click="() => this.openOrder(order.id)">
+                <div class="pc_queue_top">
+                  <span class="pc_order_ref"><t t-esc="order.name"/></span>
+                  <span t-attf-class="pc_status_tag pc_status_#{order.pc_delivery_status || 'processing'}">
+                    <t t-esc="statusLabel(order.pc_delivery_status || 'processing')"/>
+                  </span>
+                </div>
+                <div class="pc_queue_client"><t t-esc="order.partner_id[1]"/></div>
+                <div class="pc_queue_bottom">
+                  <div class="pc_queue_meta">
+                    <div class="pc_queue_date">Reçu: <t t-esc="fmtDate(order.date_order).split(' ')[0]"/></div>
+                    <div class="pc_queue_prio">Priority: High-Load</div>
+                  </div>
+                  <div class="pc_queue_amount">
+                    <t t-esc="order.amount_total.toFixed(2)"/>
+                    <span class="pc_currency"> €</span>
+                  </div>
+                </div>
+              </div>
+            </t>
+          </div>
+        </div>
+
+        <!-- Registre de Logistique -->
+        <div class="pc_panel pc_log_panel">
+          <div class="pc_panel_header">
+            <h3 class="pc_panel_title">Registre de Logistique</h3>
+            <div class="pc_panel_actions">
+              <button class="pc_icon_btn" title="Filtrer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+                </svg>
+              </button>
+              <button class="pc_icon_btn" title="Exporter CSV">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <table class="pc_log_table">
+            <thead>
+              <tr>
+                <th>ID COMMANDE</th>
+                <th>CLIENT / DESTINATAIRE</th>
+                <th>TIMESTAMP</th>
+                <th>CARGAISON</th>
+              </tr>
+            </thead>
+            <tbody>
+              <t t-if="!state.allOrders.length">
+                <tr><td colspan="4" class="pc_empty_state">Aucune commande</td></tr>
+              </t>
+              <t t-foreach="paginatedOrders" t-as="order" t-key="order.id">
+                <tr class="pc_log_row" t-on-click="() => this.openOrder(order.id)">
+                  <td>
+                    <span class="pc_order_ref"><t t-esc="order.name"/></span>
+                  </td>
+                  <td>
+                    <div class="pc_log_client"><t t-esc="order.partner_id[1]"/></div>
+                    <div class="pc_log_tier" t-if="order._lines.length">
+                      <t t-esc="order._lines.length"/> article(s)
+                    </div>
+                  </td>
+                  <td class="pc_log_ts"><t t-esc="fmtDate(order.date_order)"/></td>
+                  <td>
+                    <t t-if="order._lines.length">
+                      <span class="pc_cargo_tag"><t t-esc="order._lines[0].product_id[1].slice(0,14)"/></span>
+                      <t t-if="order._lines.length > 1">
+                        <span class="pc_cargo_extra">+<t t-esc="order._lines.length - 1"/></span>
+                      </t>
+                    </t>
+                    <t t-else="">—</t>
+                  </td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+
+          <div class="pc_pagination">
+            <span class="pc_page_info">
+              Affichage <t t-esc="Math.min(state.page * state.pageSize + 1, state.allOrders.length)"/>–<t t-esc="Math.min((state.page + 1) * state.pageSize, state.allOrders.length)"/>
+              sur <t t-esc="state.allOrders.length"/> commandes
+            </span>
+            <div class="pc_page_btns">
+              <button class="pc_page_btn" t-att-disabled="state.page === 0" t-on-click="prevPage">Précédent</button>
+              <button class="pc_page_btn pc_page_btn_next" t-att-disabled="state.page >= totalPages - 1" t-on-click="nextPage">Suivant</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </t>
+  </div>
+</t>
+
+</templates>

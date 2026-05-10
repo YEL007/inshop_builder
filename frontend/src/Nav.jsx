@@ -6,23 +6,13 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [searchResults, setSearchResults] = React.useState([]);
-  const [isDark, setIsDark] = React.useState(() => {
-    return localStorage.getItem('inshop_theme') !== 'light';
-  });
   const { favorites, lang, setLang, t, currentUser } = React.useContext(window.AppContext);
-
-  React.useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.remove('light-mode');
-    } else {
-      document.documentElement.classList.add('light-mode');
-    }
-    localStorage.setItem('inshop_theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
 
   const navLinks = [
     { id: 'catalog', label: t('nav_components') },
     { id: 'prebuilt', label: t('nav_prebuilt') },
+    { id: 'onlyonepc', label: t('nav_onlyonepc') },
+    { id: 'laptops', label: t('nav_laptops') },
     { id: 'peripherals', label: t('nav_peripherals') },
     { id: 'builder', label: t('nav_builder'), highlight: true },
     { id: 'guided', label: lang === 'fr' ? 'Configurateur' : 'Configurator' },
@@ -73,20 +63,28 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
 
       {/* Desktop links */}
       <div style={navStyles.links} className="nav-links rsp-nav-links">
-        {navLinks.map(link => (
-          <button
-            key={link.id}
-            style={{
-              ...navStyles.link,
-              ...(link.highlight ? navStyles.linkHighlight : {}),
-              ...(page === link.id ? navStyles.linkActive : {}),
-            }}
-            onClick={() => setPage(link.id)}
-          >
-            {link.label}
-            {link.highlight && <span style={navStyles.newBadge}>{t('nav_new_badge')}</span>}
-          </button>
-        ))}
+        {navLinks.map(link => {
+          const isActive =
+            link.id === 'onlyonepc'
+              ? page === 'onlyonepc' || page === 'onlyonepc-detail' || page === 'onlyone_builder'
+              : link.id === 'prebuilt'
+                ? page === 'prebuilt' || page === 'prebuilt-detail'
+                : page === link.id;
+          return (
+            <button
+              key={link.id}
+              style={{
+                ...navStyles.link,
+                ...(link.highlight ? navStyles.linkHighlight : {}),
+                ...(isActive ? navStyles.linkActive : {}),
+              }}
+              onClick={() => setPage(link.id)}
+            >
+              {link.label}
+              {link.highlight && <span style={navStyles.newBadge}>{t('nav_new_badge')}</span>}
+            </button>
+          );
+        })}
       </div>
 
       {/* Mobile hamburger */}
@@ -105,21 +103,29 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
       </button>
       {mobileOpen && (
         <div style={{ position:'fixed', top:64, left:0, right:0, background:'rgba(14,14,14,0.98)', borderBottom:'1px solid var(--border2)', padding:'16px 20px', zIndex:999 }}>
-          {navLinks.map(link => (
-            <button key={link.id}
-              style={{ ...navStyles.link, display:'block', width:'100%', textAlign:'left', padding:'12px 16px', marginBottom:4, fontSize:15,
-                ...(page === link.id ? navStyles.linkActive : {}),
-                ...(link.highlight ? navStyles.linkHighlight : {}),
-              }}
-              onClick={() => { setPage(link.id); setMobileOpen(false); }}>
-              {link.label}
-            </button>
-          ))}
+          {navLinks.map(link => {
+            const isActive =
+              link.id === 'onlyonepc'
+                ? page === 'onlyonepc' || page === 'onlyonepc-detail' || page === 'onlyone_builder'
+                : link.id === 'prebuilt'
+                  ? page === 'prebuilt' || page === 'prebuilt-detail'
+                  : page === link.id;
+            return (
+              <button key={link.id}
+                style={{ ...navStyles.link, display:'block', width:'100%', textAlign:'left', padding:'12px 16px', marginBottom:4, fontSize:15,
+                  ...(isActive ? navStyles.linkActive : {}),
+                  ...(link.highlight ? navStyles.linkHighlight : {}),
+                }}
+                onClick={() => { setPage(link.id); setMobileOpen(false); }}>
+                {link.label}
+              </button>
+            );
+          })}
         </div>
       )}
 
       {/* Right actions */}
-      <div style={navStyles.actions}>
+      <div style={navStyles.actions} className="rsp-nav-actions">
         {/* Search */}
         <div style={{ position:'relative' }}>
           <button style={navStyles.iconBtn} onClick={() => setSearchOpen(v => !v)}>
@@ -166,24 +172,18 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
 
         {/* Language / Currency toggle */}
         <button
+          className="lang-flags"
           style={{ ...navStyles.iconBtn, ...navStyles.langBtn, ...(lang === 'fr' ? navStyles.langActive : {}) }}
           onClick={() => setLang('fr')}
           title="Français — Prix CFA">
           🇫🇷
         </button>
         <button
+          className="lang-flags"
           style={{ ...navStyles.iconBtn, ...navStyles.langBtn, ...(lang === 'en' ? navStyles.langActive : {}) }}
           onClick={() => setLang('en')}
           title="English — USD prices">
           🇺🇸
-        </button>
-
-        {/* Dark / Light mode toggle */}
-        <button
-          style={{ ...navStyles.iconBtn, fontSize:16, opacity: 0.8 }}
-          onClick={() => setIsDark(v => !v)}
-          title={isDark ? 'Mode clair' : 'Mode sombre'}>
-          {isDark ? '☀️' : '🌙'}
         </button>
 
         {/* User / Connexion */}
@@ -203,7 +203,7 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
             onMouseEnter={e=>{ e.currentTarget.style.borderColor='#e8001d'; e.currentTarget.style.color='#e8001d'; }}
             onMouseLeave={e=>{ e.currentTarget.style.borderColor='#3c3c3c'; e.currentTarget.style.color='#ffffff'; }}
           >
-            CONNEXION
+            {t('sign_in').toUpperCase()}
           </button>
         )}
       </div>

@@ -2,18 +2,18 @@ import json
 from odoo import models, fields
 
 
-class PcPrebuiltImage(models.Model):
-    _name = 'pc.prebuilt.image'
-    _description = 'Pre-built PC Extra Image'
+class PcOnlyOnePcImage(models.Model):
+    _name = 'pc.onlyonepc.image'
+    _description = 'Only One PC Extra Image'
 
     name = fields.Char("Name", required=True)
     image_1920 = fields.Image("Image", max_width=1920, max_height=1920, required=True)
-    prebuilt_id = fields.Many2one('pc.prebuilt', "Pre-built PC", index=True, ondelete='cascade')
+    onlyone_id = fields.Many2one('pc.onlyonepc', "Only One PC", index=True, ondelete='cascade')
 
-class PcPrebuilt(models.Model):
-    _name = 'pc.prebuilt'
+class PcOnlyOnePc(models.Model):
+    _name = 'pc.onlyonepc'
     _inherit = ['image.mixin']
-    _description = 'Pre-built PC Configuration'
+    _description = 'Only One PC Configuration'
     _order = 'price asc'
 
     name = fields.Char('Name', required=True)
@@ -30,8 +30,8 @@ class PcPrebuilt(models.Model):
         ('low_stock', 'Low Stock'),
         ('out_of_stock', 'Out of Stock'),
     ], string='Stock Status', default='in_stock')
-    brand = fields.Char('Brand', default='INSHOP')
-    extra_image_ids = fields.One2many('pc.prebuilt.image', 'prebuilt_id', string='Extra Images')
+    brand = fields.Char('Brand', default='Only One')
+    extra_image_ids = fields.One2many('pc.onlyonepc.image', 'onlyone_id', string='Extra Images')
 
     # Component descriptions (text, not FK — matches frontend data structure)
     cpu = fields.Char('CPU')
@@ -52,10 +52,10 @@ class PcPrebuilt(models.Model):
         tags = [t.strip().lower().replace(' ', '-') for t in (self.badge or '').split(',')] if self.badge else []
         images = []
         if self.image_1920:
-            images.append(f'/web/image/pc.prebuilt/{self.id}/image_1920')
+            images.append(f'/web/image/pc.onlyonepc/{self.id}/image_1920')
         for img in self.extra_image_ids:
             if img.image_1920:
-                images.append(f'/web/image/pc.prebuilt.image/{img.id}/image_1920')
+                images.append(f'/web/image/pc.onlyonepc.image/{img.id}/image_1920')
 
         base_specs = {k: v for k, v in {
             'cpu': self.cpu,
@@ -73,18 +73,18 @@ class PcPrebuilt(models.Model):
         merged_specs = {**base_specs, **extra_specs}
 
         return {
-            'id': f'pre-{self.id}',
+            'id': f'opc-{self.id}',
             'odoo_id': self.id,
             'name': self.name,
             'price': self.price,
-            'category': 'prebuilt',
+            'category': 'onlyonepc',
             'tier': self.tier or '',
             'badge': self.badge or '',
             'tag': self.tag_line or '',
             'rating': self.rating,
             'reviews': self.review_count,
             'stock': self.stock_status or 'in_stock',
-            'brand': self.brand or 'INSHOP',
+            'brand': self.brand or 'Only One',
             'tags': tags,
             'images': images,
             'specs': merged_specs,

@@ -8,6 +8,8 @@ window.CATALOG = {
 };
 
 window.PREBUILTS = [];
+window.ONLYONEPCS = [];
+window.LAPTOPS = [];
 
 window.PERIPHERALS_DATA = {
   keyboard: [], mouse: [], microphone: [], webcam: [],

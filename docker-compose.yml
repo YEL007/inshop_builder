@@ -32,7 +32,7 @@ services:
       - ./odoo/config/odoo.conf:/etc/odoo/odoo.conf:ro
       - ./odoo/addons:/mnt/extra-addons
       - odoo_data:/var/lib/odoo
-    command: -- -d odoo -i base,pc_builder
+    command: -- -d odoo -u pc_builder
     networks:
       - backend
     restart: unless-stopped

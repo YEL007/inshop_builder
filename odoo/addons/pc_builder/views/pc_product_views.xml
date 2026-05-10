@@ -12,6 +12,7 @@
                 <field name="pc_category"/>
                 <field name="list_price" string="Price"/>
                 <field name="pc_stock_status"/>
+                <field name="pc_is_only_one" string="Only One PC" widget="boolean_toggle"/>
                 <field name="pc_rating"/>
                 <field name="pc_review_count"/>
                 <field name="active"/>
@@ -36,6 +37,7 @@
                             <field name="pc_brand"/>
                             <field name="list_price" string="Price"/>
                             <field name="pc_stock_status"/>
+                            <field name="pc_is_only_one" string="Only One PC" widget="boolean_toggle"/>
                         </group>
                         <group string="Ratings">
                             <field name="pc_rating"/>
@@ -47,9 +49,9 @@
                         <field name="pc_tags" placeholder="gaming,bestseller,flagship"/>
                     </group>
                     <notebook>
-                        <page string="Specifications">
-                            <field name="pc_specs"
-                                   placeholder='{"cores": 8, "speed": "3.6GHz", ...}'/>
+                        <page string="Spécifications Techniques">
+                            <field name="pc_specs" nolabel="1"
+                                   placeholder='CPU: {"cores": 8, "boostClock": "5.6GHz", "socket": "AM5", "tdp": 125} | GPU: {"vram": "24GB", "memType": "GDDR6X", "tdp": 450} | RAM: {"capacity": "32GB", "speed": "6000MHz", "type": "DDR5"} | Portable: {"processor": "i7-13700H", "display": "15.6 FHD 144Hz", "battery": "72Wh"} | Souris: {"dpi": 25600, "polling": "1000Hz"}'/>
                         </page>
                         <page string="Description">
                             <field name="description_sale"/>
@@ -72,6 +74,8 @@
                 <separator/>
                 <filter string="Components" name="components"
                         domain="[('pc_category', 'in', ['cpu','gpu','motherboard','ram','storage','psu','cooling','case'])]"/>
+                <filter string="PC Portables" name="laptops"
+                        domain="[('pc_category', '=', 'laptop')]"/>
                 <filter string="Peripherals" name="peripherals"
                         domain="[('pc_category', 'in', ['mouse','keyboard','microphone','webcam','monitor','speaker','headset','usb','external_hdd','network'])]"/>
                 <separator/>
@@ -121,6 +125,14 @@
                         </group>
                     </group>
                     <group>
+                        <group string="Destination">
+                            <field name="pc_is_only_one"
+                                   string="Composant Only One PC"
+                                   widget="boolean_toggle"
+                                   help="Cochez pour réserver ce composant au configurateur Only One PC. Décochez pour le rendre disponible dans le Configurateur PC standard."/>
+                        </group>
+                    </group>
+                    <group>
                         <group string="Évaluation client">
                             <field name="pc_rating"       string="Note moyenne (/ 5)"/>
                             <field name="pc_review_count" string="Nombre d'avis"/>
@@ -156,12 +168,23 @@
                     </group>
                     <group string="Spécifications techniques (JSON)">
                         <field name="pc_specs" nolabel="1"
-                               placeholder='ex: {"cores": 8, "boostClock": "5.6GHz", "tdp": 125, "socket": "AM5"}'/>
+                               placeholder='CPU: {"cores":8,"boostClock":"5.6GHz","socket":"AM5","tdp":125} | GPU: {"vram":"24GB","memType":"GDDR6X"} | RAM: {"capacity":"32GB","speed":"6000MHz","type":"DDR5"} | SSD: {"capacity":"2TB","readSpeed":"7400MB/s"} | Portable: {"processor":"i7-13700H","display":"15.6 FHD 144Hz","battery":"72Wh","os":"Windows 11"} | Souris: {"dpi":25600,"buttons":7}'/>
                     </group>
                 </page>
             </xpath>
 
         </field>
+    </record>
+
+    <!-- ── Laptop Action ─────────────────────────────────────────────── -->
+    <record id="action_pc_laptops" model="ir.actions.act_window">
+        <field name="name">PC Portables</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('pc_category', '=', 'laptop')]</field>
+        <field name="context">{'default_pc_category': 'laptop', 'default_type': 'consu'}</field>
+        <field name="view_id" ref="view_pc_product_tree"/>
+        <field name="search_view_id" ref="view_pc_product_search"/>
     </record>
 
     <!-- ── Product Action ────────────────────────────────────────────── -->
