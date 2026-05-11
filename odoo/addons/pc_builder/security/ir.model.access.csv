@@ -11,5 +11,11 @@ access_pc_product_image_public,pc.product.image public read,model_pc_product_ima
 access_pc_product_image_manager,pc.product.image manager,model_pc_product_image,base.group_system,1,1,1,1
 access_pc_prebuilt_image_public,pc.prebuilt.image public read,model_pc_prebuilt_image,,1,0,0,0
 access_pc_prebuilt_image_manager,pc.prebuilt.image manager,model_pc_prebuilt_image,base.group_system,1,1,1,1
+access_pc_config_public,pc.config public read,model_pc_config,,1,0,0,0
+access_pc_config_manager,pc.config manager,model_pc_config,base.group_system,1,1,1,1
+access_pc_contact_message_public,pc.contact.message public create,model_pc_contact_message,,0,0,1,0
+access_pc_contact_message_manager,pc.contact.message manager,model_pc_contact_message,base.group_system,1,1,1,1
 access_pc_onlyonepc_image_public,pc.onlyonepc.image public read,model_pc_onlyonepc_image,,1,0,0,0
 access_pc_onlyonepc_image_manager,pc.onlyonepc.image manager,model_pc_onlyonepc_image,base.group_system,1,1,1,1
+access_pc_category_public,pc.category public read,model_pc_category,,1,0,0,0
+access_pc_category_manager,pc.category manager,model_pc_category,base.group_system,1,1,1,1

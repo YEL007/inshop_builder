@@ -1,7 +1,6 @@
 import React from "react";
+import { ImageCarousel, ProductVisual } from "./components_shared";
 
-const ImageCarousel = window.ImageCarousel;
-const ProductVisual = window.ProductVisual;
 const ProductCard = window.ProductCard;
 
 // pages_secondary.jsx — Pre-Built, Peripherals, Cart, User Space
@@ -75,7 +74,7 @@ const SharedSidebar = ({
 
 // ─── PRE-BUILT PCs ───────────────────────────────────────────────────────────
 const PrebuiltPage = () => {
-  const { setPage, addToCart, toggleFav, favorites, t, formatPrice } = React.useContext(window.AppContext);
+  const { setPage, addToCart, toggleFav, favorites, t, formatPrice, dataLoaded } = React.useContext(window.AppContext);
   const tierColors = { Budget: '#888888', 'Mid-Range': '#909090', 'High-End': '#333333', Flagship: '#ffffff' };
   const [search, setSearch] = React.useState('');
   const [inStockOnly, setInStockOnly] = React.useState(false);
@@ -96,9 +95,9 @@ const PrebuiltPage = () => {
     else if (sortBy === 'rating') prods = [...prods].sort((a,b) => (b.rating||0) - (a.rating||0));
     else if (sortBy === 'reviews') prods = [...prods].sort((a,b) => (b.reviews||0) - (a.reviews||0));
     return prods;
-  }, [search, inStockOnly, priceRange, minRating, brands, sortBy]);
+  }, [search, inStockOnly, priceRange, minRating, brands, sortBy, dataLoaded]);
 
-  const availableBrands = React.useMemo(() => [...new Set((window.PREBUILTS||[]).map(p => p.brand).filter(Boolean))].sort(), []);
+  const availableBrands = React.useMemo(() => [...new Set((window.PREBUILTS||[]).map(p => p.brand).filter(Boolean))].sort(), [dataLoaded]);
 
 
   return (
@@ -108,6 +107,8 @@ const PrebuiltPage = () => {
         <video autoPlay loop muted playsInline style={secStyles.heroBannerImg}>
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
+        <div style={secStyles.heroBannerGrid} />
+        <div style={secStyles.heroBannerGlow} />
         <div style={secStyles.heroBannerOverlay} />
         <div style={secStyles.heroBannerContent} className="rsp-banner-content">
           <div style={secStyles.headerEye} className="rsp-banner-eye">{t('prebuilt_banner_eye')}</div>
@@ -131,7 +132,6 @@ const PrebuiltPage = () => {
           <div style={secStyles.pbGrid} className="rsp-pb-grid">
             {filtered.length === 0 ? (
               <div style={secStyles.empty}>
-                <div style={{ fontSize:40, marginBottom:12, opacity:0.3 }}>🔍</div>
                 <div style={{ color:'#a8a8a8' }}>{t('no_products') || 'Aucun produit'}</div>
               </div>
             ) : filtered.map(pc => {
@@ -148,30 +148,13 @@ const PrebuiltPage = () => {
               </button>
               {/* Visual */}
               <div style={{ ...secStyles.pbVisual, background: `linear-gradient(135deg, ${color}10, #242424)` }}>
-                <svg width="120" height="160" viewBox="0 0 120 160" fill="none">
-                  <rect x="20" y="10" width="80" height="140" rx="8" fill="#242424" stroke={color} strokeWidth="1" />
-                  <rect x="28" y="20" width="64" height="40" rx="4" fill="#2a2a2a" />
-                  <circle cx="50" cy="40" r="14" fill="none" stroke={color} strokeWidth="0.8" />
-                  <circle cx="50" cy="40" r="6" fill={color} opacity="0.3" />
-                  {[0, 60, 120, 180, 240, 300].map(a => { const r = a * Math.PI / 180; return <line key={a} x1={50 + 7 * Math.cos(r)} y1={40 + 7 * Math.sin(r)} x2={50 + 13 * Math.cos(r)} y2={40 + 13 * Math.sin(r)} stroke={color} strokeWidth="0.8" opacity="0.5" /> })}
-                  <circle cx="80" cy="40" r="12" fill="none" stroke={color} strokeWidth="0.8" />
-                  <circle cx="80" cy="40" r="5" fill={color} opacity="0.3" />
-                  <rect x="28" y="72" width="64" height="14" rx="3" fill="#2a2a2a" stroke={color} strokeWidth="0.5" />
-                  <rect x="30" y="75" width="20" height="8" rx="1" fill={color} opacity="0.15" />
-                  <rect x="34" y="90" width="20" height="8" rx="2" fill="#444444" opacity="0.3" />
-                  <rect x="58" y="90" width="20" height="8" rx="2" fill="#444444" opacity="0.3" />
-                  <rect x="20" y="100" width="5" height="40" rx="2" fill={color} opacity="0.5" />
-                  <circle cx="95" cy="140" r="7" fill="none" stroke={color} strokeWidth="1" />
-                  <circle cx="95" cy="140" r="3" fill={color} opacity="0.4" />
-                  <rect x="28" y="136" width="10" height="6" rx="1" fill="#2a2a2a" stroke="#9f9f9f" strokeWidth="0.5" />
-                  <rect x="42" y="136" width="10" height="6" rx="1" fill="#2a2a2a" stroke="#9f9f9f" strokeWidth="0.5" />
-                </svg>
+                <ImageCarousel images={pc.images} category="prebuilt" height={160} />
               </div>
 
               <div style={secStyles.pbBody}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
-                    <div style={{ ...secStyles.pbTier, color }}>{pc.tier.toUpperCase()}</div>
+                    <div style={{ ...secStyles.pbTier, color }}>{pc.tier?.toUpperCase()}</div>
                     <div style={secStyles.pbName}>{pc.name}</div>
                   </div>
                   <div style={secStyles.pbPrice}>{formatPrice(pc.price)}</div>
@@ -240,30 +223,13 @@ const PrebuiltDetailPage = ({ product: pc }) => {
         {/* Visual */}
         <div style={{ background:`linear-gradient(135deg, ${color}10, #242424)`, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', minHeight:400, position:'relative' }}>
           {pc.badge && <div style={{ position:'absolute', top:20, left:20, background: color + '20', color, fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:5, letterSpacing:'0.1em', zIndex:1 }}>{pc.badge}</div>}
-          <svg width="180" height="240" viewBox="0 0 120 160" fill="none">
-            <rect x="20" y="10" width="80" height="140" rx="8" fill="#242424" stroke={color} strokeWidth="1.5" />
-            <rect x="28" y="20" width="64" height="40" rx="4" fill="#2a2a2a" />
-            <circle cx="50" cy="40" r="14" fill="none" stroke={color} strokeWidth="0.8" />
-            <circle cx="50" cy="40" r="6" fill={color} opacity="0.3" />
-            {[0, 60, 120, 180, 240, 300].map(a => { const r = a * Math.PI / 180; return <line key={a} x1={50 + 7 * Math.cos(r)} y1={40 + 7 * Math.sin(r)} x2={50 + 13 * Math.cos(r)} y2={40 + 13 * Math.sin(r)} stroke={color} strokeWidth="0.8" opacity="0.5" /> })}
-            <circle cx="80" cy="40" r="12" fill="none" stroke={color} strokeWidth="0.8" />
-            <circle cx="80" cy="40" r="5" fill={color} opacity="0.3" />
-            <rect x="28" y="72" width="64" height="14" rx="3" fill="#2a2a2a" stroke={color} strokeWidth="0.5" />
-            <rect x="30" y="75" width="20" height="8" rx="1" fill={color} opacity="0.15" />
-            <rect x="34" y="90" width="20" height="8" rx="2" fill="#444444" opacity="0.3" />
-            <rect x="58" y="90" width="20" height="8" rx="2" fill="#444444" opacity="0.3" />
-            <rect x="20" y="100" width="5" height="40" rx="2" fill={color} opacity="0.5" />
-            <circle cx="95" cy="140" r="7" fill="none" stroke={color} strokeWidth="1" />
-            <circle cx="95" cy="140" r="3" fill={color} opacity="0.4" />
-            <rect x="28" y="136" width="10" height="6" rx="1" fill="#2a2a2a" stroke="#9f9f9f" strokeWidth="0.5" />
-            <rect x="42" y="136" width="10" height="6" rx="1" fill="#2a2a2a" stroke="#9f9f9f" strokeWidth="0.5" />
-          </svg>
+          <ImageCarousel images={pc.images} category="prebuilt" height={360} />
         </div>
 
         {/* Info */}
         <div style={{ display:'flex', flexDirection:'column' }}>
           <div style={{ display:'inline-block', fontSize:10, fontWeight:700, padding:'3px 10px', borderRadius:5, letterSpacing:'0.1em', marginBottom:12, width:'fit-content', background: color + '20', color }}>
-            {pc.tier.toUpperCase()} PRE-BUILT
+            {pc.tier?.toUpperCase()} PRE-BUILT
           </div>
           <h1 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:28, color:'#ffffff', margin:'0 0 12px 0', lineHeight:1.3 }}>{pc.name}</h1>
 
@@ -326,8 +292,11 @@ const PrebuiltDetailPage = ({ product: pc }) => {
 
       {/* Technical Specifications */}
       {(() => {
-        const SPEC_KEYS = ['cpu','gpu','ram','storage','psu','case','cooling'];
-        const specRows = SPEC_KEYS.map(k => ({ key: k, label: t(`spec_${k}`), val: pc[k] || (pc.specs && pc.specs[k]) })).filter(r => r.val);
+        const SPEC_KEYS = ['cpu', 'socket', 'gpu', 'gpu_vram', 'ram', 'ram_type', 'ram_speed', 'ram_capacity', 'storage', 'storage_type', 'storage_capacity', 'psu', 'psu_wattage', 'psu_efficiency', 'case', 'cooling'];
+        const specRows = SPEC_KEYS.map(k => {
+          const val = pc[k] || (pc.specs && pc.specs[k]);
+          return { key: k, label: t(`spec_${k}`) || k.replace('_', ' ').toUpperCase(), val };
+        }).filter(r => r.val);
         if (!specRows.length) return null;
         return (
           <div style={{ borderTop:'1px solid #3c3c3c', paddingTop:48, marginBottom:48 }}>
@@ -349,7 +318,7 @@ const PrebuiltDetailPage = ({ product: pc }) => {
 
 // ─── ONLY ONE PC PAGE ────────────────────────────────────────────────────────
 const OnlyOnePcPage = () => {
-  const { setPage, addToCart, toggleFav, favorites, t, formatPrice } = React.useContext(window.AppContext);
+  const { setPage, addToCart, toggleFav, favorites, t, formatPrice, dataLoaded } = React.useContext(window.AppContext);
   const tierColors = { Budget: '#888888', 'Mid-Range': '#909090', 'High-End': '#333333', Flagship: '#ffffff' };
   const [search, setSearch] = React.useState('');
   const [inStockOnly, setInStockOnly] = React.useState(false);
@@ -370,9 +339,9 @@ const OnlyOnePcPage = () => {
     else if (sortBy === 'rating') prods = [...prods].sort((a,b) => (b.rating||0) - (a.rating||0));
     else if (sortBy === 'reviews') prods = [...prods].sort((a,b) => (b.reviews||0) - (a.reviews||0));
     return prods;
-  }, [search, inStockOnly, priceRange, minRating, brands, sortBy]);
+  }, [search, inStockOnly, priceRange, minRating, brands, sortBy, dataLoaded]);
 
-  const availableBrands = React.useMemo(() => [...new Set((window.ONLYONEPCS||[]).map(p => p.brand).filter(Boolean))].sort(), []);
+  const availableBrands = React.useMemo(() => [...new Set((window.ONLYONEPCS||[]).map(p => p.brand).filter(Boolean))].sort(), [dataLoaded]);
 
   return (
     <div style={secStyles.page}>
@@ -380,6 +349,8 @@ const OnlyOnePcPage = () => {
         <video autoPlay loop muted playsInline style={secStyles.heroBannerImg}>
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
+        <div style={secStyles.heroBannerGrid} />
+        <div style={secStyles.heroBannerGlow} />
         <div style={secStyles.heroBannerOverlay} />
         <div style={secStyles.heroBannerContent} className="rsp-banner-content">
           <div style={secStyles.headerEye} className="rsp-banner-eye">UNIQUE BUILDS</div>
@@ -415,7 +386,6 @@ const OnlyOnePcPage = () => {
           <div style={secStyles.pbGrid} className="rsp-pb-grid">
             {filtered.length === 0 ? (
               <div style={secStyles.empty}>
-                <div style={{ fontSize:40, marginBottom:12, opacity:0.3 }}>🔍</div>
                 <div style={{ color:'#a8a8a8' }}>{t('no_products') || 'Aucun produit'}</div>
               </div>
             ) : filtered.map(pc => {
@@ -431,71 +401,14 @@ const OnlyOnePcPage = () => {
                 <svg width="13" height="13" viewBox="0 0 24 24" fill={favorites.has(pc.id)?'#e8001d':'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
               </button>
               {/* Visual - Premium Aquarium Case */}
-              <div style={{ ...secStyles.pbVisual, background: `linear-gradient(135deg, ${color}15, #121212)` }}>
-                <svg width="140" height="140" viewBox="0 0 160 140" fill="none" style={{ filter: `drop-shadow(0 0 10px ${color}40)` }}>
-                  {/* Base Chassis - Dual Chamber Width */}
-                  <rect x="10" y="10" width="140" height="120" rx="4" fill="#181818" stroke={color} strokeWidth="1" />
-                  
-                  {/* Front Glass Panel (Left) */}
-                  <path d="M10 14 h40 v112 h-40 z" fill="#2a2a2a" opacity="0.3" stroke={color} strokeWidth="0.5" />
-                  
-                  {/* Side Glass Panel (Right) */}
-                  <path d="M50 14 h90 v112 h-90 z" fill="#202020" opacity="0.4" stroke={color} strokeWidth="0.5" />
-
-                  {/* Side Fans (Vertical Stack next to Motherboard) */}
-                  {[30, 65, 100].map((cy, i) => (
-                    <g key={`sf-${i}`}>
-                      <rect x="55" y={cy-15} width="20" height="30" rx="2" fill="#111" stroke={color} strokeWidth="0.5" />
-                      <circle cx="65" cy={cy} r="12" fill={color} opacity="0.4" />
-                      <circle cx="65" cy={cy} r="4" fill="#444" />
-                    </g>
-                  ))}
-
-                  {/* Bottom Fans */}
-                  {[85, 115, 145].map((cx, i) => (
-                    <g key={`bf-${i}`}>
-                      <rect x={cx-14} y="110" width="28" height="12" rx="2" fill="#111" stroke={color} strokeWidth="0.5" />
-                      <circle cx={cx} cy="116" r="5" fill={color} opacity="0.4" />
-                    </g>
-                  ))}
-
-                  {/* Top Fans (Radiator) */}
-                  <rect x="55" y="15" width="80" height="15" rx="2" fill="#151515" />
-                  {[70, 95, 120].map((cx, i) => (
-                    <g key={`tf-${i}`}>
-                      <circle cx={cx} cy="22.5" r="5" fill={color} opacity="0.6" />
-                    </g>
-                  ))}
-
-                  {/* Motherboard & CPU Block */}
-                  <rect x="85" y="35" width="50" height="60" rx="2" fill="#1a1a1a" stroke="#333" strokeWidth="1" />
-                  <rect x="100" y="45" width="20" height="20" rx="10" fill="none" stroke={color} strokeWidth="1.5" />
-                  <circle cx="110" cy="55" r="6" fill={color} opacity="0.8" />
-                  
-                  {/* AIO Tubes */}
-                  <path d="M110 45 Q 110 30, 95 30" fill="none" stroke="#444" strokeWidth="2" />
-                  <path d="M115 45 Q 120 30, 110 30" fill="none" stroke="#444" strokeWidth="2" />
-
-                  {/* RAM RGB */}
-                  <rect x="125" y="42" width="3" height="26" fill={color} opacity="0.7" />
-                  <rect x="130" y="42" width="3" height="26" fill={color} opacity="0.7" />
-
-                  {/* Massive GPU (Vertical Mount) */}
-                  <rect x="80" y="75" width="60" height="25" rx="2" fill="#222" stroke={color} strokeWidth="0.8" />
-                  <rect x="82" y="77" width="56" height="5" fill="#333" />
-                  <rect x="85" y="85" width="50" height="10" fill={color} opacity="0.2" />
-                  <text x="110" y="93" fill={color} fontSize="8" fontWeight="bold" textAnchor="middle" opacity="0.8">RTX</text>
-
-                  {/* Custom Cables (Lian Li Strimer style) */}
-                  <path d="M140 85 Q 145 60, 135 60" fill="none" stroke={color} strokeWidth="2" opacity="0.6" />
-                  <path d="M140 88 Q 148 65, 135 65" fill="none" stroke={color} strokeWidth="2" opacity="0.6" />
-                </svg>
+              <div style={{ ...secStyles.pbVisual, background: `linear-gradient(135deg, ${color}14, #212121)`, height:180 }}>
+                <ImageCarousel images={pc.images} category="case" height={180} />
               </div>
 
               <div style={secStyles.pbBody}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
-                    <div style={{ ...secStyles.pbTier, color }}>{pc.tier.toUpperCase()}</div>
+                    <div style={{ ...secStyles.pbTier, color }}>{pc.tier?.toUpperCase()}</div>
                     <div style={secStyles.pbName}>{pc.name}</div>
                   </div>
                   <div style={secStyles.pbPrice}>{formatPrice(pc.price)}</div>
@@ -558,70 +471,13 @@ const OnlyOnePcDetailPage = ({ product: pc }) => {
         {/* Visual */}
         <div style={{ background:`linear-gradient(135deg, ${color}10, #242424)`, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', minHeight:400, position:'relative' }}>
           {pc.badge && <div style={{ position:'absolute', top:20, left:20, background: color + '20', color, fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:5, letterSpacing:'0.1em', zIndex:1 }}>{pc.badge}</div>}
-          <svg width="240" height="240" viewBox="0 0 160 140" fill="none" style={{ filter: `drop-shadow(0 0 20px ${color}50)` }}>
-            {/* Base Chassis - Dual Chamber Width */}
-            <rect x="10" y="10" width="140" height="120" rx="4" fill="#181818" stroke={color} strokeWidth="1.5" />
-            
-            {/* Front Glass Panel (Left) */}
-            <path d="M10 14 h40 v112 h-40 z" fill="#2a2a2a" opacity="0.3" stroke={color} strokeWidth="0.8" />
-            
-            {/* Side Glass Panel (Right) */}
-            <path d="M50 14 h90 v112 h-90 z" fill="#202020" opacity="0.4" stroke={color} strokeWidth="0.8" />
-
-            {/* Side Fans (Vertical Stack next to Motherboard) */}
-            {[30, 65, 100].map((cy, i) => (
-              <g key={`sf-${i}`}>
-                <rect x="55" y={cy-15} width="20" height="30" rx="2" fill="#111" stroke={color} strokeWidth="0.5" />
-                <circle cx="65" cy={cy} r="12" fill={color} opacity="0.4" />
-                <circle cx="65" cy={cy} r="4" fill="#444" />
-              </g>
-            ))}
-
-            {/* Bottom Fans */}
-            {[85, 115, 145].map((cx, i) => (
-              <g key={`bf-${i}`}>
-                <rect x={cx-14} y="110" width="28" height="12" rx="2" fill="#111" stroke={color} strokeWidth="0.5" />
-                <circle cx={cx} cy="116" r="5" fill={color} opacity="0.4" />
-              </g>
-            ))}
-
-            {/* Top Fans (Radiator) */}
-            <rect x="55" y="15" width="80" height="15" rx="2" fill="#151515" />
-            {[70, 95, 120].map((cx, i) => (
-              <g key={`tf-${i}`}>
-                <circle cx={cx} cy="22.5" r="5" fill={color} opacity="0.6" />
-              </g>
-            ))}
-
-            {/* Motherboard & CPU Block */}
-            <rect x="85" y="35" width="50" height="60" rx="2" fill="#1a1a1a" stroke="#333" strokeWidth="1" />
-            <rect x="100" y="45" width="20" height="20" rx="10" fill="none" stroke={color} strokeWidth="1.5" />
-            <circle cx="110" cy="55" r="6" fill={color} opacity="0.8" />
-            
-            {/* AIO Tubes */}
-            <path d="M110 45 Q 110 30, 95 30" fill="none" stroke="#444" strokeWidth="2" />
-            <path d="M115 45 Q 120 30, 110 30" fill="none" stroke="#444" strokeWidth="2" />
-
-            {/* RAM RGB */}
-            <rect x="125" y="42" width="3" height="26" fill={color} opacity="0.7" />
-            <rect x="130" y="42" width="3" height="26" fill={color} opacity="0.7" />
-
-            {/* Massive GPU (Vertical Mount) */}
-            <rect x="80" y="75" width="60" height="25" rx="2" fill="#222" stroke={color} strokeWidth="0.8" />
-            <rect x="82" y="77" width="56" height="5" fill="#333" />
-            <rect x="85" y="85" width="50" height="10" fill={color} opacity="0.2" />
-            <text x="110" y="93" fill={color} fontSize="8" fontWeight="bold" textAnchor="middle" opacity="0.8">RTX</text>
-
-            {/* Custom Cables (Lian Li Strimer style) */}
-            <path d="M140 85 Q 145 60, 135 60" fill="none" stroke={color} strokeWidth="2" opacity="0.6" />
-            <path d="M140 88 Q 148 65, 135 65" fill="none" stroke={color} strokeWidth="2" opacity="0.6" />
-          </svg>
+          <ImageCarousel images={pc.images} category="case" height={360} />
         </div>
 
         {/* Info */}
         <div style={{ display:'flex', flexDirection:'column' }}>
           <div style={{ display:'inline-block', fontSize:10, fontWeight:700, padding:'3px 10px', borderRadius:5, letterSpacing:'0.1em', marginBottom:12, width:'fit-content', background: color + '20', color }}>
-            {pc.tier.toUpperCase()} ONLY ONE PC
+            {pc.tier?.toUpperCase()} ONLY ONE PC
           </div>
           <h1 style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:28, color:'#ffffff', margin:'0 0 12px 0', lineHeight:1.3 }}>{pc.name}</h1>
 
@@ -675,8 +531,11 @@ const OnlyOnePcDetailPage = ({ product: pc }) => {
 
       {/* Technical Specifications */}
       {(() => {
-        const SPEC_KEYS = ['cpu','gpu','ram','storage','psu','case','cooling'];
-        const specRows = SPEC_KEYS.map(k => ({ key: k, label: t(`spec_${k}`), val: pc[k] || (pc.specs && pc.specs[k]) })).filter(r => r.val);
+        const SPEC_KEYS = ['cpu', 'socket', 'gpu', 'gpu_vram', 'ram', 'ram_type', 'ram_speed', 'ram_capacity', 'storage', 'storage_type', 'storage_capacity', 'psu', 'psu_wattage', 'psu_efficiency', 'case', 'cooling'];
+        const specRows = SPEC_KEYS.map(k => {
+          const val = pc[k] || (pc.specs && pc.specs[k]);
+          return { key: k, label: t(`spec_${k}`) || k.replace('_', ' ').toUpperCase(), val };
+        }).filter(r => r.val);
         if (!specRows.length) return null;
         return (
           <div style={{ borderTop:'1px solid #3c3c3c', paddingTop:48, marginBottom:48 }}>
@@ -697,59 +556,50 @@ const OnlyOnePcDetailPage = ({ product: pc }) => {
 };
 
 // ─── PERIPHERALS ─────────────────────────────────────────────────────────────
-const getPeriGroups = (t) => [
-  {
-    id: 'input',
-    label: t('input_devices'),
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12" /></svg>,
-    tabs: [
-      { key: 'keyboard',    label: t('label_keyboard') },
-      { key: 'mouse',       label: t('label_mouse') },
-      { key: 'microphone',  label: t('label_microphone') },
-      { key: 'webcam',      label: t('label_webcam') },
-    ],
-  },
-  {
-    id: 'output',
-    label: t('output_devices'),
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></svg>,
-    tabs: [
-      { key: 'monitor',  label: 'Écran' },
-      { key: 'speaker',  label: t('label_speaker') },
-      { key: 'headset',  label: t('label_headset') },
-    ],
-  },
-  {
-    id: 'mixed',
-    label: t('io_devices'),
-    desc: 'Échangent des données dans les deux sens',
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>,
-    tabs: [
-      { key: 'usb',          label: t('label_usb') },
-      { key: 'external_hdd', label: t('label_external_hdd') },
-      { key: 'network',      label: t('label_network') },
-    ],
-  },
-];
+const getPeriGroups = (t) => {
+  const cats = window.PC_CATEGORIES_DATA || [];
+  let peris = cats.filter(c => c.is_peripheral);
 
-const PERI_VISUALS = {
-  mouse: <svg width="44" height="64" viewBox="0 0 44 64"><path d="M6 24C6 12 14 4 22 4s16 8 16 20v20C38 55 30 60 22 60S6 55 6 44z" fill="none" stroke="#555555" strokeWidth="1.5" /><line x1="22" y1="4" x2="22" y2="28" stroke="#555555" strokeWidth="1" opacity="0.5" /><circle cx="22" cy="20" r="3" fill="#555555" opacity="0.5" /></svg>,
-  keyboard: <svg width="80" height="44" viewBox="0 0 80 44"><rect x="4" y="8" width="72" height="28" rx="4" fill="none" stroke="#555555" strokeWidth="1.5" />{[10, 18, 26, 34, 42, 50, 58, 66].map(x => [12, 20, 28].map(y => <rect key={`${x}${y}`} x={x} y={y} width="6" height="5" rx="1" fill="#555555" opacity="0.25" />))}<rect x="24" y="30" width="32" height="5" rx="2" fill="#555555" opacity="0.2" /></svg>,
-  microphone: <svg width="40" height="72" viewBox="0 0 40 72"><rect x="13" y="4" width="14" height="30" rx="7" fill="none" stroke="#555555" strokeWidth="1.5" /><path d="M6 28c0 7.7 6.3 14 14 14s14-6.3 14-14" fill="none" stroke="#555555" strokeWidth="1.5" /><line x1="20" y1="42" x2="20" y2="56" stroke="#555555" strokeWidth="1.5" /><line x1="10" y1="56" x2="30" y2="56" stroke="#555555" strokeWidth="1.5" />{[10, 16, 22, 28].map(y => <line key={y} x1="14" y1={y} x2="26" y2={y} stroke="#555555" strokeWidth="0.8" opacity="0.4" />)}</svg>,
-  webcam: <svg width="60" height="60" viewBox="0 0 60 60"><rect x="8" y="12" width="44" height="32" rx="6" fill="none" stroke="#555555" strokeWidth="1.5" /><circle cx="30" cy="28" r="10" fill="none" stroke="#555555" strokeWidth="1.5" /><circle cx="30" cy="28" r="5" fill="#555555" opacity="0.2" /><circle cx="30" cy="28" r="2" fill="#555555" opacity="0.5" /><line x1="20" y1="44" x2="40" y2="44" stroke="#555555" strokeWidth="1.5" /><line x1="30" y1="44" x2="30" y2="52" stroke="#555555" strokeWidth="1.5" /><line x1="18" y1="52" x2="42" y2="52" stroke="#555555" strokeWidth="1.5" /></svg>,
-  monitor: <svg width="80" height="60" viewBox="0 0 80 60"><rect x="4" y="4" width="72" height="46" rx="4" fill="none" stroke="#555555" strokeWidth="1.5" /><rect x="8" y="8" width="64" height="38" rx="2" fill="#555555" opacity="0.1" /><rect x="30" y="50" width="20" height="4" rx="2" fill="#555555" opacity="0.4" /><rect x="24" y="54" width="32" height="3" rx="1.5" fill="#555555" opacity="0.4" /></svg>,
-  headset: <svg width="64" height="64" viewBox="0 0 64 64"><path d="M12 36c0-11 9-20 20-20s20 9 20 20" fill="none" stroke="#555555" strokeWidth="1.5" /><rect x="6" y="34" width="10" height="16" rx="5" fill="none" stroke="#555555" strokeWidth="1.5" /><rect x="48" y="34" width="10" height="16" rx="5" fill="none" stroke="#555555" strokeWidth="1.5" /></svg>,
-  speaker: <svg width="56" height="64" viewBox="0 0 56 64"><rect x="8" y="8" width="40" height="48" rx="6" fill="none" stroke="#555555" strokeWidth="1.5" /><circle cx="28" cy="28" r="10" fill="none" stroke="#555555" strokeWidth="1.5" /><circle cx="28" cy="28" r="5" fill="#555555" opacity="0.2" /><circle cx="28" cy="46" r="4" fill="none" stroke="#555555" strokeWidth="1" /><circle cx="28" cy="46" r="1.5" fill="#555555" opacity="0.4" /></svg>,
-  usb: <svg width="32" height="72" viewBox="0 0 32 72"><rect x="8" y="4" width="16" height="40" rx="4" fill="none" stroke="#555555" strokeWidth="1.5" /><rect x="10" y="6" width="12" height="6" rx="2" fill="#555555" opacity="0.3" /><rect x="8" y="44" width="16" height="20" rx="2" fill="none" stroke="#555555" strokeWidth="1" opacity="0.5" /></svg>,
-  external_hdd: <svg width="72" height="52" viewBox="0 0 72 52"><rect x="4" y="8" width="64" height="36" rx="6" fill="none" stroke="#555555" strokeWidth="1.5" /><circle cx="52" cy="26" r="10" fill="none" stroke="#555555" strokeWidth="1" /><circle cx="52" cy="26" r="4" fill="#555555" opacity="0.3" /><rect x="12" y="20" width="28" height="4" rx="2" fill="#555555" opacity="0.3" /><rect x="12" y="28" width="20" height="3" rx="1.5" fill="#555555" opacity="0.2" /></svg>,
-  network: <svg width="64" height="56" viewBox="0 0 64 56"><rect x="4" y="16" width="56" height="28" rx="4" fill="none" stroke="#555555" strokeWidth="1.5" /><path d="M20 8 L20 16" stroke="#555555" strokeWidth="2" /><path d="M32 4 L32 16" stroke="#555555" strokeWidth="2" /><path d="M44 8 L44 16" stroke="#555555" strokeWidth="2" />{[14, 22, 30, 38, 46, 52].map(x => <rect key={x} x={x} y="22" width="4" height="16" rx="2" fill="#555555" opacity="0.25" />)}</svg>,
+  // If no categories from backend, provide defaults to avoid empty UI
+  if (peris.length === 0) {
+    peris = [
+      { code: 'keyboard', name: t('label_keyboard'), peri_group: 'input', sequence: 1 },
+      { code: 'mouse', name: t('label_mouse'), peri_group: 'input', sequence: 2 },
+      { code: 'microphone', name: t('label_microphone'), peri_group: 'input', sequence: 3 },
+      { code: 'webcam', name: t('label_webcam'), peri_group: 'input', sequence: 4 },
+      { code: 'monitor', name: t('label_monitor'), peri_group: 'output', sequence: 1 },
+      { code: 'speaker', name: t('label_speaker'), peri_group: 'output', sequence: 2 },
+      { code: 'headset', name: t('label_headset'), peri_group: 'output', sequence: 3 },
+      { code: 'usb', name: t('label_usb'), peri_group: 'io', sequence: 1 },
+      { code: 'external_hdd', name: t('label_external_hdd'), peri_group: 'io', sequence: 2 },
+      { code: 'network', name: t('label_network'), peri_group: 'io', sequence: 3 },
+    ];
+  }
+
+  return [
+    {
+      id: 'input', label: t('input_devices'), icon: '⌨️',
+      tabs: peris.filter(c => c.peri_group === 'input').sort((a,b) => (a.sequence||10) - (b.sequence||10)).map(c => ({ key: c.code, label: c.name })),
+    },
+    {
+      id: 'output', label: t('output_devices'), icon: '🔊',
+      tabs: peris.filter(c => c.peri_group === 'output').sort((a,b) => (a.sequence||10) - (b.sequence||10)).map(c => ({ key: c.code, label: c.name })),
+    },
+    {
+      id: 'io', label: t('io_devices'), icon: '🔌',
+      tabs: peris.filter(c => c.peri_group === 'io').sort((a,b) => (a.sequence||10) - (b.sequence||10)).map(c => ({ key: c.code, label: c.name })),
+    },
+  ];
 };
 
+const PERI_VISUALS = {};
+
 const PeripheralsPage = () => {
-  const { setPage, addToCart, toggleFav, favorites, t, formatPrice } = React.useContext(window.AppContext);
+  const { setPage, addToCart, toggleFav, favorites, t, formatPrice, dataLoaded, searchQuery } = React.useContext(window.AppContext);
   const PERI_GROUPS = getPeriGroups(t);
+
   const [activeGroup, setActiveGroup] = React.useState('input');
-  const [activeTab, setActiveTab] = React.useState('mouse');
+  const [activeTab, setActiveTab] = React.useState(null);
   const [search, setSearch] = React.useState('');
   const [inStockOnly, setInStockOnly] = React.useState(false);
   const [priceRange, setPriceRange] = React.useState([0, 2000]);
@@ -757,11 +607,26 @@ const PeripheralsPage = () => {
   const [brands, setBrands] = React.useState([]);
   const [sortBy, setSortBy] = React.useState('featured');
 
-  const currentGroup = PERI_GROUPS.find(g => g.id === activeGroup);
-  
+  // Sync activeTab when group changes or data loads
+  React.useEffect(() => {
+    if (PERI_GROUPS.length > 0) {
+      const g = PERI_GROUPS.find(x => x.id === activeGroup) || PERI_GROUPS[0];
+      if (!activeTab || !g.tabs.find(t => t.key === activeTab)) {
+        if (g.tabs.length > 0) setActiveTab(g.tabs[0].key);
+      }
+    }
+  }, [activeGroup, PERI_GROUPS, dataLoaded]);
+
   const filtered = React.useMemo(() => {
+    if (!activeTab) return [];
     let prods = window.PERIPHERALS_DATA[activeTab] || [];
-    if (search) prods = prods.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.brand?.toLowerCase().includes(search.toLowerCase()));
+    const q = (search || searchQuery || '').toLowerCase();
+    if (q) {
+      prods = prods.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.brand?.toLowerCase().includes(q)
+      );
+    }
     if (inStockOnly) prods = prods.filter(p => p.stock !== 'out_of_stock');
     if (brands.length) prods = prods.filter(p => brands.includes(p.brand));
     prods = prods.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
@@ -771,9 +636,21 @@ const PeripheralsPage = () => {
     else if (sortBy === 'rating') prods = [...prods].sort((a,b) => (b.rating||0) - (a.rating||0));
     else if (sortBy === 'reviews') prods = [...prods].sort((a,b) => (b.reviews||0) - (a.reviews||0));
     return prods;
-  }, [activeTab, search, inStockOnly, priceRange, minRating, brands, sortBy]);
+  }, [activeTab, search, searchQuery, inStockOnly, priceRange, minRating, brands, sortBy, dataLoaded]);
 
-  const availableBrands = React.useMemo(() => [...new Set((window.PERIPHERALS_DATA[activeTab]||[]).map(p => p.brand).filter(Boolean))].sort(), [activeTab]);
+  const availableBrands = React.useMemo(() => {
+    if (!activeTab) return [];
+    return [...new Set((window.PERIPHERALS_DATA[activeTab]||[]).map(p => p.brand).filter(Boolean))].sort();
+  }, [activeTab, dataLoaded]);
+
+  const currentGroup = PERI_GROUPS.find(g => g.id === activeGroup) || PERI_GROUPS[0];
+  if (!currentGroup || !dataLoaded) {
+    return (
+      <div style={{ padding: '100px 20px', textAlign: 'center', color: '#666', background: '#0a0a0a', minHeight: '80vh' }}>
+        <p style={{ fontFamily: "'Space Grotesk',sans-serif" }}>Chargement des périphériques...</p>
+      </div>
+    );
+  }
 
 
   const handleGroupSwitch = (gid) => {
@@ -785,15 +662,17 @@ const PeripheralsPage = () => {
   return (
     <div style={secStyles.page}>
       {/* Peripherals Banner */}
-      <div style={secStyles.heroBanner}>
+      <div style={secStyles.heroBanner} className="rsp-banner">
         <video autoPlay loop muted playsInline style={secStyles.heroBannerImg}>
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
+        <div style={secStyles.heroBannerGrid} />
+        <div style={secStyles.heroBannerGlow} />
         <div style={secStyles.heroBannerOverlay} />
-        <div style={secStyles.heroBannerContent}>
-          <div style={secStyles.headerEye}>COMPLÉTEZ VOTRE SETUP</div>
-          <h1 style={{ ...secStyles.pageTitle, margin:'0 0 8px' }}>Périphériques</h1>
-          <p style={{ ...secStyles.pageDesc, margin:0 }}>Entrée, sortie, mixte — tout ce qui se connecte à votre PC.</p>
+        <div style={secStyles.heroBannerContent} className="rsp-banner-content">
+          <div style={secStyles.headerEye} className="rsp-banner-eye">COMPLÉTEZ VOTRE SETUP</div>
+          <h1 style={secStyles.pageTitle} className="rsp-banner-title">Périphériques</h1>
+          <p style={secStyles.pageDesc}>Entrée, sortie, mixte — tout ce qui se connecte à votre PC.</p>
         </div>
       </div>
 
@@ -803,7 +682,6 @@ const PeripheralsPage = () => {
           <button key={g.id}
             style={{ ...periStyles.groupBtn, ...(activeGroup === g.id ? periStyles.groupBtnActive : {}) }}
             onClick={() => handleGroupSwitch(g.id)}>
-            <span style={{ color: activeGroup === g.id ? '#1a1a1a' : '#9f9f9f' }}>{g.icon}</span>
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontWeight: 700, fontSize: 14, color: activeGroup === g.id ? '#1a1a1a' : '#ffffff' }}>{g.label}</div>
               <div style={{ fontSize: 11, color: activeGroup === g.id ? '#333' : '#9f9f9f', marginTop: 1 }}>{g.desc}</div>
@@ -839,7 +717,6 @@ const PeripheralsPage = () => {
           <div style={periStyles.grid} className="rsp-grid-3">
             {filtered.length === 0 ? (
               <div style={secStyles.empty}>
-                <div style={{ fontSize:40, marginBottom:12, opacity:0.3 }}>🔍</div>
                 <div style={{ color:'#a8a8a8' }}>{t('no_products') || 'Aucun produit'}</div>
               </div>
             ) : filtered.map(p => (
@@ -891,7 +768,7 @@ const PeriProductCard = ({ product, visual, onAdd, onFav, onView, isFav }) => {
       <div style={{ padding:'20px', flex:1, display:'flex', flexDirection:'column' }} onClick={onView}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
           <div style={{ flex:1, minWidth:0, paddingRight:10 }}>
-            <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label.toUpperCase()}</div>
+            <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label?.toUpperCase()}</div>
             <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:18, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
             {product.brand && <div style={{ color:'#9f9f9f', fontSize:11, marginTop:3 }}>{product.brand}</div>}
           </div>
@@ -1597,16 +1474,25 @@ const secStyles = {
 
 
   // Hero banner (prebuilt & peripherals)
-  heroBanner: { position:'relative', height:320, overflow:'hidden', flexShrink:0, display:'flex', alignItems:'center' },
-  heroBannerImg: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 25%', filter: 'brightness(0.9)' },
-  heroBannerOverlay: { position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.85) 100%)' },
+  heroBanner: { position:'relative', height:360, overflow:'hidden', flexShrink:0, display:'flex', alignItems:'center', background:'#111' },
+  heroBannerImg: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 25%', opacity: 0.4 },
+  heroBannerGrid: {
+    position:'absolute', inset:0, opacity:1, zIndex:1,
+    backgroundImage:'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px)',
+  },
+  heroBannerGlow: {
+    position:'absolute', top:'20%', left:'10%', width:600, height:600, zIndex:1,
+    background:'radial-gradient(ellipse at 40% 50%, rgba(232,0,29,0.15) 0%, transparent 65%)',
+    pointerEvents:'none',
+  },
+  heroBannerOverlay: { position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)', zIndex:1 },
   heroBannerContent: { position:'relative', zIndex:2, width:'100%', padding:'0 80px' },
 
 pageHeader: { background: 'linear-gradient(135deg,#1a1a1a,#242424)', borderBottom: '1px solid #3c3c3c', padding: '48px 80px 36px' },
-headerEye: { color: '#e8001d', fontSize: 11, fontWeight: 600, letterSpacing: '0.2em', marginBottom: 8 },
-pageTitle: { fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 36, color: '#ffffff', margin: '0 0 8px' },
+headerEye: { color: '#e8001d', fontSize: 12, fontWeight: 600, letterSpacing: '0.2em', marginBottom: 12 },
+pageTitle: { fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 48, color: '#ffffff', margin: '0 0 12px', lineHeight: 1.1 },
 pageTitle2: { fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 32, color: '#ffffff', margin: '0 0 32px', paddingTop: 64 },
-pageDesc: { color: '#a8a8a8', fontSize: 15, margin: 0 },
+pageDesc: { color: '#a8a8a8', fontSize: 17, maxWidth: 600, lineHeight: 1.6, margin: 0 },
 pbGrid: { padding: '48px 80px', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 20 },
 pbCard: { background: '#242424', border: '1px solid #3c3c3c', borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'all 0.25s', position: 'relative' },
 pbBadge: { position: 'absolute', top: 16, right: 16, fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 4, letterSpacing: '0.1em', zIndex: 1 },

@@ -59,6 +59,35 @@ def error_response(message, status=400):
 
 
 class PcBuilderApi(http.Controller):
+    @http.route('/api/pc/config', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_config(self, **kwargs):
+        """Return site-wide configuration."""
+        try:
+            config = request.env['pc.config'].sudo().get_config()
+            return json_response(config)
+        except Exception as e:
+            _logger.exception('Error in get_config')
+            return error_response(str(e), 500)
+
+    @http.route('/api/pc/categories', type='http', auth='public', methods=['GET'], csrf=False)
+    def get_categories(self, **kwargs):
+        """Return all PC categories."""
+        try:
+            categories = request.env['pc.category'].sudo().search([], order='sequence, id')
+            res = []
+            for cat in categories:
+                res.append({
+                    'name': cat.name,
+                    'code': cat.code,
+                    'type': cat.type,
+                    'peri_group': cat.peri_group,
+                    'icon': cat.icon,
+                    'sequence': cat.sequence,
+                })
+            return json_response({'categories': res})
+        except Exception as e:
+            _logger.exception('Error in get_categories')
+            return error_response(str(e), 500)
 
     # ── Catalog ──────────────────────────────────────────────────────────────
 
@@ -86,7 +115,7 @@ class PcBuilderApi(http.Controller):
     def get_products(self, category=None, page=1, limit=50, **kwargs):
         """Return products, optionally filtered by pc_category."""
         try:
-            domain = [('active', '=', True), ('pc_category', '!=', False)]
+            domain = [('active', '=', True), ('pc_category_id', '!=', False)]
             if category:
                 domain.append(('pc_category', '=', category))
 
@@ -225,12 +254,13 @@ class PcBuilderApi(http.Controller):
                 user.sudo().write({'active': True})
 
             try:
-                user.sudo()._check_credentials(password, {'interactive': False})
+                # with_user(user) sets env.user = portal user so _check_credentials
+                # reads the correct password hash (it queries by self.env.user.id).
+                user.with_user(user)._check_credentials(password, {'interactive': False})
             except AccessDenied:
                 return error_response('Invalid credentials', 401)
             except Exception:
-                # Odoo version compatibility: some builds raise other exceptions
-                # on a bad password (e.g. ValidationError). Treat all as bad creds.
+                _logger.exception('Unexpected error checking credentials for %s', login_val)
                 return error_response('Invalid credentials', 401)
 
             token = _issue_token(user.id)
@@ -783,6 +813,31 @@ class PcBuilderApi(http.Controller):
             })
         except Exception as e:
             _logger.exception('Error in dashboard_admin')
+            return error_response(str(e), 500)
+
+    @http.route('/api/pc/contact/submit', type='http', auth='public', methods=['POST'], csrf=False)
+    def submit_contact(self, **kwargs):
+        """Submit a contact form message."""
+        try:
+            body = json.loads(request.httprequest.data or '{}')
+            name = body.get('name', '').strip()
+            email = body.get('email', '').strip().lower()
+            subject = body.get('subject', '').strip()
+            message = body.get('message', '').strip()
+
+            if not name or not email or not message:
+                return error_response('name, email, and message are required', 400)
+
+            msg = request.env['pc.contact.message'].sudo().create({
+                'name': name,
+                'email': email,
+                'subject': subject,
+                'message': message,
+            })
+
+            return json_response({'ok': True, 'id': msg.id})
+        except Exception as e:
+            _logger.exception('Error in submit_contact')
             return error_response(str(e), 500)
 
     @http.route('/api/pc/order/<int:order_id>/delivery/next', type='http', auth='public', methods=['POST'], csrf=False)

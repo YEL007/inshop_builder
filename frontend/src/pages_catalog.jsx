@@ -56,6 +56,8 @@ const CatalogPage = ({ initialCategory }) => {
         <video autoPlay loop muted playsInline style={catStyles.bannerImg}>
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
+        <div style={catStyles.bannerGrid} />
+        <div style={catStyles.bannerGlow} />
         <div style={catStyles.bannerOverlay} />
         <div style={catStyles.bannerContent} className="rsp-banner-content">
           <div style={catStyles.bannerEye} className="rsp-banner-eye">{t('cat_banner_eye')}</div>
@@ -173,7 +175,6 @@ const CatalogPage = ({ initialCategory }) => {
           {/* Grid */}
           {allProducts.length === 0 ? (
             <div style={catStyles.empty}>
-              <div style={{ fontSize:40, marginBottom:12, opacity:0.3 }}>🔍</div>
               <div style={{ color:'#a8a8a8' }}>{t('no_products')}</div>
             </div>
           ) : (
@@ -231,7 +232,7 @@ const CatalogProductCard = ({ product, onView, onAdd, onFav, isFav, onCompare, i
       <div style={{ padding:'20px', flex:1, display:'flex', flexDirection:'column' }} onClick={onView}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
           <div style={{ flex:1, minWidth:0, paddingRight:10 }}>
-            <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label.toUpperCase()}</div>
+            <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label?.toUpperCase()}</div>
             <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:18, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
             {product.brand && <div style={{ color:'#9f9f9f', fontSize:11, marginTop:3 }}>{product.brand}</div>}
           </div>
@@ -407,7 +408,7 @@ const ProductDetailPage = ({ product }) => {
         {/* Info */}
         <div style={pdStyles.info}>
           <div style={{ ...pdStyles.catBadge, background:(catColors[product.category]||'#e8001d')+'20', color:catColors[product.category]||'#e8001d' }}>
-            {(CATEGORY_LABELS[product.category]||product.category).toUpperCase()}
+            {(CATEGORY_LABELS[product.category]||product.category)?.toUpperCase()}
           </div>
           <div style={pdStyles.brand}>{product.brand}</div>
           <h1 style={pdStyles.name}>{product.name}</h1>
@@ -701,15 +702,25 @@ const catStyles = {
   page: { paddingTop:64 },
 
   // Banner
-  banner: { position:'relative', height:320, overflow:'hidden', flexShrink:0 },
-  bannerImg: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 40%' },
+  banner: { position:'relative', height:360, overflow:'hidden', flexShrink:0, display:'flex', alignItems:'center', background:'#111' },
+  bannerImg: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 40%', opacity: 0.4 },
+  bannerGrid: {
+    position:'absolute', inset:0, opacity:1, zIndex:1,
+    backgroundImage:'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px)',
+  },
+  bannerGlow: {
+    position:'absolute', top:'20%', left:'10%', width:600, height:600, zIndex:1,
+    background:'radial-gradient(ellipse at 40% 50%, rgba(232,0,29,0.15) 0%, transparent 65%)',
+    pointerEvents:'none',
+  },
   bannerOverlay: {
     position:'absolute', inset:0,
-    background:'linear-gradient(90deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.6) 55%, rgba(0,0,0,0.8) 100%)',
+    background:'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)',
+    zIndex:1
   },
-  bannerContent: { position:'relative', zIndex:1, display:'flex', flexDirection:'column', justifyContent:'center', height:'100%', padding:'0 80px' },
-  bannerEye: { color:'#e8001d', fontSize:11, fontWeight:700, letterSpacing:'0.25em', marginBottom:10 },
-  bannerTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:38, color:'#ffffff', margin:'0 0 10px', lineHeight:1.15 },
+  bannerContent: { position:'relative', zIndex:2, width:'100%', padding:'0 80px' },
+  bannerEye: { color:'#e8001d', fontSize:12, fontWeight:600, letterSpacing:'0.2em', marginBottom:12 },
+  bannerTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:48, color:'#ffffff', margin:'0 0 12px', lineHeight:1.1 },
 
   breadcrumb: { color:'#9f9f9f', fontSize:13, marginBottom:8, fontFamily:"'Space Grotesk',sans-serif" },
   pageTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:36, color:'#ffffff', margin:0 },

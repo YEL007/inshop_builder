@@ -27,6 +27,7 @@ const App = () => {
   const [tweaks, setTweaks] = React.useState(TWEAK_DEFAULTS);
   const [tweakVisible, setTweakVisible] = React.useState(false);
   const [dataLoaded, setDataLoaded] = React.useState(false);
+  const [config, setConfig] = React.useState(window.SITE_CONFIG || {});
 
   // Langue & devise
   const [lang, setLangRaw] = React.useState(() => localStorage.getItem('inshop_lang') || 'fr');
@@ -98,11 +99,15 @@ const App = () => {
       });
 
       // Clean up cached cart items that no longer exist in the backend
+      if (window.SITE_CONFIG) setConfig(window.SITE_CONFIG);
+      setDataLoaded(true); // Always true after attempt, even if !ok
+      if (!ok) setCatalogError(true);
+
       cartRef.current = cartRef.current.filter(item => window.ALL_PRODUCTS.some(p => p.id === item.id));
       if (!ok || cartRef.current.length !== cart.length) {
         if (!ok) {
-          cartRef.current = [];
-          localStorage.removeItem('inshop_cart');
+          // Keep cart if offline? Maybe not if we can't verify prices
+          // localStorage.removeItem('inshop_cart');
         } else {
           localStorage.setItem('inshop_cart', JSON.stringify(cartRef.current));
         }
@@ -113,9 +118,13 @@ const App = () => {
         setPageParams({});
         localStorage.removeItem('inshop_params');
       }
-
-      setDataLoaded(prev => !prev);
     };
+
+    // If already loaded before mount
+    if (window.ALL_PRODUCTS && window.ALL_PRODUCTS.length > 0) {
+      setDataLoaded(true);
+    }
+
     window.addEventListener('catalog:loaded', handler);
     return () => window.removeEventListener('catalog:loaded', handler);
   }, []);
@@ -124,7 +133,7 @@ const App = () => {
   const [page, setPageRaw] = React.useState(() => {
     // Read page from URL path on load (e.g. /catalog → 'catalog')
     const pathPage = window.location.pathname.replace('/', '') || 'home';
-    const knownPages = ['home','catalog','prebuilt','onlyonepc','peripherals','laptops','builder','onlyone_builder','cart','checkout','user','product','prebuilt-detail','onlyonepc-detail','compare','guided'];
+    const knownPages = ['home','catalog','prebuilt','onlyonepc','peripherals','laptops','builder','onlyone_builder','cart','checkout','user','product','prebuilt-detail','onlyonepc-detail','compare'];
     return knownPages.includes(pathPage) ? pathPage : (localStorage.getItem('inshop_page') || 'home');
   });
   const [pageParams, setPageParams] = React.useState(() => {
@@ -317,6 +326,7 @@ const App = () => {
     currentUser, setCurrentUser,
     dataLoaded, catalogError,
     lang, setLang, t, formatPrice,
+    config,
   };
 
   const renderPage = () => {
@@ -333,8 +343,8 @@ const App = () => {
     const PrebuiltDetail = window.PrebuiltDetailPage;
     const OnlyOnePcDetail = window.OnlyOnePcDetailPage;
     const Compare = window.ComparePage;
-    const Guided = window.GuidedPage;
     const Laptops = window.LaptopsPage;
+    const Contact = window.ContactPage;
 
     switch (page) {
       case 'home': return Home ? <Home /> : null;
@@ -348,11 +358,11 @@ const App = () => {
       case 'cart': return Cart ? <Cart /> : null;
       case 'checkout': return Checkout ? <Checkout /> : null;
       case 'user': return User ? <User initialTab={pageParams.tab} /> : null;
+      case 'contact': return Contact ? <Contact /> : null;
       case 'product': return pageParams.product && ProductDetail ? <ProductDetail product={pageParams.product} /> : <Home />;
       case 'prebuilt-detail': return pageParams.product && PrebuiltDetail ? <PrebuiltDetail product={pageParams.product} /> : <Prebuilt />;
       case 'onlyonepc-detail': return pageParams.product && OnlyOnePcDetail ? <OnlyOnePcDetail product={pageParams.product} /> : <OnlyOnePc />;
       case 'compare': return Compare ? <Compare /> : null;
-      case 'guided': return Guided ? <Guided /> : null;
       default: return (
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'80vh', gap:16 }}>
           <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:72, fontWeight:700, color:'#3c3c3c' }}>404</div>
@@ -396,12 +406,36 @@ const App = () => {
               <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#ffffff', letterSpacing: '0.1em' }}>INSHOP BUILDER</span>
             </div>
             <div style={appStyles.footerLinks} className="responsive-footer-links rsp-footer-links">
-              {[[t('footer_col_components'), ['CPU', 'GPU', lang==='fr'?'Cartes Mères':'Motherboards', lang==='fr'?'Mémoire':'Memory', lang==='fr'?'Stockage':'Storage']],
-              [t('footer_col_products'), [t('nav_prebuilt'), t('nav_peripherals'), t('nav_builder'), t('compare_title')]],
-              [t('footer_col_account'), [t('my_orders'), t('my_favorites'), t('profile_tab'), t('settings_tab')]]].map(([title, links]) => (
+              {[
+                { title: t('footer_col_components'), links: [
+                  { label: 'CPU',                                              action: () => setPage('catalog', { category: 'cpu' }) },
+                  { label: 'GPU',                                              action: () => setPage('catalog', { category: 'gpu' }) },
+                  { label: lang==='fr'?'Cartes Mères':'Motherboards',         action: () => setPage('catalog', { category: 'motherboard' }) },
+                  { label: lang==='fr'?'Mémoire':'Memory',                    action: () => setPage('catalog', { category: 'ram' }) },
+                  { label: lang==='fr'?'Stockage':'Storage',                  action: () => setPage('catalog', { category: 'storage' }) },
+                ]},
+                { title: t('footer_col_products'), links: [
+                  { label: t('nav_prebuilt'),    action: () => setPage('prebuilt') },
+                  { label: t('nav_peripherals'), action: () => setPage('peripherals') },
+                  { label: t('nav_builder'),     action: () => setPage('builder') },
+                  { label: t('compare_title'),   action: () => setPage('compare') },
+                ]},
+                { title: t('footer_col_account'), links: [
+                  { label: t('my_orders'),    action: () => setPage('user', { tab: 'orders' }) },
+                  { label: t('my_favorites'), action: () => setPage('user', { tab: 'favorites' }) },
+                  { label: t('profile_tab'),  action: () => setPage('user', { tab: 'profile' }) },
+                  { label: t('settings_tab'), action: () => setPage('user', { tab: 'settings' }) },
+                ]},
+              ].map(({ title, links }) => (
                 <div key={title}>
                   <div style={appStyles.footerColTitle}>{title}</div>
-                  {links.map(l => <div key={l} style={appStyles.footerLink}>{l}</div>)}
+                  {links.map(({ label, action }) => (
+                    <div key={label} style={appStyles.footerLink}
+                      onClick={action}
+                      onMouseEnter={e => e.currentTarget.style.color = '#e8001d'}
+                      onMouseLeave={e => e.currentTarget.style.color = '#d0d0d0'}
+                    >{label}</div>
+                  ))}
                 </div>
               ))}
             </div>

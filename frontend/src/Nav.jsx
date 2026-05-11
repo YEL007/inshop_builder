@@ -14,8 +14,8 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
     { id: 'onlyonepc', label: t('nav_onlyonepc') },
     { id: 'laptops', label: t('nav_laptops') },
     { id: 'peripherals', label: t('nav_peripherals') },
-    { id: 'builder', label: t('nav_builder'), highlight: true },
-    { id: 'guided', label: lang === 'fr' ? 'Configurateur' : 'Configurator' },
+    { id: 'builder', label: t('nav_builder') },
+    { id: 'contact', label: t('nav_contact') },
   ];
 
   const handleSearch = (q) => {
@@ -38,8 +38,8 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
 
   const catColors = {
     cpu:'#e8793a', gpu:'#6c5ce7', motherboard:'#00b894', ram:'#fdcb6e',
-    storage:'#74b9ff', psu:'#fd79a8', cooling:'#55efc4', case:'#b2bec3',
-    monitor:'#a29bfe', mouse:'#fd79a8', headset:'#ffeaa7', keyboard:'#81ecec',
+    storage:'#74b9ff', psu:'#e8001d', cooling:'#55efc4', case:'#b2bec3',
+    monitor:'#a29bfe', mouse:'#e8001d', headset:'#e8001d', keyboard:'#81ecec',
   };
 
   return (
@@ -151,7 +151,7 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
                       <div style={{ ...navStyles.searchDot, background: catColors[p.category] || 'var(--red)' }}/>
                       <div>
                         <div style={{ color:'var(--white)', fontSize:13 }}>{p.name}</div>
-                        <div style={{ color:'var(--gray)', fontSize:11 }}>{p.category.toUpperCase()} · ${p.price}</div>
+                        <div style={{ color:'var(--gray)', fontSize:11 }}>{p.category?.toUpperCase()} · ${p.price}</div>
                       </div>
                     </div>
                   ))}
@@ -203,7 +203,7 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
             onMouseEnter={e=>{ e.currentTarget.style.borderColor='#e8001d'; e.currentTarget.style.color='#e8001d'; }}
             onMouseLeave={e=>{ e.currentTarget.style.borderColor='#3c3c3c'; e.currentTarget.style.color='#ffffff'; }}
           >
-            {t('sign_in').toUpperCase()}
+            {t('sign_in')?.toUpperCase()}
           </button>
         )}
       </div>

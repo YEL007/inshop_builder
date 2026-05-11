@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- pc.category Tree View -->
+    <record id="view_pc_category_tree" model="ir.ui.view">
+        <field name="name">pc.category.tree</field>
+        <field name="model">pc.category</field>
+        <field name="arch" type="xml">
+            <tree string="Catégories PC" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="type"/>
+                <field name="peri_group" invisible="type != 'peripheral'"/>
+                <field name="icon"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- pc.category Form View -->
+    <record id="view_pc_category_form" model="ir.ui.view">
+        <field name="name">pc.category.form</field>
+        <field name="model">pc.category</field>
+        <field name="arch" type="xml">
+            <form string="Catégorie PC">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="type"/>
+                        </group>
+                        <group>
+                            <field name="peri_group" invisible="type != 'peripheral'" required="type == 'peripheral'"/>
+                            <field name="icon"/>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for pc.category -->
+    <record id="action_pc_category" model="ir.actions.act_window">
+        <field name="name">Catégories de composants</field>
+        <field name="res_model">pc.category</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez votre première catégorie !
+            </p>
+            <p>
+                Configurez les catégories de composants (CPU, GPU) et les périphériques (Clavier, Souris).
+            </p>
+        </field>
+    </record>
+</odoo>

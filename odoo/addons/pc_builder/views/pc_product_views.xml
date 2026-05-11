@@ -9,7 +9,7 @@
             <tree string="PC Products">
                 <field name="name"/>
                 <field name="pc_brand"/>
-                <field name="pc_category"/>
+                <field name="pc_category_id"/>
                 <field name="list_price" string="Price"/>
                 <field name="pc_stock_status"/>
                 <field name="pc_is_only_one" string="Only One PC" widget="boolean_toggle"/>
@@ -33,7 +33,7 @@
                     </div>
                     <group>
                         <group string="PC Info">
-                            <field name="pc_category"/>
+                            <field name="pc_category_id"/>
                             <field name="pc_brand"/>
                             <field name="list_price" string="Price"/>
                             <field name="pc_stock_status"/>
@@ -70,14 +70,14 @@
             <search string="Search PC Products">
                 <field name="name" string="Product"/>
                 <field name="pc_brand" string="Brand"/>
-                <field name="pc_category" string="Category"/>
+                <field name="pc_category_id" string="Category"/>
                 <separator/>
-                <filter string="Components" name="components"
-                        domain="[('pc_category', 'in', ['cpu','gpu','motherboard','ram','storage','psu','cooling','case'])]"/>
-                <filter string="PC Portables" name="laptops"
-                        domain="[('pc_category', '=', 'laptop')]"/>
-                <filter string="Peripherals" name="peripherals"
-                        domain="[('pc_category', 'in', ['mouse','keyboard','microphone','webcam','monitor','speaker','headset','usb','external_hdd','network'])]"/>
+                <filter string="Composants PC" name="filter_components"
+                        domain="[('pc_category_id.type', '=', 'component')]"/>
+                <filter string="Laptops" name="filter_laptop"
+                        domain="[('pc_category_id.type', '=', 'laptop')]"/>
+                <filter string="Périphériques" name="filter_peripherals"
+                        domain="[('pc_category_id.type', '=', 'peripheral')]"/>
                 <separator/>
                 <filter string="In Stock" name="in_stock"
                         domain="[('pc_stock_status', '=', 'in_stock')]"/>
@@ -89,7 +89,7 @@
                 <filter string="Active" name="active" domain="[('active', '=', True)]"/>
                 <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
                 <group expand="0" string="Group By">
-                    <filter string="Category" name="group_category" context="{'group_by': 'pc_category'}"/>
+                    <filter string="Category" name="group_category" context="{'group_by': 'pc_category_id'}"/>
                     <filter string="Brand" name="group_brand" context="{'group_by': 'pc_brand'}"/>
                     <filter string="Stock Status" name="group_stock" context="{'group_by': 'pc_stock_status'}"/>
                 </group>
@@ -113,7 +113,8 @@
                 <page string="PC Builder" name="pc_builder_tab">
                     <group>
                         <group string="Identification">
-                            <field name="pc_category" string="Catégorie"/>
+                            <field name="pc_category" invisible="1"/>
+                            <field name="pc_category_id" string="Catégorie"/>
                             <field name="pc_brand"    string="Marque"/>
                             <field name="pc_tags"
                                    string="Tags"
@@ -166,23 +167,157 @@
                             </form>
                         </field>
                     </group>
-                    <group string="Spécifications techniques (JSON)">
-                        <field name="pc_specs" nolabel="1"
-                               placeholder='CPU: {"cores":8,"boostClock":"5.6GHz","socket":"AM5","tdp":125} | GPU: {"vram":"24GB","memType":"GDDR6X"} | RAM: {"capacity":"32GB","speed":"6000MHz","type":"DDR5"} | SSD: {"capacity":"2TB","readSpeed":"7400MB/s"} | Portable: {"processor":"i7-13700H","display":"15.6 FHD 144Hz","battery":"72Wh","os":"Windows 11"} | Souris: {"dpi":25600,"buttons":7}'/>
+                    <!-- ══ Spécifications structurées (affichées selon la catégorie) ══ -->
+
+                    <!-- CPU -->
+                    <group string="Spécifications — Processeur (CPU)"
+                           invisible="pc_category != 'cpu'">
+                        <group>
+                            <field name="spec_cpu_socket"    string="Socket"/>
+                            <field name="spec_cpu_cores"     string="Cœurs"/>
+                            <field name="spec_cpu_threads"   string="Threads"/>
+                            <field name="spec_cpu_tdp"       string="TDP (W)"/>
+                        </group>
+                        <group>
+                            <field name="spec_cpu_base_ghz"  string="Fréquence de base"/>
+                            <field name="spec_cpu_boost_ghz" string="Fréquence boost"/>
+                            <field name="spec_cpu_cache"     string="Cache L3"/>
+                        </group>
                     </group>
+
+                    <!-- Carte mère -->
+                    <group string="Spécifications — Carte mère"
+                           invisible="pc_category != 'motherboard'">
+                        <group>
+                            <field name="spec_mb_socket"      string="Socket CPU"/>
+                            <field name="spec_mb_form_factor" string="Format"/>
+                            <field name="spec_mb_ram_type"    string="Type RAM supporté"/>
+                            <field name="spec_mb_chipset"     string="Chipset"/>
+                        </group>
+                        <group>
+                            <field name="spec_mb_ram_slots"   string="Slots RAM"/>
+                            <field name="spec_mb_m2_slots"    string="Slots M.2 NVMe"/>
+                            <field name="spec_mb_pcie_slots"  string="Slots PCIe x16"/>
+                        </group>
+                    </group>
+
+                    <!-- RAM -->
+                    <group string="Spécifications — Mémoire RAM"
+                           invisible="pc_category != 'ram'">
+                        <group>
+                            <field name="spec_ram_type"     string="Type DDR"/>
+                            <field name="spec_ram_capacity" string="Capacité totale"/>
+                            <field name="spec_ram_speed"    string="Fréquence (MHz)"/>
+                        </group>
+                        <group>
+                            <field name="spec_ram_modules"  string="Nb de barrettes"/>
+                            <field name="spec_ram_timing"   string="Timing (CL)"/>
+                        </group>
+                    </group>
+
+                    <!-- GPU -->
+                    <group string="Spécifications — Carte graphique (GPU)"
+                           invisible="pc_category != 'gpu'">
+                        <group>
+                            <field name="spec_gpu_architecture" string="Architecture"/>
+                            <field name="spec_gpu_vram"         string="VRAM"/>
+                            <field name="spec_gpu_mem_type"     string="Type mémoire"/>
+                        </group>
+                        <group>
+                            <field name="spec_gpu_tdp"          string="TDP (W)"/>
+                            <field name="spec_gpu_length_mm"    string="Longueur (mm)"/>
+                            <field name="spec_gpu_outputs"      string="Sorties vidéo"/>
+                        </group>
+                    </group>
+
+                    <!-- PSU -->
+                    <group string="Spécifications — Alimentation (PSU)"
+                           invisible="pc_category != 'psu'">
+                        <field name="spec_psu_wattage"    string="Puissance (W)"/>
+                        <field name="spec_psu_efficiency" string="Certification"/>
+                        <field name="spec_psu_modular"    string="Modularité"/>
+                    </group>
+
+                    <!-- Boîtier -->
+                    <group string="Spécifications — Boîtier"
+                           invisible="pc_category != 'case'">
+                        <group string="Formats supportés">
+                            <field name="spec_case_atx"  string="ATX"       widget="boolean_toggle"/>
+                            <field name="spec_case_matx" string="Micro-ATX" widget="boolean_toggle"/>
+                            <field name="spec_case_itx"  string="Mini-ITX"  widget="boolean_toggle"/>
+                            <field name="spec_case_eatx" string="E-ATX"     widget="boolean_toggle"/>
+                        </group>
+                        <group string="Dimensions max">
+                            <field name="spec_case_max_gpu_mm"     string="Longueur GPU max (mm)"/>
+                            <field name="spec_case_max_cooler_mm"  string="Hauteur ventirad max (mm)"/>
+                            <field name="spec_case_drive_bays"     string="Baies 3.5&quot;"/>
+                            <field name="spec_case_fans_included"  string="Ventilateurs inclus"/>
+                        </group>
+                    </group>
+
+                    <!-- Refroidissement -->
+                    <group string="Spécifications — Refroidissement"
+                           invisible="pc_category != 'cooling'">
+                        <group>
+                            <field name="spec_cool_type"       string="Type"/>
+                            <field name="spec_cool_tdp_rating" string="TDP max supporté (W)"/>
+                            <field name="spec_cool_height_mm"  string="Hauteur ventirad (mm)"/>
+                            <field name="spec_cool_radiator_mm" string="Radiateur AIO (mm)"/>
+                        </group>
+                        <group string="Sockets compatibles">
+                            <field name="spec_cool_sock_am5"    string="AM5"     widget="boolean_toggle"/>
+                            <field name="spec_cool_sock_am4"    string="AM4"     widget="boolean_toggle"/>
+                            <field name="spec_cool_sock_lga1700" string="LGA1700" widget="boolean_toggle"/>
+                            <field name="spec_cool_sock_lga1200" string="LGA1200" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+
+                    <!-- Stockage -->
+                    <group string="Spécifications — Stockage"
+                           invisible="pc_category != 'storage'">
+                        <field name="spec_stor_type"     string="Type"/>
+                        <field name="spec_stor_capacity" string="Capacité"/>
+                        <field name="spec_stor_read"     string="Lecture séq."/>
+                        <field name="spec_stor_write"    string="Écriture séq."/>
+                    </group>
+
+                    <!-- PC Portable -->
+                    <group string="Spécifications — PC Portable"
+                           invisible="pc_category != 'laptop'">
+                        <group>
+                            <field name="spec_laptop_cpu"     string="Processeur"/>
+                            <field name="spec_laptop_gpu"     string="Carte graphique"/>
+                            <field name="spec_laptop_ram"     string="RAM"/>
+                            <field name="spec_laptop_storage" string="Stockage"/>
+                        </group>
+                        <group>
+                            <field name="spec_laptop_display" string="Écran"/>
+                            <field name="spec_laptop_battery" string="Batterie"/>
+                            <field name="spec_laptop_os"      string="Système"/>
+                            <field name="spec_laptop_weight"  string="Poids"/>
+                        </group>
+                    </group>
+
+                    <!-- JSON résultant (lecture seule, pour debug) -->
+                    <group string="JSON généré (lecture seule)" invisible="pc_category_id == False">
+                        <field name="pc_specs" nolabel="1" readonly="1"/>
+                    </group>
+
                 </page>
             </xpath>
 
         </field>
     </record>
 
+
+
     <!-- ── Laptop Action ─────────────────────────────────────────────── -->
     <record id="action_pc_laptops" model="ir.actions.act_window">
         <field name="name">PC Portables</field>
         <field name="res_model">product.template</field>
         <field name="view_mode">tree,form</field>
-        <field name="domain">[('pc_category', '=', 'laptop')]</field>
-        <field name="context">{'default_pc_category': 'laptop', 'default_type': 'consu'}</field>
+        <field name="domain">[('pc_category_id.type', '=', 'laptop')]</field>
+        <field name="context">{'default_type': 'consu'}</field>
         <field name="view_id" ref="view_pc_product_tree"/>
         <field name="search_view_id" ref="view_pc_product_search"/>
     </record>
@@ -192,7 +327,7 @@
         <field name="name">PC Products</field>
         <field name="res_model">product.template</field>
         <field name="view_mode">tree,form</field>
-        <field name="domain">[('pc_category', '!=', False)]</field>
+        <field name="domain">[('pc_category_id', '!=', False)]</field>
         <field name="context">{'default_type': 'consu'}</field>
         <field name="search_view_id" ref="view_pc_product_search"/>
         <field name="help" type="html">

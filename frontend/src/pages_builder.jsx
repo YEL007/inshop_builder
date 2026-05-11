@@ -1,121 +1,210 @@
 import React from "react";
 
-const ImageCarousel = window.ImageCarousel;
-const ProductVisual = window.ProductVisual;
-
-// pages_builder.jsx — Custom PC Builder — Wizard Step-by-Step Layout
-
-const WIZARD_STEPS = [
-  { key:'cpu',         num:1, catalog:'cpu' },
-  { key:'motherboard', num:2, catalog:'motherboard' },
-  { key:'ram',         num:3, catalog:'ram' },
-  { key:'gpu',         num:4, catalog:'gpu' },
-  { key:'storage',     num:5, catalog:'storage' },
-  { key:'psu',         num:6, catalog:'psu' },
-  { key:'case',        num:7, catalog:'case' },
-  { key:'cooling',     num:8, catalog:'cooling' },
-];
-
-const getSpecSnippet = (product) => {
-  const s = product.specs || {};
-  switch(product.category) {
-    case 'cpu':         return s.cores ? `Cores: ${s.cores}  |  Threads: ${s.threads}  |  Boost: ${s.boostClock}` : '';
-    case 'motherboard': return s.socket ? `Socket: ${s.socket}  |  ${s.formFactor}  |  ${s.ramType}` : '';
-    case 'ram':         return s.capacity ? `${s.capacity}  |  ${s.speed} MHz  |  ${s.timing}` : '';
-    case 'gpu':         return s.vram ? `${s.vram}  |  TDP: ${s.tdp}W  |  ${s.architecture}` : '';
-    case 'storage':     return s.capacity ? `${s.capacity}  |  Read: ${s.read}  |  ${s.type}` : '';
-    case 'psu':         return s.wattage ? `${s.wattage}W  |  ${s.efficiency}  |  ${s.modular}` : '';
-    case 'case':        return s.formFactors ? `${s.formFactors.join(', ')}  |  GPU max: ${s.maxGpuLength}mm` : '';
-    case 'cooling':     return s.type ? `${s.type}  |  ${s.size}  |  TDP: ${s.tdpRating}W` : '';
-    default:            return '';
-  }
+const getWizardSteps = (cats) => {
+  return (cats || [])
+    .filter(c => c.type === 'component')
+    .map((c, i) => ({
+      key: c.code,
+      num: i + 1,
+      catalog: c.code,
+      label: c.name,
+      icon: c.icon
+    }));
 };
 
-const getCompatNote = (step, product, build) => {
-  const s = product.specs || {};
+// ── Panneau compatibilité global ─────────────────────────────────────────────
+const CompatPanel = ({ build, steps }) => {
+  const { issues, warnings } = window.checkCompatibility(build);
+  const completedCount = steps.filter(s => build[s.key]).length;
+  if (completedCount < 2) return null;
 
-  // ── CPU ↔ Carte mère : socket ────────────────────────────────────────────
-  if (step.key === 'motherboard' && build.cpu) {
-    if (s.socket !== build.cpu.specs.socket)
-      return { ok:false, msg:`Socket carte mère (${s.socket}) ≠ CPU (${build.cpu.specs.socket})` };
-  }
-  if (step.key === 'cpu' && build.motherboard) {
-    if (s.socket !== build.motherboard.specs.socket)
-      return { ok:false, msg:`Socket CPU (${s.socket}) ≠ carte mère (${build.motherboard.specs.socket})` };
-  }
+  const allOk = issues.length === 0 && warnings.length === 0;
 
-  // ── RAM ↔ Carte mère : type DDR ─────────────────────────────────────────
-  if (step.key === 'ram' && build.motherboard?.specs.ramType) {
-    if (s.type && s.type !== build.motherboard.specs.ramType)
-      return { ok:false, msg:`RAM ${s.type} incompatible avec carte mère ${build.motherboard.specs.ramType}` };
-  }
-  if (step.key === 'motherboard' && build.ram?.specs.type) {
-    if (s.ramType && s.ramType !== build.ram.specs.type)
-      return { ok:false, msg:`Carte mère ${s.ramType} incompatible avec RAM ${build.ram.specs.type}` };
-  }
+  return (
+    <div style={{
+      margin: '0 12px 12px',
+      borderRadius: 10,
+      border: `1px solid ${issues.length > 0 ? '#cc444440' : warnings.length > 0 ? '#f59e0b40' : '#22c55e40'}`,
+      background: issues.length > 0 ? '#cc444410' : warnings.length > 0 ? '#f59e0b10' : '#22c55e10',
+      overflow: 'hidden',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '8px 12px',
+        borderBottom: `1px solid ${issues.length > 0 ? '#cc444430' : warnings.length > 0 ? '#f59e0b30' : '#22c55e30'}`,
+        display: 'flex', alignItems: 'center', gap: 6,
+        fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+        color: issues.length > 0 ? '#cc4444' : warnings.length > 0 ? '#f59e0b' : '#22c55e',
+      }}>
+        {issues.length > 0 ? '✗' : warnings.length > 0 ? '⚠' : '✓'}
+        {issues.length > 0 ? `${issues.length} INCOMPATIBILITÉ${issues.length > 1 ? 'S' : ''}` :
+         warnings.length > 0 ? `${warnings.length} AVERTISSEMENT${warnings.length > 1 ? 'S' : ''}` :
+         'COMPATIBILITÉ OK'}
+      </div>
 
-  // ── Refroidissement ↔ CPU : socket + TDP ────────────────────────────────
-  if (step.key === 'cooling' && build.cpu) {
-    if (s.sockets && !s.sockets.includes(build.cpu.specs.socket))
-      return { ok:false, msg:`Refroidissement: socket ${build.cpu.specs.socket} non supporté` };
-    if (s.tdpRating && build.cpu.specs.tdp && s.tdpRating < build.cpu.specs.tdp)
-      return { ok:false, msg:`Refroidissement ${s.tdpRating}W insuffisant pour CPU ${build.cpu.specs.tdp}W` };
-  }
+      {/* Issues */}
+      {issues.map((issue, i) => (
+        <div key={i} style={{ padding: '7px 12px', borderBottom: i < issues.length - 1 ? '1px solid #cc444420' : 'none', display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+          <span style={{ color: '#cc4444', fontSize: 12, flexShrink: 0, marginTop: 1 }}>✗</span>
+          <span style={{ color: '#e08080', fontSize: 11, lineHeight: 1.4 }}>{issue.msg}</span>
+        </div>
+      ))}
 
-  // ── Alimentation ↔ CPU + GPU : puissance totale ──────────────────────────
-  if (step.key === 'psu' && (build.cpu || build.gpu)) {
-    const totalTdp = (build.cpu?.specs.tdp || 0) + (build.gpu?.specs.tdp || 0) + 50;
-    const minWatt = Math.ceil(totalTdp * 1.2);
-    if (s.wattage && s.wattage < minWatt)
-      return { ok:false, msg:`${s.wattage}W insuffisant — minimum ~${minWatt}W recommandé` };
-  }
+      {/* Warnings */}
+      {warnings.map((warn, i) => (
+        <div key={i} style={{ padding: '7px 12px', borderBottom: i < warnings.length - 1 ? '1px solid #f59e0b20' : 'none', display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+          <span style={{ color: '#f59e0b', fontSize: 12, flexShrink: 0, marginTop: 1 }}>⚠</span>
+          <span style={{ color: '#d4aa60', fontSize: 11, lineHeight: 1.4 }}>{warn.msg}</span>
+        </div>
+      ))}
 
-  // ── Boîtier ↔ Carte mère : format (ATX / mATX / ITX) ───────────────────
-  if (step.key === 'case' && build.motherboard?.specs.formFactor) {
-    if (s.formFactors && !s.formFactors.includes(build.motherboard.specs.formFactor))
-      return { ok:false, msg:`Boîtier ne supporte pas le format ${build.motherboard.specs.formFactor}` };
-  }
-  if (step.key === 'motherboard' && build.case?.specs.formFactors) {
-    if (s.formFactor && !build.case.specs.formFactors.includes(s.formFactor))
-      return { ok:false, msg:`Format carte mère (${s.formFactor}) incompatible avec le boîtier` };
-  }
-
-  // ── Boîtier ↔ Refroidissement : hauteur ventirad ────────────────────────
-  if (step.key === 'cooling' && build.case?.specs.maxCoolerHeight && s.height) {
-    const maxH = parseInt(build.case.specs.maxCoolerHeight);
-    const coolerH = parseInt(s.height);
-    if (coolerH && maxH && coolerH > maxH)
-      return { ok:false, msg:`Ventirad trop grand (${s.height}) — max boîtier: ${build.case.specs.maxCoolerHeight}` };
-  }
-
-  return { ok:true };
+      {allOk && (
+        <div style={{ padding: '7px 12px', color: '#6ee7b7', fontSize: 11 }}>
+          Tous les composants sont compatibles entre eux.
+        </div>
+      )}
+    </div>
+  );
 };
 
+// ── Card produit ──────────────────────────────────────────────────────────────
+const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
+  const { t, formatPrice, toggleFav, favorites } = React.useContext(window.AppContext);
+  const [hov, setHov] = React.useState(false);
+  const color = (window.CARD_COLORS || {})[product.category] || '#e8001d';
+  const label = (window.CARD_LABELS || {})[product.category] || product.category;
+  const specEntries = Object.entries(product.specs || {}).slice(0, 4);
+
+  const borderColor = isSelected ? color
+    : !compat.ok ? '#cc444450'
+    : compat.warning ? '#f59e0b50'
+    : hov ? color + '80' : '#3c3c3c';
+
+  const bgColor = isSelected ? color + '12'
+    : !compat.ok ? '#cc44440a'
+    : compat.warning ? '#f59e0b0a'
+    : '#242424';
+
+  return (
+    <div
+      style={{
+        background: bgColor,
+        border: `2px solid ${borderColor}`,
+        borderRadius: 14, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        transition: 'all 0.2s', position: 'relative',
+        opacity: !compat.ok ? 0.5 : 1,
+        cursor: compat.ok ? 'pointer' : 'not-allowed',
+      }}
+      onClick={compat.ok ? onSelect : undefined}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+    >
+      {/* Selected checkmark */}
+      {isSelected && (
+        <div style={{ position: 'absolute', top: 10, right: 10, width: 22, height: 22, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+        </div>
+      )}
+
+      {/* Compat badge */}
+      {!isSelected && (!compat.ok || compat.warning) && (
+        <div style={{
+          position: 'absolute', top: 10, right: 10, zIndex: 3,
+          padding: '2px 7px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+          background: !compat.ok ? '#cc444425' : '#f59e0b25',
+          color: !compat.ok ? '#cc4444' : '#f59e0b',
+          border: `1px solid ${!compat.ok ? '#cc444440' : '#f59e0b40'}`,
+        }}>
+          {!compat.ok ? '✗ INCOMPAT.' : '⚠ ATTENTION'}
+        </div>
+      )}
+
+
+      {/* Image */}
+      <div style={{ height: 140, background: `linear-gradient(135deg, ${color}14, #1e1e1e)`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {product.image
+          ? <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          : <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1" opacity="0.4"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        }
+      </div>
+
+      {/* Info */}
+      <div style={{ padding: '14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div>
+          <div style={{ color, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 3 }}>{label?.toUpperCase()}</div>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 13, color: '#fff', lineHeight: 1.3 }}>{product.name}</div>
+        </div>
+
+        {specEntries.length > 0 && (
+          <div style={{ background: '#1e1e1e', borderRadius: 6, padding: '7px 9px' }}>
+            {specEntries.map(([k, v], i) => (
+              <div key={k} style={{ display: 'flex', gap: 6, alignItems: 'baseline', ...(i < specEntries.length - 1 ? { marginBottom: 3, borderBottom: '1px solid #2a2a2a', paddingBottom: 3 } : {}) }}>
+                <span style={{ color: '#666', fontSize: 10, minWidth: 50 }}>{k}</span>
+                <span style={{ color: '#888', fontSize: 11, fontFamily: "'DM Mono',monospace" }}>{Array.isArray(v) ? v.join(', ') : String(v)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 16, color: '#e8001d' }}>{formatPrice(product.price)}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ color: '#e8001d', fontSize: 10 }}>{'★'.repeat(Math.round(product.rating || 0))}</span>
+            <span style={{ color: '#666', fontSize: 10 }}>{product.rating}</span>
+          </div>
+        </div>
+
+        {/* Compat message */}
+        {(!compat.ok || compat.warning) && compat.msg && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, padding: '6px 8px', borderRadius: 6, marginTop: 2, background: !compat.ok ? '#cc444415' : '#f59e0b12', border: `1px solid ${!compat.ok ? '#cc444430' : '#f59e0b30'}` }}>
+            <span style={{ color: !compat.ok ? '#cc4444' : '#f59e0b', fontSize: 11, flexShrink: 0, marginTop: 1 }}>{!compat.ok ? '✗' : '⚠'}</span>
+            <span style={{ color: !compat.ok ? '#e08080' : '#d4aa60', fontSize: 10, lineHeight: 1.4 }}>{compat.msg}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ── Page principale ───────────────────────────────────────────────────────────
 const BuilderPage = () => {
   const { build, setBuild, addToCart, dataLoaded, t, formatPrice } = React.useContext(window.AppContext);
   const [currentStep, setCurrentStep] = React.useState(0);
-  const [addedAll, setAddedAll] = React.useState(false);
   const [sortBy, setSortBy] = React.useState('featured');
+  const [filterIncompat, setFilterIncompat] = React.useState(false);
+  const [addedAll, setAddedAll] = React.useState(false);
 
-  const step = WIZARD_STEPS[currentStep];
+  const steps = React.useMemo(() => getWizardSteps(window.PC_CATEGORIES_DATA), [dataLoaded]);
+  const step = steps[currentStep];
+
   const products = React.useMemo(() => {
-    let p = window.CATALOG[step.catalog] || [];
-    if (sortBy === 'price_asc') p = [...p].sort((a,b)=>a.price-b.price);
-    else if (sortBy === 'price_desc') p = [...p].sort((a,b)=>b.price-a.price);
-    else if (sortBy === 'rating') p = [...p].sort((a,b)=>b.rating-a.rating);
+    if (!step) return [];
+    let p = (window.CATALOG[step.catalog] || []).filter(prod => prod.stock !== 'out_of_stock' || true);
+    if (sortBy === 'price_asc')  p = [...p].sort((a, b) => a.price - b.price);
+    if (sortBy === 'price_desc') p = [...p].sort((a, b) => b.price - a.price);
+    if (sortBy === 'rating')     p = [...p].sort((a, b) => b.rating - a.rating);
+    if (filterIncompat) {
+      p = p.filter(prod => {
+        const c = window.getCompatNote ? window.getCompatNote(step.key, prod, build) : { ok: true };
+        return c.ok;
+      });
+    }
     return p;
-  }, [step, sortBy, dataLoaded]);
+  }, [step, sortBy, filterIncompat, dataLoaded, build]);
 
-  const completedCount = WIZARD_STEPS.filter(s => build[s.key]).length;
+  const completedCount = steps.filter(s => build[s.key]).length;
   const total = window.calcBuildTotal(build);
+  const { issues, warnings } = window.checkCompatibility(build);
+  const canGoNext = currentStep < steps.length - 1;
+  const canGoPrev = currentStep > 0;
 
   const handleSelect = (product) => {
-    // Toggle: clicking the already-selected product deselects it
+    if (!step) return;
     if (build[step.key]?.id === product.id) {
       setBuild(prev => ({ ...prev, [step.key]: null }));
       return;
     }
-    const compat = getCompatNote(step, product, build);
+    const compat = window.getCompatNote ? window.getCompatNote(step.key, product, build) : { ok: true };
     if (!compat.ok) return;
     setBuild(prev => ({ ...prev, [step.key]: product }));
   };
@@ -126,123 +215,177 @@ const BuilderPage = () => {
     setTimeout(() => setAddedAll(false), 2000);
   };
 
-  const canGoNext = currentStep < WIZARD_STEPS.length - 1;
-  const canGoPrev = currentStep > 0;
+  if (steps.length === 0 && dataLoaded) {
+    return (
+      <div style={{ paddingTop: 100, textAlign: 'center', color: '#9f9f9f' }}>
+        <h2>Aucune catégorie de composant trouvée.</h2>
+        <p>Veuillez en créer dans le backend Odoo.</p>
+      </div>
+    );
+  }
+  
+  if (!step && steps.length > 0) return null;
 
   return (
-    <div style={wiz.page}>
-      {/* Title bar */}
-      <div style={wiz.titleBar} className="rsp-banner">
-        <video autoPlay loop muted playsInline style={wiz.bannerVideo}>
+    <div style={{ paddingTop: 64, minHeight: '100vh', background: '#1a1a1a', display: 'flex', flexDirection: 'column' }}>
+      {/* Banner */}
+      <div style={{ position: 'relative', height: 260, overflow: 'hidden', borderBottom: '1px solid #333', background:'#111' }}>
+        <video autoPlay loop muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }}>
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
-        <div style={wiz.bannerOverlay} />
-        <div style={wiz.titleContent} className="rsp-banner-content">
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e8001d" strokeWidth="1.5">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-            </svg>
+        <div style={{ position: 'absolute', inset: 0, opacity: 1, zIndex: 1, backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px)' }} />
+        <div style={{ position: 'absolute', top: '20%', left: '10%', width: 600, height: 600, zIndex: 1, background: 'radial-gradient(ellipse at 40% 50%, rgba(232,0,29,0.15) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)', zIndex: 1 }} />
+        <div style={{ position: 'relative', zIndex: 2, padding: '48px 80px', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div>
-              <h1 style={wiz.title} className="rsp-banner-title">{t('builder_title')}</h1>
-              <p style={wiz.subtitle} className="rsp-banner-eye">{t('builder_subtitle')}</p>
+              <div style={{ color: '#e8001d', fontSize: 12, fontWeight: 600, letterSpacing: '0.2em', marginBottom: 12 }}>CONFIGURATION PERSONNALISÉE</div>
+              <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 40, color: '#fff', margin: 0, lineHeight: 1.1 }}>{t('builder_title')}</h1>
+              <p style={{ color: '#a8a8a8', fontSize: 16, marginTop: 12, maxWidth: 600, lineHeight: 1.6 }}>{t('builder_subtitle')}</p>
             </div>
           </div>
+          {/* Compat summary bar */}
+          {completedCount >= 2 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 24 }}>
+              {issues.length > 0 && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 20, background: '#cc444420', border: '1px solid #cc444440', color: '#cc4444', fontSize: 11, fontWeight: 700 }}>
+                  ✗ {issues.length} incompatibilité{issues.length > 1 ? 's' : ''}
+                </span>
+              )}
+              {warnings.length > 0 && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 20, background: '#f59e0b20', border: '1px solid #f59e0b40', color: '#f59e0b', fontSize: 11, fontWeight: 700 }}>
+                  ⚠ {warnings.length} avertissement{warnings.length > 1 ? 's' : ''}
+                </span>
+              )}
+              {issues.length === 0 && warnings.length === 0 && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 20, background: '#22c55e20', border: '1px solid #22c55e40', color: '#22c55e', fontSize: 11, fontWeight: 700 }}>
+                  ✓ Tous compatibles
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      <div style={wiz.body} className="wizard-body">
-        {/* Left sidebar */}
-        <aside style={wiz.sidebar} className="wizard-sidebar">
-          <div style={wiz.stepList}>
-            {WIZARD_STEPS.map((s, i) => {
+      {/* Body */}
+      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', flex: 1, minHeight: 0 }} className="wizard-body">
+        {/* Sidebar */}
+        <aside style={{ borderRight: '1px solid #2a2a2a', display: 'flex', flexDirection: 'column', background: '#1e1e1e', overflowY: 'auto' }}>
+          <div style={{ padding: '12px 12px 4px' }}>
+            {steps.map((s, i) => {
               const isActive = i === currentStep;
               const isDone = !!build[s.key];
+              const stepBuild = { ...build, [s.key]: build[s.key] };
+              const stepCompat = window.checkCompatibility(stepBuild);
+              const hasIssue = stepCompat.issues.some(iss => iss.pair && iss.pair.includes(s.key));
+              const hasWarn  = stepCompat.warnings.some(w => w.pair && w.pair.includes(s.key));
+
               return (
                 <button
                   key={s.key}
                   style={{
-                    ...wiz.stepItem,
-                    ...(isActive ? wiz.stepItemActive : {}),
-                    ...(isDone && !isActive ? wiz.stepItemDone : {}),
+                    display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                    padding: '9px 10px', borderRadius: 8, border: 'none',
+                    background: isActive ? '#e8001d' : isDone ? '#252525' : 'transparent',
+                    cursor: 'pointer', transition: 'all 0.15s', marginBottom: 2, textAlign: 'left',
                   }}
                   onClick={() => setCurrentStep(i)}
                 >
-                  <div style={{ ...wiz.stepNum, ...(isActive ? wiz.stepNumActive : {}), ...(isDone && !isActive ? wiz.stepNumDone : {}) }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                    background: isActive ? '#fff' : isDone ? (hasIssue ? '#cc4444' : hasWarn ? '#f59e0b' : '#444') : '#333',
+                    color: isActive ? '#e8001d' : isDone ? (hasIssue ? '#fff' : hasWarn ? '#fff' : '#aaa') : '#666',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700,
+                  }}>
                     {isDone && !isActive
-                      ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      ? (hasIssue ? '✗' : hasWarn ? '⚠' : <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>)
                       : s.num
                     }
                   </div>
-                  <span style={wiz.stepLabel}>{t('step_label_' + s.key)}</span>
-                  {isActive && (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginLeft:'auto' }}>
-                      <path d="m9 18 6-6-6-6"/>
-                    </svg>
-                  )}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#fff' : isDone ? '#ccc' : '#666', fontFamily: "'Space Grotesk',sans-serif" }}>
+                      {t('step_label_' + s.key)}
+                    </div>
+                    {isDone && build[s.key] && (
+                      <div style={{ fontSize: 10, color: isActive ? '#ffaaaa' : '#666', marginTop: 1 }}>
+                        {build[s.key].name.slice(0, 22)}{build[s.key].name.length > 22 ? '…' : ''}
+                      </div>
+                    )}
+                  </div>
                   {isDone && !isActive && (
-                    <span style={wiz.stepPrice}>{formatPrice(build[s.key].price)}</span>
+                    <span style={{ color: '#9f9f9f', fontSize: 10, fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{formatPrice(build[s.key].price)}</span>
                   )}
                 </button>
               );
             })}
           </div>
 
-          {/* Bottom summary */}
-          <div style={wiz.summaryBox}>
-            <div style={wiz.summaryTop}>
-              <span style={{ color:'#666666', fontSize:12 }}>{t('complete_steps', completedCount, WIZARD_STEPS.length)}</span>
-            </div>
-            <div style={wiz.summaryTotal}>{formatPrice(total)}</div>
+          {/* Compat panel */}
+          <CompatPanel build={build} steps={steps} />
+
+          {/* Summary */}
+          <div style={{ padding: '14px', borderTop: '1px solid #2a2a2a', background: '#1a1a1a', marginTop: 'auto' }}>
+            <div style={{ color: '#666', fontSize: 11, marginBottom: 4 }}>{t('complete_steps', completedCount, steps.length)}</div>
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 26, color: '#fff', marginBottom: 10 }}>{formatPrice(total)}</div>
             <button
-              style={{ ...wiz.addAllBtn, ...(completedCount===0?wiz.addAllBtnDisabled:{}), ...(addedAll?wiz.addAllBtnSuccess:{}) }}
-              disabled={completedCount===0}
+              style={{
+                width: '100%', padding: '10px', border: 'none', borderRadius: 8, cursor: completedCount === 0 ? 'not-allowed' : 'pointer',
+                fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 13,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s',
+                background: addedAll ? '#22c55e' : completedCount === 0 ? '#333' : '#e8001d',
+                color: completedCount === 0 ? '#666' : '#fff',
+              }}
+              disabled={completedCount === 0}
               onClick={handleAddAll}
             >
-              {addedAll ? (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  {t('added_to_cart')}
-                </>
-              ) : (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                  {t('add_all_to_cart')}
-                </>
-              )}
+              {addedAll ? '✓ Ajouté !' : t('add_all_to_cart')}
             </button>
           </div>
         </aside>
 
-        {/* Main content */}
-        <main style={wiz.main} className="wizard-main">
+        {/* Main */}
+        <main style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
           {/* Step header */}
-          <div style={wiz.stepHeader} className="wizard-step-header">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
             <div>
-              <h2 style={wiz.stepTitle}>{t('step_label_' + step.key)}</h2>
-              <p style={wiz.stepHint}>
+              <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, color: '#fff', margin: '0 0 4px' }}>
+                {t('step_label_' + step.key)}
+              </h2>
+              <p style={{ color: '#9f9f9f', fontSize: 12 }}>
                 {build[step.key]
-                  ? <><span style={{ color:'#e8001d' }}>✓ {t('selected')}: </span>{build[step.key].name}</>
-                  : t('select_component') + ' — ' + t('step_label_' + step.key)}
+                  ? <><span style={{ color: '#22c55e' }}>✓ Sélectionné : </span>{build[step.key].name}</>
+                  : `Choisissez un composant — ${t('step_label_' + step.key)}`}
               </p>
             </div>
-            <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={wiz.sortSelect}>
-              <option value="featured">{t('sort_featured')}</option>
-              <option value="price_asc">{t('sort_price_asc')}</option>
-              <option value="price_desc">{t('sort_price_desc')}</option>
-              <option value="rating">{t('sort_rating')}</option>
-            </select>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 11, color: '#888' }}>
+                <input type="checkbox" checked={filterIncompat} onChange={e => setFilterIncompat(e.target.checked)}
+                  style={{ accentColor: '#e8001d', cursor: 'pointer' }} />
+                Masquer incompatibles
+              </label>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+                style={{ background: '#222', border: '1px solid #3c3c3c', borderRadius: 7, padding: '7px 12px', color: '#888', fontFamily: "'Space Grotesk',sans-serif", fontSize: 12, outline: 'none', cursor: 'pointer' }}>
+                <option value="featured">{t('sort_featured')}</option>
+                <option value="price_asc">{t('sort_price_asc')}</option>
+                <option value="price_desc">{t('sort_price_desc')}</option>
+                <option value="rating">{t('sort_rating')}</option>
+              </select>
+            </div>
           </div>
 
-          {/* Product grid */}
-          <div style={wiz.productGrid} className="wizard-grid">
-            {products.map(product => {
-              const compat = getCompatNote(step, product, build);
-              const isSelected = build[step.key]?.id === product.id;
+          {/* Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }} className="wizard-grid">
+            {products.length === 0 ? (
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px 20px', color: '#555' }}>
+                <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 14 }}>Aucun produit disponible pour cette catégorie.</div>
+              </div>
+            ) : products.map(product => {
+              const compat = window.getCompatNote ? window.getCompatNote(step.key, product, build) : { ok: true, warning: false };
               return (
                 <ProductWizardCard
                   key={product.id}
                   product={product}
-                  isSelected={isSelected}
+                  isSelected={build[step.key]?.id === product.id}
                   compat={compat}
                   onSelect={() => handleSelect(product)}
                 />
@@ -251,25 +394,27 @@ const BuilderPage = () => {
           </div>
 
           {/* Navigation */}
-          <div style={wiz.navRow}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
             <button
-              style={{ ...wiz.navBtn, ...(canGoPrev ? {} : wiz.navBtnDisabled) }}
-              disabled={!canGoPrev}
-              onClick={() => setCurrentStep(i => i - 1)}
+              style={{ background: '#222', border: '1px solid #3c3c3c', color: canGoPrev ? '#ccc' : '#444', padding: '10px 24px', borderRadius: 8, cursor: canGoPrev ? 'pointer' : 'not-allowed', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 14 }}
+              disabled={!canGoPrev} onClick={() => setCurrentStep(i => i - 1)}
             >
               {t('prev')}
             </button>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              {WIZARD_STEPS.map((_, i) => (
-                <div key={i} style={{
-                  width: i===currentStep?24:6, height:6, borderRadius:3,
-                  background: i===currentStep?'#e8001d': build[WIZARD_STEPS[i].key]?'#9f9f9f':'#3c3c3c',
-                  transition:'all 0.2s', cursor:'pointer',
-                }} onClick={() => setCurrentStep(i)}/>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {steps.map((_, i) => (
+                <div key={i}
+                  style={{
+                    flex: 1, height: 3, borderRadius: 2,
+                    background: i === currentStep ? '#e8001d' : build[steps[i].key] ? '#555' : '#333',
+                  }}
+                  onClick={() => setCurrentStep(i)} />
               ))}
             </div>
+
             <button
-              style={{ ...wiz.navBtnPrimary, ...(canGoNext ? {} : wiz.navBtnPrimaryDone) }}
+              style={{ background: canGoNext ? '#e8001d' : '#555', color: '#fff', border: 'none', padding: '10px 28px', borderRadius: 8, cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 14 }}
               onClick={() => canGoNext && setCurrentStep(i => i + 1)}
             >
               {canGoNext ? t('next_step') : t('done')}
@@ -279,176 +424,6 @@ const BuilderPage = () => {
       </div>
     </div>
   );
-};
-
-const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
-  const { t, formatPrice, toggleFav, favorites } = React.useContext(window.AppContext);
-  const [hov, setHov] = React.useState(false);
-  const color = (window.CARD_COLORS||{})[product.category] || '#e8001d';
-  const label = (window.CARD_LABELS||{})[product.category] || product.category;
-  const specEntries = Object.entries(product.specs||{}).slice(0, 4);
-
-  return (
-    <div
-      style={{
-        background: isSelected ? color+'12' : '#242424',
-        border: `2px solid ${isSelected ? color : !compat.ok ? '#cc444440' : hov ? color+'80' : '#3c3c3c'}`,
-        borderRadius:16, overflow:'hidden', display:'flex', flexDirection:'column',
-        transition:'all 0.2s', position:'relative',
-        opacity: !compat.ok ? 0.45 : 1,
-        cursor: compat.ok ? 'pointer' : 'not-allowed',
-      }}
-      onClick={compat.ok ? onSelect : undefined}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-    >
-      {isSelected && (
-        <div style={{ position:'absolute', top:12, right:12, width:24, height:24, borderRadius:'50%', background:color, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-      )}
-      <button style={{ position:'absolute', top:12, left:12, background:'rgba(14,14,14,0.85)', border:'none', cursor:'pointer', width:26, height:26, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2, color: favorites.has(product.id)?'#e8001d':'#9f9f9f' }}
-        onClick={e => { e.stopPropagation(); toggleFav(product.id); }}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill={favorites.has(product.id)?'#e8001d':'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      </button>
-
-      <div style={{ height:160, background:`linear-gradient(135deg, ${color}14, #212121)`, overflow:'hidden' }}>
-        <ImageCarousel images={product.images} category={product.category} />
-      </div>
-
-      <div style={{ padding:'16px', flex:1, display:'flex', flexDirection:'column' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
-          <div style={{ flex:1, minWidth:0, paddingRight:8 }}>
-            <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:4 }}>{label.toUpperCase()}</div>
-            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
-          </div>
-          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:17, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
-        </div>
-
-        {specEntries.length > 0 && (
-          <div style={{ background:'#212121', borderRadius:7, padding:'8px 10px', marginBottom:10 }}>
-            {specEntries.map(([k, v], i) => (
-              <div key={k} style={{ display:'flex', gap:6, alignItems:'baseline', ...(i < specEntries.length-1 ? { marginBottom:4, borderBottom:'1px solid #2a2a2a', paddingBottom:4 } : {}) }}>
-                <span style={{ color:'#9f9f9f', fontSize:10, minWidth:52 }}>{k}</span>
-                <span style={{ color:'#666666', fontSize:11, fontFamily:"'DM Mono',monospace" }}>{Array.isArray(v)?v.join(', '):String(v)}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'auto' }}>
-          <div>
-            <span style={{ color:'#e8001d', fontSize:11 }}>{'★'.repeat(Math.round(product.rating))}</span>
-            <span style={{ color:'#9f9f9f', marginLeft:4, fontSize:10 }}>{product.rating}</span>
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-            <div style={{ width:5, height:5, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':'#555' }} />
-            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':'#9f9f9f', fontSize:10 }}>
-              {product.stock==='in_stock'?t('in_stock'):product.stock==='low_stock'?t('low_stock'):t('out_of_stock')}
-            </span>
-          </div>
-        </div>
-
-        {!compat.ok && (
-          <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:8, padding:'6px 8px', background:'#cc444415', borderRadius:6, color:'#cc4444', fontSize:11 }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#cc4444" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-            {compat.msg}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const wiz = {
-  page: { paddingTop:64, minHeight:'100vh', background:'#1a1a1a', display:'flex', flexDirection:'column' },
-  titleBar: { position:'relative', height:180, overflow:'hidden', borderBottom:'1px solid #333333' },
-  bannerVideo: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.6 },
-  bannerOverlay: { position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, transparent 60%, rgba(0,0,0,0.8) 100%)' },
-  titleContent: { position:'relative', zIndex:2, padding:'32px 40px', height:'100%', boxSizing:'border-box', display:'flex', flexDirection:'column', justifyContent:'center' },
-  title: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:26, color:'#ffffff', margin:0, lineHeight:1.2 },
-  subtitle: { color:'#9f9f9f', fontSize:13, marginTop:4 },
-  body: { display:'grid', gridTemplateColumns:'280px 1fr', flex:1, minHeight:0 },
-
-  // Sidebar
-  sidebar: { borderRight:'1px solid #333333', display:'flex', flexDirection:'column', background:'#1e1e1e' },
-  stepList: { flex:1, padding:'16px 12px' },
-  stepItem: {
-    display:'flex', alignItems:'center', gap:10, width:'100%',
-    padding:'10px 12px', borderRadius:8, border:'none',
-    background:'transparent', cursor:'pointer', transition:'all 0.15s',
-    marginBottom:2, textAlign:'left',
-  },
-  stepItemActive: { background:'#e8001d', color:'#ffffff' },
-  stepItemDone: { background:'#222222' },
-  stepNum: {
-    width:24, height:24, borderRadius:'50%', background:'#333333',
-    color:'#9f9f9f', fontSize:11, fontWeight:700,
-    display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
-  },
-  stepNumActive: { background:'#ffffff', color:'#e8001d' },
-  stepNumDone: { background:'#444444', color:'#909090' },
-  stepLabel: { fontSize:13, fontWeight:600, color:'inherit', flex:1, fontFamily:"'Space Grotesk',sans-serif" },
-  stepPrice: { color:'#9f9f9f', fontSize:11, fontFamily:"'DM Mono',monospace", marginLeft:'auto' },
-
-  summaryBox: { padding:'16px', borderTop:'1px solid #333333', background:'#212121' },
-  summaryTop: { marginBottom:4 },
-  summaryTotal: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:28, color:'#ffffff', marginBottom:12 },
-  addAllBtn: {
-    width:'100%', padding:'10px', background:'#e8001d', color:'#ffffff',
-    border:'none', borderRadius:8, cursor:'pointer',
-    fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13,
-    display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'all 0.2s',
-  },
-  addAllBtnDisabled: { background:'#333333', color:'#9f9f9f', cursor:'not-allowed' },
-  addAllBtnSuccess: { background:'#909090', color:'#ffffff' },
-
-  // Main
-  main: { padding:'28px 36px', display:'flex', flexDirection:'column', gap:20, overflowY:'auto' },
-  stepHeader: { display:'flex', justifyContent:'space-between', alignItems:'flex-start' },
-  stepTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#ffffff', margin:'0 0 4px' },
-  stepHint: { color:'#9f9f9f', fontSize:13 },
-  sortSelect: { background:'#222222', border:'1px solid #3c3c3c', borderRadius:7, padding:'7px 12px', color:'#666666', fontFamily:"'Space Grotesk',sans-serif", fontSize:12, outline:'none', cursor:'pointer' },
-
-  productGrid: { display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 },
-
-  prodCard: {
-    display:'flex', gap:0, background:'#242424', border:'1px solid #333333',
-    borderRadius:10, overflow:'hidden', cursor:'pointer', transition:'all 0.15s', position:'relative',
-  },
-  prodCardHov: { borderColor:'#444444', background:'#2e2e2e' },
-  prodCardSelected: { borderColor:'#e8001d', background:'#222222' },
-  prodCardIncompat: { opacity:0.5, cursor:'not-allowed' },
-  prodImg: {
-    width:90, height:90, flexShrink:0,
-    display:'flex', alignItems:'center', justifyContent:'center',
-    borderRight:'1px solid #333333',
-  },
-  prodInfo: { padding:'12px 14px', flex:1, minWidth:0 },
-  prodBrand: { color:'#9f9f9f', fontSize:10, fontWeight:700, letterSpacing:'0.12em', marginBottom:2 },
-  prodName: { color:'#ffffff', fontWeight:600, fontSize:13, lineHeight:1.3, marginBottom:6 },
-  prodSpecs: { color:'#9f9f9f', fontSize:11, fontFamily:"'DM Mono',monospace", lineHeight:1.5, marginBottom:8 },
-  prodFooter: { display:'flex', justifyContent:'space-between', alignItems:'center' },
-  prodPrice: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:18, color:'#ffffff' },
-  incompatNote: { display:'flex', alignItems:'center', gap:6, marginTop:6, color:'#cc4444', fontSize:11 },
-  selectedCheck: {
-    position:'absolute', top:8, right:8, width:20, height:20, borderRadius:'50%',
-    background:'#e8001d', display:'flex', alignItems:'center', justifyContent:'center',
-  },
-
-  navRow: { display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:8, marginTop:'auto' },
-  navBtn: {
-    background:'#222222', border:'1px solid #3c3c3c', color:'#666666',
-    padding:'10px 24px', borderRadius:8, cursor:'pointer',
-    fontFamily:"'Space Grotesk',sans-serif", fontWeight:600, fontSize:14, transition:'all 0.15s',
-  },
-  navBtnDisabled: { opacity:0.3, cursor:'not-allowed' },
-  navBtnPrimary: {
-    background:'#e8001d', color:'#ffffff', border:'none',
-    padding:'10px 28px', borderRadius:8, cursor:'pointer',
-    fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, transition:'all 0.15s',
-  },
-  navBtnPrimaryDone: { background:'#909090' },
 };
 
 Object.assign(window, { BuilderPage });

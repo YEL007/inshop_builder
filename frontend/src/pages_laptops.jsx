@@ -215,7 +215,7 @@ const LaptopCard = ({ product, onView, onAdd, onFav, isFav }) => {
       <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }} onClick={onView}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
           <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
-            <div style={{ color, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 5 }}>{t('label_laptop').toUpperCase()}</div>
+            <div style={{ color, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 5 }}>{t('label_laptop')?.toUpperCase()}</div>
             <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 16, color: '#ffffff', lineHeight: 1.3 }}>{product.name}</div>
             {product.brand && <div style={{ color: '#9f9f9f', fontSize: 11, marginTop: 3 }}>{product.brand}</div>}
           </div>

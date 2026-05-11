@@ -132,6 +132,16 @@
     async getRelated(productId) {
       return get(`/product/${productId}/related`);
     },
+    async getConfig() {
+      return get('/config');
+    },
+    async getCategories() {
+      return get('/categories');
+    },
+    async submitContact(data) {
+      // data: { name, email, subject, message }
+      return post('/contact/submit', data);
+    },
   };
 
   // ── Bootstrap: fetch catalog + pre-builts from Odoo, populate globals ──────
@@ -140,13 +150,15 @@
     let catalogOk = false;
 
     try {
-      const [catalogRes, peripheralsRes, prebuiltsRes, onlyOnePcsRes, onlyOneCatalogRes, laptopsRes] = await Promise.all([
+      const [catalogRes, peripheralsRes, prebuiltsRes, onlyOnePcsRes, onlyOneCatalogRes, laptopsRes, configRes, categoriesRes] = await Promise.all([
         get('/catalog'),
         get('/peripherals'),
         get('/prebuilts'),
         get('/onlyonepcs'),
         get('/onlyone_catalog'),
         get('/laptops'),
+        get('/config'),
+        get('/categories'),
       ]);
 
       if (catalogRes.catalog) {
@@ -181,6 +193,14 @@
         ...Object.values(window.PERIPHERALS_DATA).flat(),
         ...window.LAPTOPS,
       ];
+
+      if (configRes) {
+        window.SITE_CONFIG = configRes;
+      }
+
+      if (categoriesRes && categoriesRes.categories) {
+        window.PC_CATEGORIES_DATA = categoriesRes.categories;
+      }
 
       try { localStorage.setItem('inshop_products_cache', JSON.stringify(window.ALL_PRODUCTS)); } catch(_) {}
       catalogOk = true;

@@ -1,82 +1,25 @@
 import React from "react";
+import { ImageCarousel, ProductVisual } from "./components_shared";
 
 // pages_home.jsx — Home Page
 
 const CATEGORY_CARDS = [
-  { id:'cpu', icon:'🔲', color:'#e8793a' },
-  { id:'gpu', icon:'🎮', color:'#6c5ce7' },
-  { id:'motherboard', icon:'📟', color:'#00b894' },
-  { id:'ram', icon:'💾', color:'#fdcb6e' },
-  { id:'storage', icon:'⚡', color:'#74b9ff' },
-  { id:'psu', icon:'🔌', color:'#fd79a8' },
-  { id:'cooling', icon:'❄️', color:'#55efc4' },
-  { id:'case', icon:'🖥️', color:'#b2bec3' },
+  { id:'cpu', color:'#e8793a' },
+  { id:'gpu', color:'#6c5ce7' },
+  { id:'motherboard', color:'#00b894' },
+  { id:'ram', color:'#fdcb6e' },
+  { id:'storage', color:'#74b9ff' },
+  { id:'psu', color:'#e8001d' },
+  { id:'cooling', color:'#55efc4' },
+  { id:'case', color:'#b2bec3' },
 ];
 
-const ImageCarousel = ({ images, category, height }) => {
-  const [idx, setIdx] = React.useState(0);
-  const [isHovered, setIsHovered] = React.useState(false);
-  const hasImages = images && images.length > 0;
-
-  React.useEffect(() => {
-    if (!hasImages || images.length <= 1 || isHovered) return;
-    const timer = setInterval(() => {
-      setIdx(prev => (prev + 1) % images.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [hasImages, images, isHovered]);
-
-  if (!hasImages) {
-    return (
-      <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <ProductVisual category={category} />
-      </div>
-    );
-  }
-
-  const go = (e, dir) => {
-    e.stopPropagation();
-    setIdx(i => (i + dir + images.length) % images.length);
-  };
-
-  return (
-    <div 
-      style={{ position:'relative', width:'100%', height:'100%', overflow:'hidden' }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <img src={images[idx]} alt=""
-        style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', transition:'opacity 0.2s' }}
-        onError={e => { e.target.style.display='none'; }} />
-
-      {images.length > 1 && (
-        <>
-          <button onClick={e => go(e, -1)}
-            style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', background:'rgba(0,0,0,0.55)', border:'none', color:'#fff', width:26, height:26, borderRadius:'50%', cursor:'pointer', fontSize:16, lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2, opacity: isHovered ? 1 : 0, transition:'opacity 0.3s' }}>
-            ‹
-          </button>
-          <button onClick={e => go(e, 1)}
-            style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', background:'rgba(0,0,0,0.55)', border:'none', color:'#fff', width:26, height:26, borderRadius:'50%', cursor:'pointer', fontSize:16, lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2, opacity: isHovered ? 1 : 0, transition:'opacity 0.3s' }}>
-            ›
-          </button>
-          <div style={{ position:'absolute', bottom:8, left:'50%', transform:'translateX(-50%)', display:'flex', gap:4, zIndex:2 }}>
-            {images.map((_, i) => (
-              <div key={i}
-                onClick={e => { e.stopPropagation(); setIdx(i); }}
-                style={{ width: i===idx ? 16 : 6, height:6, borderRadius:3, background: i===idx ? '#fff' : 'rgba(255,255,255,0.35)', cursor:'pointer', transition:'all 0.2s' }} />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
 
 const CARD_COLORS = {
   cpu:'#e8793a', gpu:'#6c5ce7', motherboard:'#00b894', ram:'#fdcb6e',
-  storage:'#74b9ff', psu:'#fd79a8', cooling:'#55efc4', case:'#b2bec3',
+  storage:'#74b9ff', psu:'#e8001d', cooling:'#55efc4', case:'#b2bec3',
   mouse:'#a29bfe', keyboard:'#81ecec', microphone:'#fab1a0', webcam:'#ffeaa7',
-  monitor:'#a29bfe', speaker:'#55efc4', headset:'#fd79a8', usb:'#74b9ff',
+  monitor:'#a29bfe', speaker:'#55efc4', headset:'#e8001d', usb:'#74b9ff',
   external_hdd:'#b2bec3', network:'#00b894', prebuilt:'#e8001d',
 };
 const CARD_LABELS = {
@@ -121,7 +64,7 @@ const ProductCard = ({ product, onAdd, onFav, onView, isFav }) => {
       <div style={{ padding:'18px', flex:1, display:'flex', flexDirection:'column' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14, cursor:'pointer' }} onClick={() => onView(product)}>
           <div style={{ flex:1, minWidth:0, paddingRight:10 }}>
-            <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label.toUpperCase()}</div>
+            <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label?.toUpperCase()}</div>
             <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:15, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
           </div>
           <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:19, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
@@ -164,40 +107,9 @@ const ProductCard = ({ product, onAdd, onFav, onView, isFav }) => {
   );
 };
 
-const ProductVisual = ({ category, brand, imageUrl }) => {
-  if (imageUrl) {
-    return (
-      <img 
-        src={imageUrl} 
-        alt="" 
-        style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '10px' }} 
-        onError={(e) => { e.target.style.display = 'none'; }}
-      />
-    );
-  }
-  const visuals = {
-    cpu: <svg width="64" height="64" viewBox="0 0 64 64"><rect x="16" y="16" width="32" height="32" rx="3" fill="none" stroke="#e8001d" strokeWidth="1.5"/><rect x="22" y="22" width="20" height="20" rx="2" fill="#e8001d" opacity="0.15"/><rect x="26" y="26" width="12" height="12" rx="1" fill="#e8001d" opacity="0.4"/>{[20,26,32,38,44].map(x=><><line key={`t${x}`} x1={x} y1="16" x2={x} y2="11" stroke="#e8001d" strokeWidth="1" opacity="0.5"/><line key={`b${x}`} x1={x} y1="48" x2={x} y2="53" stroke="#e8001d" strokeWidth="1" opacity="0.5"/></>)}{[20,26,32,38,44].map(y=><><line key={`l${y}`} x1="16" y1={y} x2="11" y2={y} stroke="#e8001d" strokeWidth="1" opacity="0.5"/><line key={`r${y}`} x1="48" y1={y} x2="53" y2={y} stroke="#e8001d" strokeWidth="1" opacity="0.5"/></>)}</svg>,
-    gpu: <svg width="80" height="48" viewBox="0 0 80 48"><rect x="4" y="10" width="72" height="28" rx="4" fill="none" stroke="#888888" strokeWidth="1.5"/><rect x="8" y="14" width="40" height="20" rx="3" fill="#888888" opacity="0.15"/><circle cx="28" cy="24" r="8" fill="none" stroke="#888888" strokeWidth="1"/><circle cx="28" cy="24" r="4" fill="#888888" opacity="0.4"/><circle cx="48" cy="24" r="6" fill="none" stroke="#888888" strokeWidth="1"/><circle cx="48" cy="24" r="3" fill="#888888" opacity="0.4"/>{[56,62,68].map(x=><rect key={x} x={x} y="14" width="4" height="20" rx="2" fill="#888888" opacity="0.3"/>)}<rect x="10" y="38" width="60" height="3" rx="1" fill="#888888" opacity="0.3"/></svg>,
-    motherboard: <svg width="72" height="72" viewBox="0 0 72 72"><rect x="4" y="4" width="64" height="64" rx="4" fill="none" stroke="#666666" strokeWidth="1.5"/>{[8,20,32,44,56].map(x=>[8,20,32,44,56].map(y=><circle key={`${x}${y}`} cx={x} cy={y} r="1.5" fill="#666666" opacity="0.3"/>))}<rect x="10" y="10" width="20" height="15" rx="2" fill="#666666" opacity="0.2" stroke="#666666" strokeWidth="0.5"/><rect x="34" y="10" width="28" height="12" rx="2" fill="#666666" opacity="0.15"/><rect x="10" y="30" width="52" height="8" rx="2" fill="#666666" opacity="0.1" stroke="#666666" strokeWidth="0.5"/><rect x="10" y="44" width="52" height="5" rx="1" fill="#666666" opacity="0.1" stroke="#666666" strokeWidth="0.5"/></svg>,
-    ram: <svg width="40" height="72" viewBox="0 0 40 72"><rect x="6" y="6" width="28" height="60" rx="2" fill="none" stroke="#444444" strokeWidth="1.5"/>{[12,18,24,30,36,42,48,54].map(y=><rect key={y} x="10" y={y} width="20" height="4" rx="1" fill="#444444" opacity="0.2"/>)}<rect x="9" y="62" width="22" height="3" rx="1" fill="#444444" opacity="0.4"/></svg>,
-    storage: <svg width="72" height="40" viewBox="0 0 72 40"><rect x="4" y="8" width="64" height="24" rx="3" fill="none" stroke="#555555" strokeWidth="1.5"/><rect x="8" y="12" width="16" height="16" rx="2" fill="#555555" opacity="0.2"/><rect x="8" y="12" width="16" height="16" rx="2" fill="none" stroke="#555555" strokeWidth="0.5"/>{[28,34,40,46,52,58].map(x=><rect key={x} x={x} y="14" width="6" height="12" rx="1" fill="#555555" opacity="0.2"/>)}<rect x="4" y="34" width="64" height="2" rx="1" fill="#555555" opacity="0.4"/></svg>,
-    psu: <svg width="64" height="56" viewBox="0 0 64 56"><rect x="4" y="4" width="56" height="48" rx="4" fill="none" stroke="#888888" strokeWidth="1.5"/><circle cx="20" cy="28" r="10" fill="none" stroke="#888888" strokeWidth="1"/><circle cx="20" cy="28" r="5" fill="#888888" opacity="0.3"/>{[36,44,52].map(x=><><rect key={`r${x}`} x={x} y="12" width="6" height="4" rx="1" fill="#888888" opacity="0.3"/><rect key={`g${x}`} x={x} y="20" width="6" height="4" rx="1" fill="#888888" opacity="0.3"/><rect key={`b${x}`} x={x} y="28" width="6" height="4" rx="1" fill="#888888" opacity="0.3"/></>)}</svg>,
-    cooling: <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#555555" strokeWidth="1.5"/><circle cx="32" cy="32" r="8" fill="#555555" opacity="0.2" stroke="#555555" strokeWidth="1"/>{[0,45,90,135,180,225,270,315].map(a=>{const r=a*Math.PI/180;const x1=32+10*Math.cos(r);const y1=32+10*Math.sin(r);const x2=32+22*Math.cos(r);const y2=32+22*Math.sin(r);return<line key={a} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#555555" strokeWidth="1.5" opacity="0.5"/>})}</svg>,
-    case: <svg width="52" height="72" viewBox="0 0 52 72"><rect x="4" y="4" width="44" height="64" rx="4" fill="none" stroke="#888888" strokeWidth="1.5"/><rect x="8" y="10" width="36" height="24" rx="2" fill="#888888" opacity="0.1"/><circle cx="26" cy="50" r="8" fill="none" stroke="#888888" strokeWidth="1"/><circle cx="26" cy="50" r="3" fill="#888888" opacity="0.4"/><rect x="12" y="62" width="8" height="2" rx="1" fill="#888888" opacity="0.5"/><rect x="32" y="62" width="8" height="2" rx="1" fill="#888888" opacity="0.5"/></svg>,
-    monitor: <svg width="80" height="60" viewBox="0 0 80 60"><rect x="4" y="4" width="72" height="46" rx="4" fill="none" stroke="#555555" strokeWidth="1.5"/><rect x="8" y="8" width="64" height="38" rx="2" fill="#a29bfe" opacity="0.1"/><rect x="30" y="50" width="20" height="4" rx="2" fill="#a29bfe" opacity="0.4"/><rect x="24" y="54" width="32" height="3" rx="1.5" fill="#a29bfe" opacity="0.4"/></svg>,
-    mouse: <svg width="44" height="64" viewBox="0 0 44 64"><path d="M6 24C6 12 14 4 22 4s16 8 16 20v20C38 55 30 60 22 60S6 55 6 44z" fill="none" stroke="#888888" strokeWidth="1.5"/><line x1="22" y1="4" x2="22" y2="28" stroke="#888888" strokeWidth="1" opacity="0.5"/><circle cx="22" cy="20" r="3" fill="#888888" opacity="0.5"/></svg>,
-    headset: <svg width="64" height="64" viewBox="0 0 64 64"><path d="M12 36c0-11 9-20 20-20s20 9 20 20" fill="none" stroke="#444444" strokeWidth="1.5"/><rect x="6" y="34" width="10" height="16" rx="5" fill="none" stroke="#444444" strokeWidth="1.5"/><rect x="48" y="34" width="10" height="16" rx="5" fill="none" stroke="#444444" strokeWidth="1.5"/></svg>,
-    keyboard: <svg width="80" height="44" viewBox="0 0 80 44"><rect x="4" y="8" width="72" height="28" rx="4" fill="none" stroke="#666666" strokeWidth="1.5"/>{[10,18,26,34,42,50,58,66].map(x=>[12,20,28].map(y=><rect key={`${x}${y}`} x={x} y={y} width="6" height="5" rx="1" fill="#81ecec" opacity="0.25"/>))}<rect x="24" y="30" width="32" height="5" rx="2" fill="#81ecec" opacity="0.2"/></svg>,
-  };
-  return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', width:'100%', height:'100%' }}>
-      {visuals[category] || <div style={{ color:'#9f9f9f', fontSize:11 }}>{category}</div>}
-    </div>
-  );
-};
 
 const HomePage = () => {
-  const { setPage, cart, addToCart, favorites, toggleFav, t, formatPrice } = React.useContext(window.AppContext);
+  const { setPage, cart, addToCart, favorites, toggleFav, t, formatPrice, config } = React.useContext(window.AppContext);
   const featured = [
     ...window.CATALOG.cpu.slice(0,2),
     ...window.CATALOG.gpu.slice(0,2),
@@ -217,11 +129,15 @@ const HomePage = () => {
         <div style={homeStyles.heroContent}>
           <div style={homeStyles.heroEyebrow}>{t('hero_eyebrow')}</div>
           <h1 style={homeStyles.heroTitle}>
-            {t('hero_title_1')}<br/>
-            <span style={{ color:'#e8001d' }}>{t('hero_title_2')}</span>
+            {config?.hero?.title || (
+              <>
+                {t('hero_title_1')}<br/>
+                <span style={{ color:'#e8001d' }}>{t('hero_title_2')}</span>
+              </>
+            )}
           </h1>
           <p style={homeStyles.heroDesc}>
-            {t('hero_desc')}
+            {config?.hero?.subtitle || t('hero_desc')}
           </p>
           <div style={homeStyles.heroBtns} className="rsp-hero-btns">
             <button style={homeStyles.heroBtnPrimary}

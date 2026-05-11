@@ -62,5 +62,27 @@
               parent="menu_pc_builder_root"
               action="action_pc_users"
               sequence="30"/>
+    <!-- ── Configuration ────────────────────────────────────────────── -->
+    <menuitem id="menu_pc_config_root"
+              name="Configuration"
+              parent="menu_pc_builder_root"
+              sequence="100"/>
 
+    <menuitem id="menu_pc_categories"
+              name="Catégories de produits"
+              parent="menu_pc_config_root"
+              action="action_pc_category"
+              sequence="10"/>
+
+    <menuitem id="menu_pc_config_global"
+              name="Paramètres"
+              parent="menu_pc_config_root"
+              action="action_pc_config_server"
+              sequence="20"/>
+
+    <menuitem id="menu_pc_contact"
+              name="Messages Contact"
+              parent="menu_pc_config_root"
+              action="action_pc_contact_messages"
+              sequence="30"/>
 </odoo>
