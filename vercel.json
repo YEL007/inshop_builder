@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/pc/:path*",
-      "destination": "https://inshop-builder-backend.vercel.app/api/pc/:path*"
+      "destination": "https://e2a0a0f5681359.lhr.life/api/pc/:path*"
     },
     {
       "source": "/(.*)",
