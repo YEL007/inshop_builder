@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>INSHOP BUILDER · Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/admin/app.css" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
+  <script src="/admin/api.js"></script>
+  <script src="/admin/data.js"></script>
+  <script type="text/babel" src="/admin/tweaks-panel.jsx"></script>
+  <script type="text/babel" src="/admin/icons.jsx"></script>
+  <script type="text/babel" src="/admin/chrome.jsx"></script>
+  <script type="text/babel" src="/admin/dashboard.jsx"></script>
+  <script type="text/babel" src="/admin/list-view.jsx"></script>
+  <script type="text/babel" src="/admin/form-detail.jsx"></script>
+  <script type="text/babel" src="/admin/app.jsx"></script>
+
+  <script type="text/babel">
+    console.log('Admin scripts loaded, starting initialization...');
+
+    class ErrorBoundary extends React.Component {
+      constructor(props) { super(props); this.state = { err: null }; }
+      static getDerivedStateFromError(e) { return { err: e }; }
+      componentDidCatch(e, info) { console.error('React Error:', e, info); }
+      render() {
+        if (this.state.err) return (
+          <div style={{padding:32,fontFamily:'sans-serif',background:'#fef2f2',minHeight:'100vh',color:'#991b1b'}}>
+            <h2 style={{margin:0}}>Oups ! Une erreur est survenue.</h2>
+            <p>L\'interface d\'administration n\'a pas pu s\'afficher correctement.</p>
+            <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12,color:'#333',background:'#fff',padding:16,borderRadius:8,border:'1px solid #fee2e2'}}>{String(this.state.err)}{'\n\n'}{this.state.err?.stack}</pre>
+            <button style={{padding:'8px 16px',borderRadius:6,border:'1px solid #ef4444',background:'#ef4444',color:'#fff',cursor:'pointer'}} onClick={() => window.location.reload()}>Recharger la page</button>
+          </div>
+        );
+        return this.props.children;
+      }
+    }
+
+    const AdminRoot = () => {
+      const [authed, setAuthed] = React.useState(null);
+      const [loginErr, setLoginErr] = React.useState('');
+      const [loginUser, setLoginUser] = React.useState('');
+      const [loginPass, setLoginPass] = React.useState('');
+
+      React.useEffect(() => {
+        if (window.API) {
+          window.API.init().then(() => {
+            setAuthed(!!window.API.token);
+          }).catch(e => {
+            console.error('API init failed', e);
+            setAuthed(false);
+          });
+        } else {
+          console.error('window.API not found');
+          setAuthed(false);
+        }
+      }, []);
+
+      const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoginErr('');
+        try {
+          const ok = await window.API.login(loginUser, loginPass);
+          if (ok) setAuthed(true);
+          else setLoginErr('Identifiants invalides ou accès refusé');
+        } catch (err) {
+          setLoginErr('Erreur de connexion au serveur');
+        }
+      };
+
+      if (authed === null) {
+        return (
+          <div style={{height:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#fafaf7', color:'#71757a'}}>
+            <div style={{width:32, height:32, border:'3px solid rgba(0,0,0,0.1)', borderTopColor:'#0d7f76', borderRadius:'50%', animation:'spin 0.8s linear infinite', marginBottom:16}}></div>
+            <p style={{fontSize:13}}>Chargement de l\'administration...</p>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        );
+      }
+
+      if (!authed) return (
+        <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#f4f3ee'}}>
+          <form onSubmit={handleLogin} style={{background:'white', padding:32, borderRadius:12, boxShadow:'0 4px 24px rgba(0,0,0,0.06)', width:340, border:'1px solid #e6e3da'}}>
+            <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:28}}>
+              <div style={{width:36, height:36, borderRadius:8, background:'#16181a', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, fontSize:14}}>iB</div>
+              <div>
+                <div style={{fontWeight:600, fontSize:15, color:'#16181a'}}>INSHOP BUILDER</div>
+                <div style={{fontSize:11, color:'#71757a', textTransform:'uppercase', letterSpacing:'0.05em'}}>Administration</div>
+              </div>
+            </div>
+            {loginErr && <div style={{color:'#b8442c', marginBottom:20, fontSize:13, padding:'10px 12px', background:'#fbe6df', borderRadius:6, border:'1px solid #f8d7ce'}}>{loginErr}</div>}
+            <div style={{marginBottom:18}}>
+              <label style={{display:'block', marginBottom:6, fontSize:12, color:'#3d4044', fontWeight:500}}>Identifiant</label>
+              <input style={{width:'100%', padding:'10px 12px', borderRadius:6, border:'1px solid #e6e3da', outline:'none', fontSize:14}} value={loginUser} onChange={e=>setLoginUser(e.target.value)} required autoFocus placeholder="admin" />
+            </div>
+            <div style={{marginBottom:28}}>
+              <label style={{display:'block', marginBottom:6, fontSize:12, color:'#3d4044', fontWeight:500}}>Mot de passe</label>
+              <input style={{width:'100%', padding:'10px 12px', borderRadius:6, border:'1px solid #e6e3da', outline:'none', fontSize:14}} type="password" value={loginPass} onChange={e=>setLoginPass(e.target.value)} required placeholder="••••••••" />
+            </div>
+            <button style={{width:'100%', padding:'10px', borderRadius:6, border:'none', background:'#0d7f76', color:'white', fontWeight:600, fontSize:14, cursor:'pointer'}}>Se connecter</button>
+          </form>
+        </div>
+      );
+
+      const App = window.App;
+      if (!App) {
+        return (
+          <div style={{padding:40, textAlign:'center', fontFamily:'sans-serif'}}>
+            <h2 style={{color:'#b8442c'}}>Erreur de chargement</h2>
+            <p>Le composant <code>App</code> est manquant. Vérifiez que <code>app.jsx</code> est correctement chargé.</p>
+          </div>
+        );
+      }
+
+      return <ErrorBoundary><App /></ErrorBoundary>;
+    };
+
+    try {
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<AdminRoot />);
+      console.log('AdminRoot mounted');
+    } catch (e) {
+      console.error('Failed to mount React app', e);
+    }
+  </script>
+</body>
+</html>

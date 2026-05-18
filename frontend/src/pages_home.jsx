@@ -4,14 +4,14 @@ import { ImageCarousel, ProductVisual } from "./components_shared";
 // pages_home.jsx — Home Page
 
 const CATEGORY_CARDS = [
-  { id:'cpu', color:'#e8793a' },
-  { id:'gpu', color:'#6c5ce7' },
-  { id:'motherboard', color:'#00b894' },
-  { id:'ram', color:'#fdcb6e' },
-  { id:'storage', color:'#74b9ff' },
-  { id:'psu', color:'#e8001d' },
-  { id:'cooling', color:'#55efc4' },
-  { id:'case', color:'#b2bec3' },
+  { id:'cpu', color:'#e8793a', image: '/categories/cpu.png' },
+  { id:'gpu', color:'#6c5ce7', image: '/categories/gpu.png' },
+  { id:'motherboard', color:'#00b894', image: '/categories/motherboard.png' },
+  { id:'ram', color:'#fdcb6e', image: '/categories/ram.png' },
+  { id:'storage', color:'#74b9ff', image: '/categories/storage.png' },
+  { id:'psu', color:'#e8001d', image: '/categories/psu.png' },
+  { id:'cooling', color:'#55efc4', image: '/categories/cooling.png' },
+  { id:'case', color:'#b2bec3', image: '/categories/case.png' },
 ];
 
 
@@ -41,23 +41,23 @@ const ProductCard = ({ product, onAdd, onFav, onView, isFav }) => {
 
   return (
     <div
-      style={{ background:'#242424', border:`1px solid ${hov ? color : '#3c3c3c'}`, borderRadius:16, overflow:'hidden', display:'flex', flexDirection:'column', transition:'all 0.25s', position:'relative' }}
+      style={{ background:'var(--white)', border:`1px solid ${hov ? color : 'var(--border)'}`, borderRadius:16, overflow:'hidden', display:'flex', flexDirection:'column', transition:'all 0.25s', position:'relative', boxShadow: hov ? '0 8px 24px rgba(0,0,0,0.08)' : '0 1px 4px rgba(0,0,0,0.04)' }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
 
-      <button style={{ position:'absolute', top:14, left:14, background:'rgba(14,14,14,0.85)', border:'none', cursor:'pointer', width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', zIndex:1, color: isFav?'#e8001d':'#9f9f9f' }}
+      <button style={{ position:'absolute', top:14, left:14, background:'rgba(255,255,255,0.9)', border:'1px solid var(--border)', cursor:'pointer', width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', zIndex:1, color: isFav?'var(--accent)':'var(--gray-text)' }}
         onClick={e => { e.stopPropagation(); onFav(product); }}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill={isFav?'#e8001d':'none'} stroke="currentColor" strokeWidth="2">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill={isFav?'var(--accent)':'none'} stroke="currentColor" strokeWidth="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
         </svg>
       </button>
 
       {badge && (
-        <div style={{ position:'absolute', top:14, right:14, background: badge==='BESTSELLER' ? color+'28' : '#88888828', color: badge==='BESTSELLER' ? color : '#888888', fontSize:9, fontWeight:700, padding:'3px 9px', borderRadius:4, letterSpacing:'0.1em', zIndex:1 }}>
+        <div style={{ position:'absolute', top:14, right:14, background: badge==='BESTSELLER' ? color+'28' : 'var(--gray-50)', color: badge==='BESTSELLER' ? color : 'var(--gray-text)', fontSize:9, fontWeight:700, padding:'3px 9px', borderRadius:4, letterSpacing:'0.1em', zIndex:1 }}>
           {badge}
         </div>
       )}
 
-      <div style={{ height:190, background:`linear-gradient(135deg, ${color}14, #212121)`, overflow:'hidden', cursor:'pointer' }} onClick={() => onView(product)}>
+      <div style={{ height:190, background:`linear-gradient(135deg, ${color}10, var(--gray-50))`, overflow:'hidden', cursor:'pointer' }} onClick={() => onView(product)}>
         <ImageCarousel images={product.images} category={product.category} />
       </div>
 
@@ -65,17 +65,17 @@ const ProductCard = ({ product, onAdd, onFav, onView, isFav }) => {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14, cursor:'pointer' }} onClick={() => onView(product)}>
           <div style={{ flex:1, minWidth:0, paddingRight:10 }}>
             <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:5 }}>{label?.toUpperCase()}</div>
-            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:15, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
+            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:600, fontSize:18, color:'var(--black)', lineHeight:1.25 }}>{product.name}</div>
           </div>
-          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:19, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
+          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:19, color:'var(--accent)', flexShrink:0 }}>{formatPrice(product.price)}</div>
         </div>
 
         {specEntries.length > 0 && (
-          <div style={{ background:'#212121', borderRadius:8, padding:'10px 12px', marginBottom:12, cursor:'pointer' }} onClick={() => onView(product)}>
+          <div style={{ background:'var(--gray-50)', borderRadius:8, padding:'10px 12px', marginBottom:12, cursor:'pointer' }} onClick={() => onView(product)}>
             {specEntries.map(([k, v], i) => (
-              <div key={k} style={{ display:'flex', gap:8, alignItems:'baseline', ...(i < specEntries.length-1 ? { marginBottom:5, borderBottom:'1px solid #2a2a2a', paddingBottom:5 } : {}) }}>
-                <span style={{ color:'#9f9f9f', fontSize:11, minWidth:56 }}>{k}</span>
-                <span style={{ color:'#c8c8c8', fontSize:12, fontFamily:"'DM Mono',monospace" }}>{Array.isArray(v)?v.join(', '):String(v)}</span>
+              <div key={k} style={{ display:'flex', gap:8, alignItems:'baseline', ...(i < specEntries.length-1 ? { marginBottom:5, borderBottom:'1px solid var(--border)', paddingBottom:5 } : {}) }}>
+                <span style={{ color:'var(--gray-text)', fontSize:11, minWidth:56 }}>{k}</span>
+                <span style={{ color:'var(--black)', fontSize:12, fontFamily:"'DM Mono',monospace" }}>{Array.isArray(v)?v.join(', '):String(v)}</span>
               </div>
             ))}
           </div>
@@ -83,12 +83,12 @@ const ProductCard = ({ product, onAdd, onFav, onView, isFav }) => {
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
           <div>
-            <span style={{ color:'#e8001d', fontSize:12 }}>{'★'.repeat(Math.round(product.rating))}</span>
-            <span style={{ color:'#9f9f9f', marginLeft:5, fontSize:11 }}>{product.rating} ({product.reviews?.toLocaleString()})</span>
+            <span style={{ color:'var(--accent)', fontSize:12 }}>{'★'.repeat(Math.round(product.rating))}</span>
+            <span style={{ color:'var(--gray-text)', marginLeft:5, fontSize:11 }}>{product.rating} ({product.reviews?.toLocaleString()})</span>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:4 }}>
             <div style={{ width:5, height:5, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'#4caf70' }} />
-            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'#b0b0b0', fontSize:11 }}>
+            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':product.stock==='low_stock'?'#e8a020':'var(--gray-text)', fontSize:11 }}>
               {product.stock==='in_stock'?t('in_stock'):product.stock==='low_stock'?t('low_stock'):t('out_of_stock')}
             </span>
           </div>
@@ -96,7 +96,7 @@ const ProductCard = ({ product, onAdd, onFav, onView, isFav }) => {
 
         <button
           disabled={product.stock === 'out_of_stock'}
-          style={{ width:'100%', padding:'11px', background: product.stock === 'out_of_stock' ? '#3c3c3c' : color, color: product.stock === 'out_of_stock' ? '#666' : '#ffffff', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor: product.stock === 'out_of_stock' ? 'not-allowed' : 'pointer', transition:'opacity 0.2s', marginTop:'auto' }}
+          style={{ width:'100%', padding:'11px', background: product.stock === 'out_of_stock' ? 'var(--gray-300)' : color, color: product.stock === 'out_of_stock' ? 'var(--gray-text)' : 'var(--white)', border:'none', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, cursor: product.stock === 'out_of_stock' ? 'not-allowed' : 'pointer', transition:'opacity 0.2s', marginTop:'auto' }}
           onClick={e => { e.stopPropagation(); onAdd(product); }}
           onMouseEnter={e => { if (product.stock !== 'out_of_stock') e.currentTarget.style.opacity='0.8'; }}
           onMouseLeave={e => e.currentTarget.style.opacity='1'}>
@@ -109,13 +109,38 @@ const ProductCard = ({ product, onAdd, onFav, onView, isFav }) => {
 
 
 const HomePage = () => {
-  const { setPage, cart, addToCart, favorites, toggleFav, t, formatPrice, config } = React.useContext(window.AppContext);
-  const featured = [
-    ...window.CATALOG.cpu.slice(0,2),
-    ...window.CATALOG.gpu.slice(0,2),
-    ...window.CATALOG.cooling.slice(0,1),
-    ...window.CATALOG.ram.slice(0,1),
-  ];
+  const { setPage, cart, addToCart, favorites, toggleFav, t, formatPrice, config, dataLoaded } = React.useContext(window.AppContext);
+  
+  const featured = React.useMemo(() => {
+    return [
+      ...(window.CATALOG?.cpu || []).slice(0,2),
+      ...(window.CATALOG?.gpu || []).slice(0,2),
+      ...(window.CATALOG?.cooling || []).slice(0,1),
+      ...(window.CATALOG?.ram || []).slice(0,1),
+    ];
+  }, [dataLoaded]);
+
+  const dynamicStats = React.useMemo(() => {
+    const allProducts = [
+      ...(window.PREBUILTS || []),
+      ...(window.ONLYONEPCS || []),
+      ...(window.LAPTOPS || []),
+      ...(window.CATALOG ? Object.values(window.CATALOG).flat() : [])
+    ];
+    
+    const totalCount = allProducts.length;
+    const productCountText = totalCount > 0 ? `${totalCount}+` : '500+';
+
+    const ratedProducts = allProducts.filter(p => (p.rating || 0) > 0);
+    const avgRating = ratedProducts.length > 0
+      ? (ratedProducts.reduce((s, p) => s + Number(p.rating), 0) / ratedProducts.length).toFixed(1)
+      : '5.0';
+
+    return {
+      productsCount: productCountText,
+      rating: `${avgRating}★`
+    };
+  }, [dataLoaded]);
 
   return (
     <div style={homeStyles.page}>
@@ -149,16 +174,16 @@ const HomePage = () => {
             </button>
             <button style={homeStyles.heroBtnSecondary}
               onClick={() => setPage('prebuilt')}
-              onMouseEnter={e => { e.currentTarget.style.background='#2a2a2a'; e.currentTarget.style.borderColor='#444444'; }}
-              onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='#3c3c3c'; }}>
+              onMouseEnter={e => { e.currentTarget.style.background='var(--gray-100)'; e.currentTarget.style.borderColor='var(--gray-400)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='var(--gray-300)'; }}>
               {t('hero_btn_prebuilt')}
             </button>
           </div>
           <div style={homeStyles.heroStats}>
-            {[['500+',t('hero_stat_products')],['99.9%',t('hero_stat_uptime')],['48h',t('hero_stat_delivery')],['5★',t('hero_stat_rating')]].map(([n,l])=>(
+            {[[dynamicStats.productsCount,t('hero_stat_products')],['99.9%',t('hero_stat_uptime')],['48h',t('hero_stat_delivery')],[dynamicStats.rating,t('hero_stat_rating')]].map(([n,l])=>(
               <div key={l} style={homeStyles.heroStat}>
                 <div style={{ color:'#ffffff', fontWeight:700, fontSize:20 }}>{n}</div>
-                <div style={{ color:'#9f9f9f', fontSize:12 }}>{l}</div>
+                <div style={{ color:'rgba(255,255,255,0.6)', fontSize:12 }}>{l}</div>
               </div>
             ))}
           </div>
@@ -215,10 +240,14 @@ const HomePage = () => {
           {CATEGORY_CARDS.map(cat => (
             <button key={cat.id} style={homeStyles.catCard}
               onClick={() => setPage('catalog', { category: cat.id })}
-              onMouseEnter={e => { e.currentTarget.style.borderColor=cat.color; e.currentTarget.style.background='#242424'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor='#3c3c3c'; e.currentTarget.style.background='#212121'; }}>
-              <div style={{ ...homeStyles.catIcon, background: cat.color + '20', color: cat.color }}>
-                <ProductVisual category={cat.id} />
+              onMouseEnter={e => { e.currentTarget.style.borderColor=cat.color; e.currentTarget.style.background='#fff8f8'; e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor='#e5e5e5'; e.currentTarget.style.background='#ffffff'; e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.04)'; }}>
+              <div style={{ ...homeStyles.catIcon, background: cat.image ? 'transparent' : cat.color + '20', color: cat.color }}>
+                {cat.image ? (
+                  <img src={cat.image} alt={cat.id} style={{ width:'100%', height:'100%', objectFit:'contain' }} />
+                ) : (
+                  <ProductVisual category={cat.id} />
+                )}
               </div>
               <div style={homeStyles.catLabel}>{t('cat_' + cat.id)}</div>
               <div style={homeStyles.catDesc}>
@@ -237,7 +266,7 @@ const HomePage = () => {
             <h2 style={homeStyles.sectionTitle}>{t('section_feat_title')}</h2>
           </div>
           <button style={homeStyles.seeAll} onClick={() => setPage('catalog')}
-            onMouseEnter={e => e.currentTarget.style.color='#ffffff'}
+            onMouseEnter={e => e.currentTarget.style.color='#c0001a'}
             onMouseLeave={e => e.currentTarget.style.color='#e8001d'}>
             {t('view_all')}
           </button>
@@ -274,27 +303,28 @@ const HomePage = () => {
 
 const homeStyles = {
   page: { paddingTop: 64 },
+  // Hero : on garde le fond sombre pour l'effet vidéo + rouge
   hero: {
     position:'relative', minHeight:'90vh', display:'flex', alignItems:'center',
     padding:'80px 80px 80px 80px', overflow:'hidden',
-    background:'linear-gradient(135deg, #1a1a1a 0%, #212121 50%, #1a1a1a 100%)',
+    background:'#0a0a0a',
   },
   heroGrid: {
-    position:'absolute', inset:0, opacity:1,
-    backgroundImage:'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px)',
+    position:'absolute', inset:0, opacity:0.1,
+    backgroundImage:'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.05) 39px, rgba(255,255,255,0.05) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.05) 39px, rgba(255,255,255,0.05) 40px)',
   },
   heroGlow: {
     position:'absolute', top:'20%', left:'10%', width:600, height:600,
-    background:'radial-gradient(ellipse at 40% 50%, rgba(232,0,29,0.15) 0%, transparent 65%)',
+    background:'radial-gradient(ellipse at 40% 50%, rgba(232,0,29,0.3) 0%, transparent 65%)',
     pointerEvents:'none',
   },
   heroContent: { position:'relative', zIndex:1, maxWidth:560 },
   heroEyebrow: { color:'#e8001d', fontSize:12, fontWeight:600, letterSpacing:'0.2em', marginBottom:16 },
   heroTitle: {
-    fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:64,
+    fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:72,
     color:'#ffffff', lineHeight:1.1, margin:'0 0 20px 0',
   },
-  heroDesc: { color:'#a8a8a8', fontSize:17, lineHeight:1.6, margin:'0 0 36px 0' },
+  heroDesc: { color:'rgba(255,255,255,0.7)', fontSize:18, lineHeight:1.6, margin:'0 0 36px 0' },
   heroBtns: { display:'flex', gap:12, marginBottom:52 },
   heroBtnPrimary: {
     display:'flex', alignItems:'center', gap:8,
@@ -303,7 +333,7 @@ const homeStyles = {
     fontWeight:700, fontSize:15, transition:'background 0.2s',
   },
   heroBtnSecondary: {
-    background:'transparent', color:'#ffffff', border:'1px solid #3c3c3c', cursor:'pointer',
+    background:'transparent', color:'#ffffff', border:'1px solid rgba(255,255,255,0.2)', cursor:'pointer',
     padding:'14px 28px', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif",
     fontWeight:500, fontSize:15, transition:'all 0.2s',
   },
@@ -317,30 +347,30 @@ const homeStyles = {
   section: { padding:'80px 80px' },
   sectionHeader: { display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:36 },
   sectionEye: { color:'#e8001d', fontSize:11, fontWeight:600, letterSpacing:'0.2em', marginBottom:8 },
-  sectionTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:32, color:'#ffffff', margin:0 },
+  sectionTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:36, color:'var(--black)', margin:0 },
   seeAll: { background:'none', border:'none', cursor:'pointer', color:'#e8001d', fontFamily:"'Space Grotesk',sans-serif", fontSize:14, fontWeight:500, transition:'color 0.2s' },
   categoriesGrid: { display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:16 },
   catCard: {
-    background:'#212121', border:'1px solid #3c3c3c', borderRadius:12,
+    background:'#ffffff', border:'1px solid #e5e5e5', borderRadius:12,
     padding:'24px 20px', cursor:'pointer', textAlign:'left', transition:'all 0.2s',
-    display:'flex', flexDirection:'column', gap:8,
+    display:'flex', flexDirection:'column', gap:8, boxShadow:'0 1px 4px rgba(0,0,0,0.04)',
   },
-  catIcon: { width:64, height:64, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:4 },
-  catLabel: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:600, fontSize:14, color:'#ffffff' },
-  catDesc: { color:'#9f9f9f', fontSize:12 },
+  catIcon: { width:80, height:80, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:8, overflow:'hidden' },
+  catLabel: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:600, fontSize:15, color:'var(--black)' },
+  catDesc: { color:'var(--gray-600)', fontSize:12 },
   productsGrid: { display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:20 },
   card: {
-    background:'#242424', border:'1px solid #3c3c3c', borderRadius:12,
+    background:'#ffffff', border:'1px solid #e0e0e0', borderRadius:12,
     overflow:'hidden', transition:'all 0.2s', cursor:'pointer',
   },
-  cardHovered: { borderColor:'#444444', transform:'translateY(-2px)', boxShadow:'0 12px 40px rgba(0,0,0,0.1)' },
+  cardHovered: { borderColor:'#cccccc', transform:'translateY(-2px)', boxShadow:'0 12px 40px rgba(0,0,0,0.08)' },
   cardImg: {
     height:160, display:'flex', alignItems:'center', justifyContent:'center',
     position:'relative',
   },
   favBtn: {
-    position:'absolute', top:10, right:10, background:'rgba(14,14,14,0.8)',
-    border:'none', cursor:'pointer', width:32, height:32, borderRadius:8,
+    position:'absolute', top:10, right:10, background:'rgba(255,255,255,0.9)',
+    border:'1px solid #eeeeee', cursor:'pointer', width:32, height:32, borderRadius:8,
     display:'flex', alignItems:'center', justifyContent:'center', transition:'color 0.2s',
   },
   bestsellerBadge: {
@@ -349,30 +379,31 @@ const homeStyles = {
     fontSize:9, fontWeight:700, padding:'3px 8px', borderRadius:4, letterSpacing:'0.1em',
   },
   cardBody: { padding:'16px' },
-  cardBrand: { color:'#9f9f9f', fontSize:11, fontWeight:500, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 },
-  cardName: { color:'#ffffff', fontWeight:600, fontSize:14, lineHeight:1.4, marginBottom:8 },
-  cardRating: { color:'#ffffff', fontSize:12, marginBottom:10 },
+  cardBrand: { color:'#888888', fontSize:11, fontWeight:500, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 },
+  cardName: { color:'#111111', fontWeight:600, fontSize:14, lineHeight:1.4, marginBottom:8 },
+  cardRating: { color:'#111111', fontSize:12, marginBottom:10 },
   cardFooter: { display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 },
-  cardPrice: { color:'#ffffff', fontWeight:700, fontSize:20, fontFamily:"'Space Grotesk',sans-serif" },
+  cardPrice: { color:'#111111', fontWeight:700, fontSize:20, fontFamily:"'Space Grotesk',sans-serif" },
   stockDot: { width:6, height:6, borderRadius:'50%' },
   addBtn: {
     width:'100%', padding:'10px', background:'#e8001d', color:'#ffffff',
     border:'none', cursor:'pointer', borderRadius:8,
     fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13, transition:'background 0.2s',
   },
+  // CTA banner : Light theme
   ctaBanner: {
     margin:'0 80px 80px', borderRadius:16,
-    background:'linear-gradient(135deg, #242424, #2a2a2a)',
-    border:'1px solid #3c3c3c', padding:'64px 80px', position:'relative', overflow:'hidden',
+    background:'var(--gray-50)',
+    border:'1px solid var(--gray-200)', padding:'64px 80px', position:'relative', overflow:'hidden',
   },
   ctaBannerGlow: {
     position:'absolute', top:'-50%', right:'-10%', width:400, height:400,
-    background:'radial-gradient(circle, rgba(232,0,29,0.12) 0%, transparent 70%)',
+    background:'radial-gradient(circle, rgba(232,0,29,0.15) 0%, transparent 70%)',
     pointerEvents:'none',
   },
   ctaEye: { color:'#e8001d', fontSize:11, fontWeight:600, letterSpacing:'0.2em', marginBottom:12 },
-  ctaTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:40, color:'#ffffff', margin:'0 0 16px 0' },
-  ctaDesc: { color:'#a8a8a8', fontSize:16, maxWidth:500, lineHeight:1.6, margin:'0 0 32px 0' },
+  ctaTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:48, color:'var(--black)', margin:'0 0 16px 0' },
+  ctaDesc: { color:'var(--gray-700)', fontSize:18, maxWidth:500, lineHeight:1.6, margin:'0 0 32px 0' },
   ctaBtn: {
     display:'inline-flex', alignItems:'center', gap:8,
     background:'#e8001d', color:'#ffffff', border:'none', cursor:'pointer',

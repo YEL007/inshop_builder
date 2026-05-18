@@ -6,8 +6,10 @@ from django.conf import settings as django_settings
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import Sum
+from django.db.models.functions import TruncDate
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -304,8 +306,7 @@ def login_view(request):
             return Response({'error': 'Invalid credentials'}, status=401)
 
         if not user.is_active:
-            user.is_active = True
-            user.save(update_fields=['is_active'])
+            return Response({'error': 'Invalid credentials'}, status=401)
 
         refresh = RefreshToken.for_user(user)
         return Response({
@@ -381,12 +382,10 @@ def me_view(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def update_profile(request):
     try:
-        user = _get_user(request)
-        if not user:
-            return Response({'error': 'Not authenticated'}, status=401)
+        user = request.user
 
         data = request.data.get('data') or request.data
         if 'name' in data:
@@ -413,13 +412,108 @@ def update_profile(request):
         return Response({'error': str(e)}, status=500)
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_request(request):
+    try:
+        import random
+        from django.core.cache import cache
+        email = (request.data.get('email') or '').strip().lower()
+        if not email:
+            return Response({'error': 'Email est requis.'}, status=400)
+        
+        user = User.objects.filter(email__iexact=email).first()
+        if not user:
+            # For security, return success even if user not found, so we don't leak emails
+            return Response({'ok': True, 'message': 'Si un compte existe pour cet email, un code a été envoyé.'})
+        
+        # Generate 6-digit code
+        code = f"{random.randint(100000, 999999)}"
+        cache.set(f"pwd_reset_{email}", code, 600)  # expires in 10 minutes
+        
+        # Send Email
+        try:
+            send_mail(
+                subject="[INSHOP Builder] Code de réinitialisation de mot de passe",
+                message=f"Bonjour {user.get_display_name()},\n\nVotre code de réinitialisation de mot de passe est : {code}\nCe code expirera dans 10 minutes.",
+                from_email=django_settings.DEFAULT_FROM_EMAIL or 'noreply@inshop-builder.com',
+                recipient_list=[email],
+                fail_silently=False
+            )
+        except Exception as mail_err:
+            _logger.exception('Failed to send reset email')
+            # Fallback for dev / print to logs
+            print(f"========================================\nPASSWORD RESET CODE FOR {email}: {code}\n========================================")
+            
+        resp_data = {'ok': True, 'message': 'Si un compte existe pour cet email, un code a été envoyé.'}
+        if django_settings.DEBUG:
+            resp_data['debug_code'] = code
+            
+        return Response(resp_data)
+    except Exception as e:
+        _logger.exception('Error in password_reset_request')
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_confirm(request):
+    try:
+        from django.core.cache import cache
+        email = (request.data.get('email') or '').strip().lower()
+        code = (request.data.get('code') or '').strip()
+        new_password = request.data.get('password') or ''
+        
+        if not email or not code or not new_password:
+            return Response({'error': 'Email, code et mot de passe requis.'}, status=400)
+            
+        cached_code = cache.get(f"pwd_reset_{email}")
+        if not cached_code or cached_code != code:
+            return Response({'error': 'Code de réinitialisation invalide ou expiré.'}, status=400)
+            
+        user = User.objects.filter(email__iexact=email).first()
+        if not user:
+            return Response({'error': 'Utilisateur introuvable.'}, status=400)
+            
+        # Password validation
+        try:
+            validate_password(new_password)
+        except ValidationError as e:
+            return Response({'error': e.messages[0]}, status=400)
+            
+        # Reset password
+        user.set_password(new_password)
+        user.save()
+        
+        # Invalidate code
+        cache.delete(f"pwd_reset_{email}")
+        
+        return Response({'ok': True, 'message': 'Mot de passe réinitialisé avec succès.'})
+    except Exception as e:
+        _logger.exception('Error in password_reset_confirm')
+        return Response({'error': str(e)}, status=500)
+
+
+
 # ── Reviews ───────────────────────────────────────────────────────────────────
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_reviews(request, product_id):
     try:
-        reviews = Review.objects.filter(product_id=product_id).select_related('user').order_by('-date')
+        product_id_str = str(product_id)
+        if product_id_str.startswith('pre-'):
+            reviews = Review.objects.filter(prebuilt_id=int(product_id_str.replace('pre-', ''))).select_related('user').order_by('-date')
+        elif product_id_str.startswith('one-'):
+            reviews = Review.objects.filter(onlyonepc_id=int(product_id_str.replace('one-', ''))).select_related('user').order_by('-date')
+        else:
+            # Handles standard products (e.g. cpu-1, monitor-1, or just 1)
+            try:
+                pid = int(product_id_str.split('-')[-1])
+            except ValueError:
+                pid = product_id
+            reviews = Review.objects.filter(product_id=pid).select_related('user').order_by('-date')
+            
         return Response({'reviews': [r.to_dict() for r in reviews]})
     except Exception as e:
         _logger.exception('Error in get_reviews')
@@ -427,37 +521,50 @@ def get_reviews(request, product_id):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def submit_review(request):
     try:
-        user = _get_user(request)
-        if not user:
-            return Response({'error': 'Not authenticated'}, status=401)
+        user = request.user
 
-        product_id = int(request.data.get('product_id') or 0)
+        product_id_str = str(request.data.get('product_id') or '')
         rating = int(request.data.get('rating') or 0)
         comment = (request.data.get('comment') or '').strip()
 
-        if not product_id or not rating:
+        if not product_id_str or not rating:
             return Response({'error': 'product_id et rating sont requis.'}, status=400)
         if not (1 <= rating <= 5):
             return Response({'error': 'La note doit être entre 1 et 5.'}, status=400)
 
-        product = Product.objects.filter(id=product_id).first()
-        if not product:
-            return Response({'error': 'Product not found'}, status=404)
+        product = prebuilt = onlyonepc = None
+        new_rating = new_count = 0
 
-        review, created = Review.objects.update_or_create(
-            product=product,
-            user=user,
-            defaults={'rating': rating, 'comment': comment},
-        )
-        product.refresh_from_db(fields=['rating', 'review_count'])
+        if product_id_str.startswith('pre-'):
+            pid = int(product_id_str.replace('pre-', ''))
+            prebuilt = Prebuilt.objects.filter(id=pid).first()
+            if not prebuilt: return Response({'error': 'Prebuilt not found'}, status=404)
+            review, _ = Review.objects.update_or_create(prebuilt=prebuilt, user=user, defaults={'rating': rating, 'comment': comment})
+            prebuilt.refresh_from_db(fields=['rating', 'review_count'])
+            new_rating, new_count = prebuilt.rating, prebuilt.review_count
+        elif product_id_str.startswith('one-'):
+            pid = int(product_id_str.replace('one-', ''))
+            onlyonepc = OnlyOnePC.objects.filter(id=pid).first()
+            if not onlyonepc: return Response({'error': 'OnlyOnePC not found'}, status=404)
+            review, _ = Review.objects.update_or_create(onlyonepc=onlyonepc, user=user, defaults={'rating': rating, 'comment': comment})
+            onlyonepc.refresh_from_db(fields=['rating', 'review_count'])
+            new_rating, new_count = onlyonepc.rating, onlyonepc.review_count
+        else:
+            try: pid = int(product_id_str.split('-')[-1])
+            except ValueError: pid = product_id_str
+            product = Product.objects.filter(id=pid).first()
+            if not product: return Response({'error': 'Product not found'}, status=404)
+            review, _ = Review.objects.update_or_create(product=product, user=user, defaults={'rating': rating, 'comment': comment})
+            product.refresh_from_db(fields=['rating', 'review_count'])
+            new_rating, new_count = product.rating, product.review_count
 
         return Response({
             'review': review.to_dict(),
-            'new_rating': product.rating,
-            'new_count': product.review_count,
+            'new_rating': new_rating,
+            'new_count': new_count,
         })
     except Exception as e:
         _logger.exception('Error in submit_review')
@@ -613,14 +720,13 @@ def confirm_order(request):
             order.shipping_city = shipping.get('city', '')
             order.shipping_zip = shipping.get('zip', '')
 
-        order.compute_total()
         order.state = 'sale'
         order.confirmed_at = timezone.now()
         if user:
             order.user = user
         order.save()
 
-        request.session['cart_order_id'] = None
+        request.session.pop('cart_order_id', None)
 
         # Send confirmation email
         recipient = order.shipping_email or (user.email if user else None)
@@ -651,13 +757,10 @@ def confirm_order(request):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def get_orders(request):
     try:
-        user = _get_user(request)
-        if not user:
-            return Response({'error': 'Not authenticated'}, status=401)
-
+        user = request.user
         orders = Order.objects.filter(
             user=user,
             state__in=['sale', 'done'],
@@ -691,12 +794,10 @@ def _advance_delivery(order):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def order_delivery_next(request, order_id):
     try:
-        user = _get_user(request)
-        if not user:
-            return Response({'error': 'Not authenticated'}, status=401)
+        user = request.user
 
         order = Order.objects.filter(id=order_id).prefetch_related('items__product').first()
         if not order:
@@ -721,12 +822,10 @@ def order_delivery_next(request, order_id):
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def dashboard_me(request):
     try:
-        user = _get_user(request)
-        if not user:
-            return Response({'error': 'Not authenticated'}, status=401)
+        user = request.user
 
         orders = Order.objects.filter(
             user=user, state__in=['sale', 'done']
@@ -752,33 +851,33 @@ def dashboard_me(request):
 # ── Admin ─────────────────────────────────────────────────────────────────────
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAdminUser])
 def dashboard_admin(request):
     try:
-        user = _get_user(request)
-        if not user or not user.is_staff:
-            return Response({'error': 'Forbidden'}, status=403)
-
         now = timezone.now()
         thirty_days_ago = now - timedelta(days=30)
 
         confirmed_orders = Order.objects.filter(state__in=['sale', 'done'])
         orders_30d = confirmed_orders.filter(created_at__gte=thirty_days_ago)
 
-        revenue_30d = float(sum(o.total for o in orders_30d))
+        revenue_30d = float(orders_30d.aggregate(total=Sum('total'))['total'] or 0)
         orders_count_30d = orders_30d.count()
         active_products = Product.objects.filter(active=True).count()
         total_users = User.objects.count()
 
-        # 14-day daily revenue series
-        revenue_series = []
-        for i in range(13, -1, -1):
-            day_start = now - timedelta(days=i + 1)
-            day_end = now - timedelta(days=i)
-            day_rev = float(sum(
-                o.total for o in orders_30d.filter(created_at__gte=day_start, created_at__lt=day_end)
-            ))
-            revenue_series.append(day_rev)
+        # 14-day daily revenue series — single DB query
+        fourteen_days_ago = now - timedelta(days=14)
+        daily_qs = (
+            Order.objects.filter(state__in=['sale', 'done'], created_at__gte=fourteen_days_ago)
+            .annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(rev=Sum('total'))
+        )
+        daily_map = {str(entry['day']): float(entry['rev'] or 0) for entry in daily_qs}
+        revenue_series = [
+            daily_map.get(str((now - timedelta(days=i)).date()), 0.0)
+            for i in range(13, -1, -1)
+        ]
 
         low_stock = list(Product.objects.filter(stock_status='low_stock', active=True).values('id', 'name')[:5])
         unread_contacts = ContactMessage.objects.filter(state='new').count()
@@ -818,12 +917,9 @@ def dashboard_admin(request):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAdminUser])
 def admin_orders(request):
     try:
-        user = _get_user(request)
-        if not user or not user.is_staff:
-            return Response({'error': 'Forbidden'}, status=403)
 
         orders = Order.objects.filter(
             state__in=['sale', 'done']
@@ -839,12 +935,9 @@ def admin_orders(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAdminUser])
 def admin_order_delivery_next(request, order_id):
     try:
-        user = _get_user(request)
-        if not user or not user.is_staff:
-            return Response({'error': 'Forbidden'}, status=403)
 
         order = Order.objects.filter(id=order_id).prefetch_related('items__product').first()
         if not order:
@@ -860,6 +953,63 @@ def admin_order_delivery_next(request, order_id):
         return Response({'order': order.to_dict(full=True, request=request)})
     except Exception as e:
         _logger.exception('Error in admin_order_delivery_next')
+        return Response({'error': str(e)}, status=500)
+
+
+# ── XLS Import ───────────────────────────────────────────────────────────────
+
+_IMPORT_MODELS = {'products', 'prebuilts', 'onlyonepcs'}
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def import_xls(request, model_type):
+    if model_type not in _IMPORT_MODELS:
+        return Response({'error': f'Unknown model type: {model_type}'}, status=400)
+
+    file = request.FILES.get('file')
+    if not file:
+        return Response({'error': 'No file provided'}, status=400)
+
+    if not file.name.lower().endswith(('.xls', '.xlsx')):
+        return Response({'error': 'File must be .xls or .xlsx'}, status=400)
+
+    try:
+        from . import importers
+        file_bytes = file.read()
+
+        if model_type == 'products':
+            result = importers.import_products(file_bytes)
+        elif model_type == 'prebuilts':
+            result = importers.import_prebuilts(file_bytes)
+        else:
+            result = importers.import_onlyonepcs(file_bytes)
+
+        status_code = 200 if not result['errors'] else 207
+        return Response(result, status=status_code)
+    except Exception as e:
+        _logger.exception('Error in import_xls(%s)', model_type)
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def import_template(request, model_type):
+    if model_type not in _IMPORT_MODELS:
+        return Response({'error': f'Unknown model type: {model_type}'}, status=400)
+
+    try:
+        from . import importers
+        from django.http import HttpResponse
+
+        xlsx_bytes = importers.generate_template(model_type)
+        response = HttpResponse(
+            xlsx_bytes,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = f'attachment; filename="template_{model_type}.xlsx"'
+        return response
+    except Exception as e:
+        _logger.exception('Error in import_template(%s)', model_type)
         return Response({'error': str(e)}, status=500)
 
 

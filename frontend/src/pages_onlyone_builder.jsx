@@ -106,14 +106,14 @@ const OnlyOneBuilderPage = () => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, borderBottom: '1px solid #2a2a2a', marginBottom: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, borderBottom: '1px solid var(--border)', background: 'var(--white)', marginBottom: 0 }}>
         <button onClick={() => setPage('onlyonepc')}
-          style={{ padding: '16px 24px', background: 'transparent', border: 'none', borderBottom: '2px solid transparent', color: '#9f9f9f', fontFamily: "'Space Grotesk',sans-serif", fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'color 0.2s' }}
-          onMouseEnter={e=>e.currentTarget.style.color='#ffffff'} onMouseLeave={e=>e.currentTarget.style.color='#9f9f9f'}>
+          style={{ padding: '16px 24px', background: 'transparent', border: 'none', borderBottom: '2px solid transparent', color: 'var(--gray-text)', fontFamily: "'Space Grotesk',sans-serif", fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'color 0.2s' }}
+          onMouseEnter={e=>e.currentTarget.style.color='var(--black)'} onMouseLeave={e=>e.currentTarget.style.color='var(--gray-text)'}>
           {t('onlyone_unique_tab')}
         </button>
         <button onClick={() => {}}
-          style={{ padding: '16px 24px', background: 'transparent', border: 'none', borderBottom: '2px solid #e8001d', color: '#ffffff', fontFamily: "'Space Grotesk',sans-serif", fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ padding: '16px 24px', background: 'transparent', border: 'none', borderBottom: '2px solid var(--accent)', color: 'var(--black)', fontFamily: "'Space Grotesk',sans-serif", fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
           {t('onlyone_custom_tab')}
         </button>
       </div>
@@ -150,7 +150,7 @@ const OnlyOneBuilderPage = () => {
           {/* Bottom summary */}
           <div style={wiz.summaryBox}>
             <div style={wiz.summaryTop}>
-              <span style={{ color:'#666666', fontSize:12 }}>{t('complete_steps', completedCount, WIZARD_STEPS.length)}</span>
+              <span style={{ color:'var(--gray-text)', fontSize:12 }}>{t('complete_steps', completedCount, WIZARD_STEPS.length)}</span>
             </div>
             <div style={wiz.summaryTotal}>{formatPrice(total)}</div>
             <button
@@ -171,7 +171,7 @@ const OnlyOneBuilderPage = () => {
               <h2 style={wiz.stepTitle}>{t('step_label_' + step.key)}</h2>
               <p style={wiz.stepHint}>
                 {build[step.key]
-                  ? <><span style={{ color:'#e8001d' }}>✓ {t('selected')}: </span>{build[step.key].name}</>
+                  ? <><span style={{ color:'var(--accent)' }}>✓ {t('selected')}: </span>{build[step.key].name}</>
                   : t('onlyone_select_hint') + ' — ' + t('step_label_' + step.key)}
               </p>
             </div>
@@ -186,7 +186,7 @@ const OnlyOneBuilderPage = () => {
           {/* Product grid */}
           <div style={wiz.productGrid} className="wizard-grid">
             {products.length === 0 ? (
-              <div style={{ padding: 40, textAlign: 'center', color: '#9f9f9f' }}>
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-text)' }}>
                 {t('onlyone_no_products')}
               </div>
             ) : products.map(product => {
@@ -217,7 +217,7 @@ const OnlyOneBuilderPage = () => {
               {WIZARD_STEPS.map((_, i) => (
                 <div key={i} style={{
                   width: i===currentStep?24:6, height:6, borderRadius:3,
-                  background: i===currentStep?'#e8001d': build[WIZARD_STEPS[i].key]?'#9f9f9f':'#3c3c3c',
+                  background: i===currentStep?'var(--accent)': build[WIZARD_STEPS[i].key]?'var(--gray-text)':'var(--border)',
                   transition:'all 0.2s', cursor:'pointer',
                 }} onClick={() => setCurrentStep(i)}/>
               ))}
@@ -238,19 +238,20 @@ const OnlyOneBuilderPage = () => {
 const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
   const { t, formatPrice, toggleFav, favorites } = React.useContext(window.AppContext);
   const [hov, setHov] = React.useState(false);
-  const color = (window.CARD_COLORS||{})[product.category] || '#e8001d';
+  const color = (window.CARD_COLORS||{})[product.category] || 'var(--accent)';
   const label = (window.CARD_LABELS||{})[product.category] || product.category;
   const specEntries = Object.entries(product.specs||{}).slice(0, 4);
 
   return (
     <div
       style={{
-        background: isSelected ? color+'12' : '#242424',
-        border: `2px solid ${isSelected ? color : !compat.ok ? '#cc444440' : hov ? color+'80' : '#3c3c3c'}`,
+        background: isSelected ? color+'12' : 'var(--white)',
+        border: `2px solid ${isSelected ? color : !compat.ok ? '#cc444440' : hov ? color+'80' : 'var(--border)'}`,
         borderRadius:16, overflow:'hidden', display:'flex', flexDirection:'column',
         transition:'all 0.2s', position:'relative',
         opacity: !compat.ok ? 0.45 : 1,
         cursor: compat.ok ? 'pointer' : 'not-allowed',
+        boxShadow: hov ? '0 8px 24px rgba(0,0,0,0.06)' : 'none',
       }}
       onClick={compat.ok ? onSelect : undefined}
       onMouseEnter={() => setHov(true)}
@@ -262,7 +263,7 @@ const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
         </div>
       )}
 
-      <div style={{ height:160, background:`linear-gradient(135deg, ${color}14, #212121)`, overflow:'hidden' }}>
+      <div style={{ height:160, background:`linear-gradient(135deg, ${color}14, var(--gray-50))`, overflow:'hidden' }}>
         <ImageCarousel images={product.images} category={product.category} />
       </div>
 
@@ -270,17 +271,17 @@ const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
           <div style={{ flex:1, minWidth:0, paddingRight:8 }}>
             <div style={{ color, fontSize:10, fontWeight:700, letterSpacing:'0.15em', marginBottom:4 }}>ONLY ONE {label?.toUpperCase()}</div>
-            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, color:'#ffffff', lineHeight:1.3 }}>{product.name}</div>
+            <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, color:'var(--black)', lineHeight:1.3 }}>{product.name}</div>
           </div>
-          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:17, color:'#e8001d', flexShrink:0 }}>{formatPrice(product.price)}</div>
+          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:17, color:'var(--accent)', flexShrink:0 }}>{formatPrice(product.price)}</div>
         </div>
 
         {specEntries.length > 0 && (
-          <div style={{ background:'#212121', borderRadius:7, padding:'8px 10px', marginBottom:10 }}>
+          <div style={{ background:'var(--gray-50)', borderRadius:7, padding:'8px 10px', marginBottom:10 }}>
             {specEntries.map(([k, v], i) => (
-              <div key={k} style={{ display:'flex', gap:6, alignItems:'baseline', ...(i < specEntries.length-1 ? { marginBottom:4, borderBottom:'1px solid #2a2a2a', paddingBottom:4 } : {}) }}>
-                <span style={{ color:'#9f9f9f', fontSize:10, minWidth:52 }}>{k}</span>
-                <span style={{ color:'#666666', fontSize:11, fontFamily:"'DM Mono',monospace" }}>{Array.isArray(v)?v.join(', '):String(v)}</span>
+              <div key={k} style={{ display:'flex', gap:6, alignItems:'baseline', ...(i < specEntries.length-1 ? { marginBottom:4, borderBottom:'1px solid var(--border)', paddingBottom:4 } : {}) }}>
+                <span style={{ color:'var(--gray-text)', fontSize:10, minWidth:52 }}>{k}</span>
+                <span style={{ color:'var(--black)', fontSize:11, fontFamily:"'DM Mono',monospace" }}>{Array.isArray(v)?v.join(', '):String(v)}</span>
               </div>
             ))}
           </div>
@@ -288,12 +289,12 @@ const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'auto' }}>
           <div>
-            <span style={{ color:'#e8001d', fontSize:11 }}>{'★'.repeat(Math.round(product.rating||0))}</span>
-            <span style={{ color:'#9f9f9f', marginLeft:4, fontSize:10 }}>{product.rating||0}</span>
+            <span style={{ color:'var(--accent)', fontSize:11 }}>{'★'.repeat(Math.round(product.rating||0))}</span>
+            <span style={{ color:'var(--gray-text)', marginLeft:4, fontSize:10 }}>{product.rating||0}</span>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:4 }}>
             <div style={{ width:5, height:5, borderRadius:'50%', background: product.stock==='out_of_stock'?'#cc4444':'#555' }} />
-            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':'#9f9f9f', fontSize:10 }}>
+            <span style={{ color: product.stock==='out_of_stock'?'#cc4444':'var(--gray-text)', fontSize:10 }}>
               {product.stock==='in_stock'?t('in_stock'):product.stock==='low_stock'?t('low_stock'):t('out_of_stock')}
             </span>
           </div>
@@ -311,30 +312,30 @@ const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
 };
 
 const wiz = {
-  page: { paddingTop:64, minHeight:'100vh', background:'#1a1a1a', display:'flex', flexDirection:'column' },
+  page: { paddingTop:64, minHeight:'100vh', background:'var(--bg)', display:'flex', flexDirection:'column' },
 
   // Bannière hero
-  heroBanner: { position:'relative', height:400, overflow:'hidden', flexShrink:0, display:'flex', alignItems:'center', background:'#111' },
+  heroBanner: { position:'relative', height:400, overflow:'hidden', flexShrink:0, display:'flex', alignItems:'center', background:'#0a0a0a' },
   heroBannerImg: { position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 25%', opacity: 0.4 },
   heroBannerGrid: {
-    position:'absolute', inset:0, opacity:1, zIndex:1,
-    backgroundImage:'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px)',
+    position:'absolute', inset:0, opacity:0.1, zIndex:1,
+    backgroundImage:'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.05) 39px, rgba(255,255,255,0.05) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.05) 39px, rgba(255,255,255,0.05) 40px)',
   },
   heroBannerGlow: {
     position:'absolute', top:'20%', left:'10%', width:600, height:600, zIndex:1,
-    background:'radial-gradient(ellipse at 40% 50%, rgba(232,0,29,0.15) 0%, transparent 65%)',
+    background:'radial-gradient(ellipse at 40% 50%, rgba(232,0,29,0.3) 0%, transparent 65%)',
     pointerEvents:'none',
   },
-  heroBannerOverlay: { position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)', zIndex:1 },
+  heroBannerOverlay: { position:'absolute', inset:0, background:'linear-gradient(90deg, #0a0a0a 0%, transparent 50%, #0a0a0a 100%)', zIndex:1 },
   heroBannerContent: { position:'relative', zIndex:2, width:'100%', padding:'0 80px' },
-  headerEye: { color:'#e8001d', fontSize:12, fontWeight:600, letterSpacing:'0.2em', marginBottom:12 },
+  headerEye: { color:'var(--accent)', fontSize:12, fontWeight:600, letterSpacing:'0.2em', marginBottom:12 },
   pageTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:48, color:'#ffffff', margin:'0 0 12px', lineHeight:1.1 },
-  pageDesc: { color:'#a8a8a8', fontSize:17, maxWidth:600, lineHeight:1.6, margin:0 },
+  pageDesc: { color:'rgba(255,255,255,0.7)', fontSize:17, maxWidth:600, lineHeight:1.6, margin:0 },
 
-  body: { display:'grid', gridTemplateColumns:'280px 1fr', flex:1, minHeight:0, borderTop: '1px solid #333' },
+  body: { display:'grid', gridTemplateColumns:'280px 1fr', flex:1, minHeight:0, borderTop: '1px solid var(--border)' },
 
   // Sidebar
-  sidebar: { borderRight:'1px solid #333333', display:'flex', flexDirection:'column', background:'#1e1e1e' },
+  sidebar: { borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column', background:'var(--gray-50)' },
   stepList: { flex:1, padding:'16px 12px' },
   stepItem: {
     display:'flex', alignItems:'center', gap:10, width:'100%',
@@ -342,52 +343,52 @@ const wiz = {
     background:'transparent', cursor:'pointer', transition:'all 0.15s',
     marginBottom:2, textAlign:'left',
   },
-  stepItemActive: { background:'#e8001d', color:'#ffffff' },
-  stepItemDone: { background:'#222222' },
+  stepItemActive: { background:'var(--black)', color:'var(--white)' },
+  stepItemDone: { background:'var(--white)', border:'1px solid var(--border)' },
   stepNum: {
-    width:24, height:24, borderRadius:'50%', background:'#333333',
-    color:'#9f9f9f', fontSize:11, fontWeight:700,
+    width:24, height:24, borderRadius:'50%', background:'var(--border)',
+    color:'var(--gray-text)', fontSize:11, fontWeight:700,
     display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
   },
-  stepNumActive: { background:'#ffffff', color:'#e8001d' },
-  stepNumDone: { background:'#444444', color:'#909090' },
+  stepNumActive: { background:'var(--accent)', color:'var(--white)' },
+  stepNumDone: { background:'var(--black)', color:'var(--white)' },
   stepLabel: { fontSize:13, fontWeight:600, color:'inherit', flex:1, fontFamily:"'Space Grotesk',sans-serif" },
-  stepPrice: { color:'#9f9f9f', fontSize:11, fontFamily:"'DM Mono',monospace", marginLeft:'auto' },
+  stepPrice: { color:'var(--gray-text)', fontSize:11, fontFamily:"'DM Mono',monospace", marginLeft:'auto' },
 
-  summaryBox: { padding:'16px', borderTop:'1px solid #333333', background:'#212121' },
+  summaryBox: { padding:'16px', borderTop:'1px solid var(--border)', background:'var(--white)' },
   summaryTop: { marginBottom:4 },
-  summaryTotal: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:28, color:'#ffffff', marginBottom:12 },
+  summaryTotal: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:28, color:'var(--black)', marginBottom:12 },
   addAllBtn: {
-    width:'100%', padding:'10px', background:'#e8001d', color:'#ffffff',
+    width:'100%', padding:'10px', background:'var(--accent)', color:'var(--white)',
     border:'none', borderRadius:8, cursor:'pointer',
     fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:13,
     display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'all 0.2s',
   },
-  addAllBtnDisabled: { background:'#333333', color:'#9f9f9f', cursor:'not-allowed' },
-  addAllBtnSuccess: { background:'#909090', color:'#ffffff' },
+  addAllBtnDisabled: { background:'var(--border)', color:'var(--gray-text)', cursor:'not-allowed' },
+  addAllBtnSuccess: { background:'var(--black)', color:'var(--white)' },
 
   // Main
-  main: { padding:'28px 36px', display:'flex', flexDirection:'column', gap:20, overflowY:'auto' },
+  main: { padding:'28px 36px', display:'flex', flexDirection:'column', gap:20, overflowY:'auto', background:'var(--bg)' },
   stepHeader: { display:'flex', justifyContent:'space-between', alignItems:'flex-start' },
-  stepTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#ffffff', margin:'0 0 4px' },
-  stepHint: { color:'#9f9f9f', fontSize:13 },
-  sortSelect: { background:'#222222', border:'1px solid #3c3c3c', borderRadius:7, padding:'7px 12px', color:'#666666', fontFamily:"'Space Grotesk',sans-serif", fontSize:12, outline:'none', cursor:'pointer' },
+  stepTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'var(--black)', margin:'0 0 4px' },
+  stepHint: { color:'var(--gray-text)', fontSize:13 },
+  sortSelect: { background:'var(--white)', border:'1px solid var(--border)', borderRadius:7, padding:'7px 12px', color:'var(--gray-text)', fontFamily:"'Space Grotesk',sans-serif", fontSize:12, outline:'none', cursor:'pointer' },
 
   productGrid: { display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 },
 
   navRow: { display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:8, marginTop:'auto' },
   navBtn: {
-    background:'#222222', border:'1px solid #3c3c3c', color:'#666666',
+    background:'var(--white)', border:'1px solid var(--border)', color:'var(--gray-text)',
     padding:'10px 24px', borderRadius:8, cursor:'pointer',
     fontFamily:"'Space Grotesk',sans-serif", fontWeight:600, fontSize:14, transition:'all 0.15s',
   },
   navBtnDisabled: { opacity:0.3, cursor:'not-allowed' },
   navBtnPrimary: {
-    background:'#e8001d', color:'#ffffff', border:'none',
+    background:'var(--accent)', color:'var(--white)', border:'none',
     padding:'10px 28px', borderRadius:8, cursor:'pointer',
     fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, transition:'all 0.15s',
   },
-  navBtnPrimaryDone: { background:'#909090' },
+  navBtnPrimaryDone: { background:'var(--black)' },
 };
 
 Object.assign(window, { OnlyOneBuilderPage });

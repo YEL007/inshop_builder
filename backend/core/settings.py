@@ -128,7 +128,7 @@ CORS_ALLOW_HEADERS = [
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
 SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
 SESSION_SAVE_EVERY_REQUEST = False
 
 # Email

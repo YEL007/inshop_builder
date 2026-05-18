@@ -9,7 +9,7 @@ const LaptopsPage = () => {
 
   const [sortBy,       setSortBy]       = React.useState('featured');
   const [search,       setSearch]       = React.useState('');
-  const [priceRange,   setPriceRange]   = React.useState([0, 5000]);
+  const [priceRange,   setPriceRange]   = React.useState([0, 20000]);
   const [brands,       setBrands]       = React.useState([]);
   const [inStockOnly,  setInStockOnly]  = React.useState(false);
   const [minRating,    setMinRating]    = React.useState(0);
@@ -65,8 +65,8 @@ const LaptopsPage = () => {
           <div style={ls.filterGroup}>
             <div style={ls.filterLabel}>{t('filter_availability')}</div>
             <label style={ls.checkRow}>
-              <input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} style={{ accentColor: '#e8001d' }} />
-              <span style={{ color: '#b8b8b8', fontSize: 13 }}>{t('filter_in_stock_only')}</span>
+              <input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
+              <span style={{ color: 'var(--gray-text)', fontSize: 13 }}>{t('filter_in_stock_only')}</span>
             </label>
           </div>
 
@@ -75,15 +75,15 @@ const LaptopsPage = () => {
             <div style={ls.filterLabel}>{t('filter_price')}</div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               <div style={ls.priceInput}>{formatPrice(priceRange[0])}</div>
-              <span style={{ color: '#9f9f9f', alignSelf: 'center' }}>—</span>
+              <span style={{ color: 'var(--gray-text)', alignSelf: 'center' }}>—</span>
               <div style={ls.priceInput}>{formatPrice(priceRange[1])}</div>
             </div>
             <input type="range" min={0} max={5000} step={50} value={priceRange[0]}
               onChange={e => setPriceRange([Math.min(+e.target.value, priceRange[1] - 50), priceRange[1]])}
-              style={{ width: '100%', accentColor: '#e8001d', marginBottom: 6 }} />
+              style={{ width: '100%', accentColor: 'var(--accent)', marginBottom: 6 }} />
             <input type="range" min={0} max={5000} step={50} value={priceRange[1]}
               onChange={e => setPriceRange([priceRange[0], Math.max(+e.target.value, priceRange[0] + 50)])}
-              style={{ width: '100%', accentColor: '#e8001d' }} />
+              style={{ width: '100%', accentColor: 'var(--accent)' }} />
           </div>
 
           {/* Note */}
@@ -93,25 +93,25 @@ const LaptopsPage = () => {
               <label key={r} style={ls.checkRow}>
                 <input type="radio" name="laptop_rating" checked={minRating === r}
                   onChange={() => setMinRating(minRating === r ? 0 : r)}
-                  style={{ accentColor: '#e8001d' }} />
-                <span style={{ color: '#e8001d', fontSize: 12 }}>{'★'.repeat(r)}{'☆'.repeat(5 - r)}</span>
-                <span style={{ color: '#a8a8a8', fontSize: 11 }}>&amp; +</span>
+                  style={{ accentColor: 'var(--accent)' }} />
+                <span style={{ color: 'var(--accent)', fontSize: 12 }}>{'★'.repeat(r)}{'☆'.repeat(5 - r)}</span>
+                <span style={{ color: 'var(--gray-text)', fontSize: 11 }}>&amp; +</span>
               </label>
             ))}
             {minRating > 0 && (
-              <button style={{ ...ls.filterBtn, color: '#9f9f9f', fontSize: 11, padding: 0, marginTop: 8 }}
+              <button style={{ ...ls.filterBtn, color: 'var(--gray-text)', fontSize: 11, padding: 0, marginTop: 8 }}
                 onClick={() => setMinRating(0)}>✕ {t('clear_filter')}</button>
             )}
           </div>
 
-          {/* Marques — viennent d'Odoo via pc_brand */}
+          {/* Marques */}
           {availableBrands.length > 0 && (
             <div style={ls.filterGroup}>
               <div style={ls.filterLabel}>{t('filter_brand')}</div>
               {availableBrands.map(b => (
                 <label key={b} style={ls.checkRow}>
-                  <input type="checkbox" checked={brands.includes(b)} onChange={() => toggleBrand(b)} style={{ accentColor: '#e8001d' }} />
-                  <span style={{ color: '#b8b8b8', fontSize: 13 }}>{b}</span>
+                  <input type="checkbox" checked={brands.includes(b)} onChange={() => toggleBrand(b)} style={{ accentColor: 'var(--accent)' }} />
+                  <span style={{ color: 'var(--gray-text)', fontSize: 13 }}>{b}</span>
                 </label>
               ))}
             </div>
@@ -130,7 +130,7 @@ const LaptopsPage = () => {
               style={ls.searchInput}
             />
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
-              <span style={{ color: '#9f9f9f', fontSize: 13 }}>{t('products_count', filtered.length)}</span>
+              <span style={{ color: 'var(--gray-text)', fontSize: 13 }}>{t('products_count', filtered.length)}</span>
               <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={ls.sortSelect}>
                 <option value="featured">{t('sort_featured')}</option>
                 <option value="price_asc">{t('sort_price_asc')}</option>
@@ -145,7 +145,7 @@ const LaptopsPage = () => {
           {filtered.length === 0 ? (
             <div style={ls.empty}>
               <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.3 }}>💻</div>
-              <div style={{ color: '#a8a8a8' }}>{t('no_products')}</div>
+              <div style={{ color: 'var(--gray-text)' }}>{t('no_products')}</div>
             </div>
           ) : (
             <div style={ls.grid} className="rsp-grid-3">
@@ -181,33 +181,34 @@ const LaptopCard = ({ product, onView, onAdd, onFav, isFav }) => {
   return (
     <div
       style={{
-        background: '#242424',
-        border: `1px solid ${hov ? color : '#3c3c3c'}`,
+        background: 'var(--white)',
+        border: `1px solid ${hov ? color : 'var(--border)'}`,
         borderRadius: 16, overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
         transition: 'all 0.25s', position: 'relative',
         transform: hov ? 'translateY(-4px)' : 'none',
+        boxShadow: hov ? '0 12px 32px rgba(0,0,0,0.08)' : '0 1px 4px rgba(0,0,0,0.04)',
       }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
       {/* Favori */}
       <button
-        style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(14,14,14,0.85)', border: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, color: isFav ? '#e8001d' : '#9f9f9f' }}
+        style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(255,255,255,0.9)', border: '1px solid var(--border)', cursor: 'pointer', width: 28, height: 28, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, color: isFav ? 'var(--accent)' : 'var(--gray-text)' }}
         onClick={e => { e.stopPropagation(); onFav(); }}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill={isFav ? '#e8001d' : 'none'} stroke="currentColor" strokeWidth="2">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill={isFav ? 'var(--accent)' : 'none'} stroke="currentColor" strokeWidth="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
         </svg>
       </button>
 
       {badge && (
-        <div style={{ position: 'absolute', top: 14, right: 14, background: badge === t('badge_bestseller') ? color + '28' : '#cc444428', color: badge === t('badge_bestseller') ? color : '#cc4444', fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 4, letterSpacing: '0.1em', zIndex: 1 }}>
+        <div style={{ position: 'absolute', top: 14, right: 14, background: badge === t('badge_bestseller') ? color + '28' : 'var(--gray-50)', color: badge === t('badge_bestseller') ? color : 'var(--gray-text)', fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 4, letterSpacing: '0.1em', zIndex: 1 }}>
           {badge}
         </div>
       )}
 
       {/* Image */}
-      <div style={{ height: 200, background: `linear-gradient(135deg, ${color}14, #212121)`, overflow: 'hidden', cursor: 'pointer' }} onClick={onView}>
+      <div style={{ height: 200, background: `linear-gradient(135deg, ${color}14, var(--gray-50))`, overflow: 'hidden', cursor: 'pointer' }} onClick={onView}>
         <ImageCarousel images={product.images} category={product.category} />
       </div>
 
@@ -216,19 +217,19 @@ const LaptopCard = ({ product, onView, onAdd, onFav, isFav }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
           <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
             <div style={{ color, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 5 }}>{t('label_laptop')?.toUpperCase()}</div>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 16, color: '#ffffff', lineHeight: 1.3 }}>{product.name}</div>
-            {product.brand && <div style={{ color: '#9f9f9f', fontSize: 11, marginTop: 3 }}>{product.brand}</div>}
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 16, color: 'var(--black)', lineHeight: 1.3 }}>{product.name}</div>
+            {product.brand && <div style={{ color: 'var(--gray-text)', fontSize: 11, marginTop: 3 }}>{product.brand}</div>}
           </div>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, color: '#e8001d', flexShrink: 0 }}>{formatPrice(product.price)}</div>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, color: 'var(--accent)', flexShrink: 0 }}>{formatPrice(product.price)}</div>
         </div>
 
-        {/* Specs — viennent du JSON Odoo */}
+        {/* Specs */}
         {specEntries.length > 0 && (
-          <div style={{ background: '#1e1e1e', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
+          <div style={{ background: 'var(--gray-50)', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
             {specEntries.map(([k, v], i) => (
-              <div key={k} style={{ display: 'flex', gap: 8, alignItems: 'baseline', ...(i < specEntries.length - 1 ? { marginBottom: 5, borderBottom: '1px solid #2a2a2a', paddingBottom: 5 } : {}) }}>
-                <span style={{ color: '#9f9f9f', fontSize: 10, minWidth: 60, flexShrink: 0 }}>{k}</span>
-                <span style={{ color: '#cccccc', fontSize: 11, fontFamily: "'DM Mono',monospace" }}>{Array.isArray(v) ? v.join(', ') : String(v)}</span>
+              <div key={k} style={{ display: 'flex', gap: 8, alignItems: 'baseline', ...(i < specEntries.length - 1 ? { marginBottom: 5, borderBottom: '1px solid var(--border)', paddingBottom: 5 } : {}) }}>
+                <span style={{ color: 'var(--gray-text)', fontSize: 10, minWidth: 60, flexShrink: 0 }}>{k}</span>
+                <span style={{ color: 'var(--black)', fontSize: 11, fontFamily: "'DM Mono',monospace" }}>{Array.isArray(v) ? v.join(', ') : String(v)}</span>
               </div>
             ))}
           </div>
@@ -236,19 +237,19 @@ const LaptopCard = ({ product, onView, onAdd, onFav, isFav }) => {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div>
-            <span style={{ color: '#e8001d', fontSize: 12 }}>{'★'.repeat(Math.round(product.rating || 0))}</span>
-            <span style={{ color: '#9f9f9f', marginLeft: 5, fontSize: 11 }}>{product.rating || 0} ({(product.reviews || 0).toLocaleString()})</span>
+            <span style={{ color: 'var(--accent)', fontSize: 12 }}>{'★'.repeat(Math.round(product.rating || 0))}</span>
+            <span style={{ color: 'var(--gray-text)', marginLeft: 5, fontSize: 11 }}>{product.rating || 0} ({(product.reviews || 0).toLocaleString()})</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div style={{ width: 5, height: 5, borderRadius: '50%', background: product.stock === 'out_of_stock' ? '#cc4444' : product.stock === 'low_stock' ? '#e8a020' : '#4caf70' }} />
-            <span style={{ color: product.stock === 'out_of_stock' ? '#cc4444' : product.stock === 'low_stock' ? '#e8a020' : '#b0b0b0', fontSize: 11 }}>
+            <span style={{ color: product.stock === 'out_of_stock' ? '#cc4444' : product.stock === 'low_stock' ? '#e8a020' : 'var(--gray-text)', fontSize: 11 }}>
               {product.stock === 'in_stock' ? t('in_stock') : product.stock === 'low_stock' ? t('low_stock') : t('out_of_stock')}
             </span>
           </div>
         </div>
 
         <button
-          style={{ width: '100%', padding: '12px', background: color, color: '#ffffff', border: 'none', borderRadius: 8, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'opacity 0.2s', marginTop: 'auto' }}
+          style={{ width: '100%', padding: '12px', background: 'var(--black)', color: 'var(--white)', border: 'none', borderRadius: 8, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'opacity 0.2s', marginTop: 'auto' }}
           onClick={e => { e.stopPropagation(); onAdd(); }}
           onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
           onMouseLeave={e => e.currentTarget.style.opacity = '1'}
@@ -263,36 +264,36 @@ const LaptopCard = ({ product, onView, onAdd, onFav, isFav }) => {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const ls = {
-  page:   { paddingTop: 64, minHeight: '100vh', background: '#1a1a1a' },
+  page:   { paddingTop: 64, minHeight: '100vh', background: 'var(--bg)' },
 
-  banner: { position: 'relative', height: 220, overflow: 'hidden', borderBottom: '1px solid #2a2a2a' },
-  bannerVideo:   { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 },
-  bannerOverlay: { position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.88) 0%, transparent 65%, rgba(0,0,0,0.6) 100%)' },
+  banner: { position: 'relative', height: 220, overflow: 'hidden', borderBottom: '1px solid var(--border)', background: '#0a0a0a' },
+  bannerVideo:   { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 },
+  bannerOverlay: { position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #0a0a0a 0%, transparent 65%, #0a0a0a 100%)' },
   bannerContent: { position: 'relative', zIndex: 2, padding: '40px 80px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' },
   bannerEye:   { color: '#6c5ce7', fontSize: 11, fontWeight: 700, letterSpacing: '0.2em', marginBottom: 8 },
   bannerTitle: { fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 32, color: '#ffffff', margin: '0 0 6px' },
-  bannerDesc:  { color: '#a8a8a8', fontSize: 14, margin: 0 },
+  bannerDesc:  { color: 'rgba(255,255,255,0.7)', fontSize: 14, margin: 0 },
 
   layout:  { display: 'grid', gridTemplateColumns: '240px 1fr', minHeight: 0, alignItems: 'start' },
 
-  sidebar: { borderRight: '1px solid #2a2a2a', padding: '28px 20px', position: 'sticky', top: 64, maxHeight: 'calc(100vh - 64px)', overflowY: 'auto', background: '#1a1a1a' },
+  sidebar: { borderRight: '1px solid var(--border)', padding: '28px 20px', position: 'sticky', top: 64, maxHeight: 'calc(100vh - 64px)', overflowY: 'auto', background: 'var(--bg)' },
   filterGroup: { marginBottom: 28 },
-  filterLabel: { color: '#9f9f9f', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 12 },
+  filterLabel: { color: 'var(--gray-text)', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 12 },
   checkRow:    { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, cursor: 'pointer' },
-  priceInput:  { flex: 1, background: '#242424', border: '1px solid #3c3c3c', borderRadius: 6, padding: '5px 8px', color: '#b8b8b8', fontSize: 11, textAlign: 'center' },
+  priceInput:  { flex: 1, background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 8px', color: 'var(--black)', fontSize: 11, textAlign: 'center' },
   filterBtn:   { background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", transition: 'color 0.15s' },
 
   main:    { padding: '28px 36px', display: 'flex', flexDirection: 'column', gap: 20 },
   toolbar: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
   searchInput: {
     flex: 1, minWidth: 180,
-    background: '#242424', border: '1px solid #3c3c3c', borderRadius: 8,
-    padding: '10px 14px', color: '#ffffff',
+    background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 8,
+    padding: '10px 14px', color: 'var(--black)',
     fontFamily: "'Space Grotesk',sans-serif", fontSize: 13, outline: 'none',
   },
   sortSelect: {
-    background: '#242424', border: '1px solid #3c3c3c', borderRadius: 8,
-    padding: '9px 12px', color: '#b8b8b8',
+    background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 8,
+    padding: '9px 12px', color: 'var(--gray-text)',
     fontFamily: "'Space Grotesk',sans-serif", fontSize: 12, outline: 'none', cursor: 'pointer',
   },
   grid:  { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 },

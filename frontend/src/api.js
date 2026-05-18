@@ -1,4 +1,4 @@
-// PC Builder — Odoo API client
+// PC Builder — Django API client
 // Fetches live data from the backend and populates the same globals
 // that the static data.js defines, so the rest of the app is unchanged.
 // Falls back to static data if the API is unreachable.
@@ -8,7 +8,7 @@
 
   // ── Token helpers ────────────────────────────────────────────────────────
   // The backend issues a random Bearer token on login that is stored here.
-  // It is completely independent from the Odoo admin session cookie, so the
+  // It is completely independent from the Django admin session cookie, so the
   // backend admin is never disconnected when a customer logs in.
 
   function getToken() { return localStorage.getItem('inshop_token') || ''; }
@@ -27,7 +27,14 @@
       credentials: 'include',
       headers: { ...authHeaders() },
     });
-    if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
+    if (!res.ok) {
+      let msg = `GET ${path} → ${res.status}`;
+      try {
+        const d = await res.json();
+        if (d && d.error) msg = d.error;
+      } catch (err) {}
+      throw new Error(msg);
+    }
     return res.json();
   }
 
@@ -38,7 +45,14 @@
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error(`POST ${path} → ${res.status}`);
+    if (!res.ok) {
+      let msg = `POST ${path} → ${res.status}`;
+      try {
+        const d = await res.json();
+        if (d && d.error) msg = d.error;
+      } catch (err) {}
+      throw new Error(msg);
+    }
     return res.json();
   }
 
@@ -55,6 +69,14 @@
 
     async register(name, email, password, phone, address) {
       return post('/auth/register', { name, email, password, phone: phone || '', address: address || '' });
+    },
+
+    async resetPasswordRequest(email) {
+      return post('/auth/reset-password-request', { email });
+    },
+
+    async resetPasswordConfirm(email, code, password) {
+      return post('/auth/reset-password-confirm', { email, code, password });
     },
 
     async logout() {
@@ -142,9 +164,13 @@
       // data: { name, email, subject, message }
       return post('/contact/submit', data);
     },
+    async submitReview(data) {
+      // data: { product_id, rating, comment }
+      return post('/review', data);
+    },
   };
 
-  // ── Bootstrap: fetch catalog + pre-builts from Odoo, populate globals ──────
+  // ── Bootstrap: fetch catalog + pre-builts from Django, populate globals ──────
 
   async function bootstrap() {
     let catalogOk = false;
@@ -202,11 +228,20 @@
         window.PC_CATEGORIES_DATA = categoriesRes.categories;
       }
 
-      try { localStorage.setItem('inshop_products_cache', JSON.stringify(window.ALL_PRODUCTS)); } catch(_) {}
+      try { 
+        localStorage.setItem('inshop_products_cache', JSON.stringify(window.ALL_PRODUCTS));
+        localStorage.setItem('inshop_catalog_cache', JSON.stringify(window.CATALOG));
+        localStorage.setItem('inshop_prebuilts_cache', JSON.stringify(window.PREBUILTS));
+        localStorage.setItem('inshop_onlyonepcs_cache', JSON.stringify(window.ONLYONEPCS));
+        localStorage.setItem('inshop_laptops_cache', JSON.stringify(window.LAPTOPS));
+        localStorage.setItem('inshop_peripherals_cache', JSON.stringify(window.PERIPHERALS_DATA));
+        localStorage.setItem('inshop_categories_cache', JSON.stringify(window.PC_CATEGORIES_DATA));
+        localStorage.setItem('inshop_onlyone_catalog_cache', JSON.stringify(window.ONLYONE_CATALOG));
+      } catch(_) {}
       catalogOk = true;
-      console.info('[PcApi] Live data loaded from Odoo.');
+      console.info('[PcApi] Live data loaded from Django.');
     } catch (err) {
-      console.error('[PcApi] Backend unreachable — catalog empty.', err.message);
+      console.error('[PcApi] Catalog bootstrap failed:', err);
     }
 
     window.dispatchEvent(new CustomEvent('catalog:loaded', { detail: { ok: catalogOk } }));
@@ -217,15 +252,36 @@
       if (session.authenticated) {
         window.dispatchEvent(new CustomEvent('pc:session', { detail: session }));
       }
-    } catch (_) {
-      // No active session — fine
-    }
+    } catch (_) {}
+
+    return catalogOk;
   }
 
   // Restore cached products for offline favorites display
   try {
     const _c = JSON.parse(localStorage.getItem('inshop_products_cache') || 'null');
     if (Array.isArray(_c) && _c.length > 0) window.ALL_PRODUCTS = _c;
+
+    const _cat = JSON.parse(localStorage.getItem('inshop_catalog_cache') || 'null');
+    if (_cat) Object.assign(window.CATALOG, _cat);
+
+    const _pre = JSON.parse(localStorage.getItem('inshop_prebuilts_cache') || 'null');
+    if (Array.isArray(_pre)) window.PREBUILTS = _pre;
+
+    const _oop = JSON.parse(localStorage.getItem('inshop_onlyonepcs_cache') || 'null');
+    if (Array.isArray(_oop)) window.ONLYONEPCS = _oop;
+
+    const _lap = JSON.parse(localStorage.getItem('inshop_laptops_cache') || 'null');
+    if (Array.isArray(_lap)) window.LAPTOPS = _lap;
+
+    const _peri = JSON.parse(localStorage.getItem('inshop_peripherals_cache') || 'null');
+    if (_peri) Object.assign(window.PERIPHERALS_DATA, _peri);
+
+    const _cats = JSON.parse(localStorage.getItem('inshop_categories_cache') || 'null');
+    if (Array.isArray(_cats)) window.PC_CATEGORIES_DATA = _cats;
+
+    const _oocat = JSON.parse(localStorage.getItem('inshop_onlyone_catalog_cache') || 'null');
+    if (_oocat) window.ONLYONE_CATALOG = _oocat;
   } catch(_) {}
 
   // Run after data.js has executed (scripts are sequential)

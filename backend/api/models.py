@@ -73,6 +73,9 @@ STOCK_CHOICES = [
 class User(AbstractUser):
     phone = models.CharField(max_length=30, blank=True)
     street = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    zip_code = models.CharField(max_length=20, blank=True)
+    country = models.CharField(max_length=100, blank=True)
 
     def get_display_name(self):
         return self.get_full_name() or self.username
@@ -112,7 +115,7 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     brand = models.CharField(max_length=100, blank=True)
     description = models.TextField(blank=True, verbose_name="Description détaillée")
-    price = models.FloatField(default=0)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products'
     )
@@ -122,7 +125,7 @@ class Product(models.Model):
     active = models.BooleanField(default=True)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     specs = models.JSONField(default=dict, blank=True)
-    rating = models.FloatField(default=0)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
     review_count = models.IntegerField(default=0)
 
     # CPU
@@ -289,10 +292,9 @@ class Product(models.Model):
 
         return specs
 
-    def save(self, *args, update_fields=None, **kwargs):
-        if update_fields is None or not set(update_fields).isdisjoint({'rating', 'review_count'}):
-            self.specs = self._compute_specs()
-        super().save(*args, update_fields=update_fields, **kwargs)
+    def save(self, *args, **kwargs):
+        self.specs = self._compute_specs()
+        super().save(*args, **kwargs)
 
     def to_dict(self, request=None):
         cat = self.category.code if self.category else 'other'
@@ -345,11 +347,11 @@ class ProductImage(models.Model):
 
 class Prebuilt(models.Model):
     name = models.CharField(max_length=255)
-    price = models.FloatField(default=0)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tier = models.CharField(max_length=50, blank=True, help_text='Budget / Mid-Range / High-End / Flagship')
     badge = models.CharField(max_length=100, blank=True)
     tag_line = models.CharField(max_length=255, blank=True)
-    rating = models.FloatField(default=4.5)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=4.5)
     review_count = models.IntegerField(default=0)
     stock_status = models.CharField(max_length=20, choices=STOCK_CHOICES, default='in_stock')
     brand = models.CharField(max_length=100, default='INSHOP')
@@ -428,6 +430,7 @@ class Prebuilt(models.Model):
             'stock': self.stock_status or 'in_stock',
             'brand': self.brand or 'INSHOP',
             'tags': tags,
+            'image': images[0] if images else None,
             'images': images,
             'specs': self.specs or {},
             'gaming': self.gaming_perf or '',
@@ -448,10 +451,10 @@ class PrebuiltImage(models.Model):
 
 class OnlyOnePC(models.Model):
     name = models.CharField(max_length=255)
-    price = models.FloatField(default=0)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     badge = models.CharField(max_length=100, blank=True)
     tag_line = models.CharField(max_length=255, blank=True)
-    rating = models.FloatField(default=4.8)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=4.8)
     review_count = models.IntegerField(default=0)
     stock_status = models.CharField(max_length=20, choices=STOCK_CHOICES, default='in_stock')
     image = models.ImageField(upload_to='onlyonepcs/', blank=True, null=True)
@@ -545,18 +548,20 @@ class OnlyOnePCImage(models.Model):
 # ── Reviews ───────────────────────────────────────────────────────────────────
 
 class Review(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
+    prebuilt = models.ForeignKey(Prebuilt, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
+    onlyonepc = models.ForeignKey(OnlyOnePC, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('product', 'user')
         ordering = ['-date']
 
     def __str__(self):
-        return f'{self.user} → {self.product} ({self.rating}/5)'
+        item = self.product or self.prebuilt or self.onlyonepc
+        return f'{self.user} → {item} ({self.rating}/5)'
 
     def to_dict(self):
         return {
@@ -570,11 +575,24 @@ class Review(models.Model):
 
 @receiver([post_save, post_delete], sender=Review)
 def update_product_rating(sender, instance, **kwargs):
-    product = instance.product
-    reviews = list(product.reviews.values_list('rating', flat=True))
-    count = len(reviews)
-    avg = round(sum(reviews) / count, 1) if count else 0.0
-    Product.objects.filter(pk=product.pk).update(rating=avg, review_count=count)
+    if instance.product:
+        product = instance.product
+        reviews = list(product.reviews.values_list('rating', flat=True))
+        count = len(reviews)
+        avg = round(sum(reviews) / count, 1) if count else 0.0
+        Product.objects.filter(pk=product.pk).update(rating=avg, review_count=count)
+    elif instance.prebuilt:
+        prebuilt = instance.prebuilt
+        reviews = list(prebuilt.reviews.values_list('rating', flat=True))
+        count = len(reviews)
+        avg = round(sum(reviews) / count, 1) if count else 0.0
+        Prebuilt.objects.filter(pk=prebuilt.pk).update(rating=avg, review_count=count)
+    elif instance.onlyonepc:
+        onlyonepc = instance.onlyonepc
+        reviews = list(onlyonepc.reviews.values_list('rating', flat=True))
+        count = len(reviews)
+        avg = round(sum(reviews) / count, 1) if count else 0.0
+        OnlyOnePC.objects.filter(pk=onlyonepc.pk).update(rating=avg, review_count=count)
 
 
 # ── Contact ───────────────────────────────────────────────────────────────────
@@ -666,7 +684,7 @@ class Order(models.Model):
     delivery_status = models.CharField(max_length=20, choices=DELIVERY_CHOICES, default='processing')
     created_at = models.DateTimeField(auto_now_add=True)
     confirmed_at = models.DateTimeField(null=True, blank=True)
-    total = models.FloatField(default=0)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     shipping_name = models.CharField(max_length=100, blank=True)
     shipping_email = models.EmailField(blank=True)
@@ -709,7 +727,7 @@ class OrderItem(models.Model):
     product_name = models.CharField(max_length=255)
     product_template_id = models.IntegerField(null=True, blank=True)
     qty = models.IntegerField(default=1)
-    price = models.FloatField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
 
     @property
     def subtotal(self):

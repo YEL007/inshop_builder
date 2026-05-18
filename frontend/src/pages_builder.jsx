@@ -80,10 +80,10 @@ const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
     : compat.warning ? '#f59e0b50'
     : hov ? color + '80' : '#3c3c3c';
 
-  const bgColor = isSelected ? color + '12'
-    : !compat.ok ? '#cc44440a'
-    : compat.warning ? '#f59e0b0a'
-    : '#242424';
+  const bgColor = isSelected ? color + '08'
+    : !compat.ok ? '#cc444405'
+    : compat.warning ? '#f59e0b05'
+    : 'var(--white)';
 
   return (
     <div
@@ -121,7 +121,7 @@ const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
 
 
       {/* Image */}
-      <div style={{ height: 140, background: `linear-gradient(135deg, ${color}14, #1e1e1e)`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ height: 140, background: `linear-gradient(135deg, ${color}08, var(--gray-50))`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {product.image
           ? <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           : <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1" opacity="0.4"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
@@ -132,11 +132,11 @@ const ProductWizardCard = ({ product, isSelected, compat, onSelect }) => {
       <div style={{ padding: '14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div>
           <div style={{ color, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 3 }}>{label?.toUpperCase()}</div>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 13, color: '#fff', lineHeight: 1.3 }}>{product.name}</div>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 13, color: 'var(--black)', lineHeight: 1.3 }}>{product.name}</div>
         </div>
 
         {specEntries.length > 0 && (
-          <div style={{ background: '#1e1e1e', borderRadius: 6, padding: '7px 9px' }}>
+          <div style={{ background: 'var(--gray-50)', borderRadius: 6, padding: '7px 9px' }}>
             {specEntries.map(([k, v], i) => (
               <div key={k} style={{ display: 'flex', gap: 6, alignItems: 'baseline', ...(i < specEntries.length - 1 ? { marginBottom: 3, borderBottom: '1px solid #2a2a2a', paddingBottom: 3 } : {}) }}>
                 <span style={{ color: '#666', fontSize: 10, minWidth: 50 }}>{k}</span>
@@ -179,7 +179,7 @@ const BuilderPage = () => {
 
   const products = React.useMemo(() => {
     if (!step) return [];
-    let p = (window.CATALOG[step.catalog] || []).filter(prod => prod.stock !== 'out_of_stock' || true);
+    let p = (window.CATALOG[step.catalog] || []).filter(prod => prod.stock !== 'out_of_stock');
     if (sortBy === 'price_asc')  p = [...p].sort((a, b) => a.price - b.price);
     if (sortBy === 'price_desc') p = [...p].sort((a, b) => b.price - a.price);
     if (sortBy === 'rating')     p = [...p].sort((a, b) => b.rating - a.rating);
@@ -219,7 +219,7 @@ const BuilderPage = () => {
     return (
       <div style={{ paddingTop: 100, textAlign: 'center', color: '#9f9f9f' }}>
         <h2>Aucune catégorie de composant trouvée.</h2>
-        <p>Veuillez en créer dans le backend Odoo.</p>
+        <p>Veuillez en créer dans le backend Django.</p>
       </div>
     );
   }
@@ -227,21 +227,21 @@ const BuilderPage = () => {
   if (!step && steps.length > 0) return null;
 
   return (
-    <div style={{ paddingTop: 64, minHeight: '100vh', background: '#1a1a1a', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ paddingTop: 64, minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', flexDirection: 'column' }}>
       {/* Banner */}
-      <div style={{ position: 'relative', height: 260, overflow: 'hidden', borderBottom: '1px solid #333', background:'#111' }}>
+      <div style={{ position: 'relative', height: 260, overflow: 'hidden', borderBottom: '1px solid var(--border)', background:'#0a0a0a' }}>
         <video autoPlay loop muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }}>
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
-        <div style={{ position: 'absolute', inset: 0, opacity: 1, zIndex: 1, backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px)' }} />
-        <div style={{ position: 'absolute', top: '20%', left: '10%', width: 600, height: 600, zIndex: 1, background: 'radial-gradient(ellipse at 40% 50%, rgba(232,0,29,0.15) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.1, zIndex: 1, backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.05) 39px, rgba(255,255,255,0.05) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.05) 39px, rgba(255,255,255,0.05) 40px)' }} />
+        <div style={{ position: 'absolute', top: '20%', left: '10%', width: 600, height: 600, zIndex: 1, background: 'radial-gradient(ellipse at 40% 50%, rgba(232,0,29,0.3) 0%, transparent 65%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)', zIndex: 1 }} />
         <div style={{ position: 'relative', zIndex: 2, padding: '48px 80px', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div>
               <div style={{ color: '#e8001d', fontSize: 12, fontWeight: 600, letterSpacing: '0.2em', marginBottom: 12 }}>CONFIGURATION PERSONNALISÉE</div>
-              <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 40, color: '#fff', margin: 0, lineHeight: 1.1 }}>{t('builder_title')}</h1>
-              <p style={{ color: '#a8a8a8', fontSize: 16, marginTop: 12, maxWidth: 600, lineHeight: 1.6 }}>{t('builder_subtitle')}</p>
+              <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 40, color: '#ffffff', margin: 0, lineHeight: 1.1 }}>{t('builder_title')}</h1>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 16, marginTop: 12, maxWidth: 600, lineHeight: 1.6 }}>{t('builder_subtitle')}</p>
             </div>
           </div>
           {/* Compat summary bar */}
@@ -270,7 +270,7 @@ const BuilderPage = () => {
       {/* Body */}
       <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', flex: 1, minHeight: 0 }} className="wizard-body">
         {/* Sidebar */}
-        <aside style={{ borderRight: '1px solid #2a2a2a', display: 'flex', flexDirection: 'column', background: '#1e1e1e', overflowY: 'auto' }}>
+        <aside style={{ borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--gray-50)', overflowY: 'auto' }}>
           <div style={{ padding: '12px 12px 4px' }}>
             {steps.map((s, i) => {
               const isActive = i === currentStep;
@@ -286,7 +286,7 @@ const BuilderPage = () => {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, width: '100%',
                     padding: '9px 10px', borderRadius: 8, border: 'none',
-                    background: isActive ? '#e8001d' : isDone ? '#252525' : 'transparent',
+                    background: isActive ? 'var(--red)' : isDone ? 'var(--gray-100)' : 'transparent',
                     cursor: 'pointer', transition: 'all 0.15s', marginBottom: 2, textAlign: 'left',
                   }}
                   onClick={() => setCurrentStep(i)}
@@ -303,11 +303,11 @@ const BuilderPage = () => {
                     }
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#fff' : isDone ? '#ccc' : '#666', fontFamily: "'Space Grotesk',sans-serif" }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#fff' : isDone ? 'var(--gray-800)' : 'var(--gray-600)', fontFamily: "'Space Grotesk',sans-serif" }}>
                       {t('step_label_' + s.key)}
                     </div>
                     {isDone && build[s.key] && (
-                      <div style={{ fontSize: 10, color: isActive ? '#ffaaaa' : '#666', marginTop: 1 }}>
+                      <div style={{ fontSize: 10, color: isActive ? '#ffaaaa' : 'var(--gray-500)', marginTop: 1 }}>
                         {build[s.key].name.slice(0, 22)}{build[s.key].name.length > 22 ? '…' : ''}
                       </div>
                     )}
@@ -324,9 +324,9 @@ const BuilderPage = () => {
           <CompatPanel build={build} steps={steps} />
 
           {/* Summary */}
-          <div style={{ padding: '14px', borderTop: '1px solid #2a2a2a', background: '#1a1a1a', marginTop: 'auto' }}>
-            <div style={{ color: '#666', fontSize: 11, marginBottom: 4 }}>{t('complete_steps', completedCount, steps.length)}</div>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 26, color: '#fff', marginBottom: 10 }}>{formatPrice(total)}</div>
+          <div style={{ padding: '14px', borderTop: '1px solid var(--border)', background: 'var(--white)', marginTop: 'auto' }}>
+            <div style={{ color: 'var(--gray-600)', fontSize: 11, marginBottom: 4 }}>{t('complete_steps', completedCount, steps.length)}</div>
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 26, color: 'var(--black)', marginBottom: 10 }}>{formatPrice(total)}</div>
             <button
               style={{
                 width: '100%', padding: '10px', border: 'none', borderRadius: 8, cursor: completedCount === 0 ? 'not-allowed' : 'pointer',
@@ -348,7 +348,7 @@ const BuilderPage = () => {
           {/* Step header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
             <div>
-              <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, color: '#fff', margin: '0 0 4px' }}>
+              <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, color: 'var(--black)', margin: '0 0 4px' }}>
                 {t('step_label_' + step.key)}
               </h2>
               <p style={{ color: '#9f9f9f', fontSize: 12 }}>
@@ -364,7 +364,7 @@ const BuilderPage = () => {
                 Masquer incompatibles
               </label>
               <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-                style={{ background: '#222', border: '1px solid #3c3c3c', borderRadius: 7, padding: '7px 12px', color: '#888', fontFamily: "'Space Grotesk',sans-serif", fontSize: 12, outline: 'none', cursor: 'pointer' }}>
+                style={{ background: 'var(--white)', border: '1px solid var(--gray-300)', borderRadius: 7, padding: '7px 12px', color: 'var(--gray-800)', fontFamily: "'Space Grotesk',sans-serif", fontSize: 12, outline: 'none', cursor: 'pointer' }}>
                 <option value="featured">{t('sort_featured')}</option>
                 <option value="price_asc">{t('sort_price_asc')}</option>
                 <option value="price_desc">{t('sort_price_desc')}</option>
@@ -396,7 +396,7 @@ const BuilderPage = () => {
           {/* Navigation */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
             <button
-              style={{ background: '#222', border: '1px solid #3c3c3c', color: canGoPrev ? '#ccc' : '#444', padding: '10px 24px', borderRadius: 8, cursor: canGoPrev ? 'pointer' : 'not-allowed', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 14 }}
+              style={{ background: 'var(--gray-100)', border: '1px solid var(--gray-300)', color: canGoPrev ? 'var(--gray-800)' : 'var(--gray-400)', padding: '10px 24px', borderRadius: 8, cursor: canGoPrev ? 'pointer' : 'not-allowed', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 14 }}
               disabled={!canGoPrev} onClick={() => setCurrentStep(i => i - 1)}
             >
               {t('prev')}

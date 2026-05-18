@@ -1,0 +1,76 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+&rsaquo; {% trans 'Importer XLS' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" style="max-width: 700px; margin: 20px auto; padding: 24px; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.07);">
+  <h1 style="margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 12px; color: #333;">
+    Importer des {{ opts.verbose_name_plural|capfirst }} via XLS
+  </h1>
+
+  <p style="color: #555; font-size: 13px; line-height: 1.6; margin-bottom: 16px;">
+    Téléversez un fichier <strong>.xlsx</strong> contenant les colonnes définies dans le template.
+    Les enregistrements existants (même <strong>nom</strong>) seront mis à jour ; les nouveaux seront créés.
+    Les colonnes marquées en <span style="color:#c00; font-weight:bold;">rouge</span> dans le template sont obligatoires.
+  </p>
+
+  <div style="margin-bottom: 20px;">
+    <a href="template/" style="display: inline-block; background: #17a2b8; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px;">
+      ⬇ Télécharger le template XLS
+    </a>
+  </div>
+
+  <form action="." method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div style="margin-bottom: 20px;">
+      <label for="xls_file" style="display: block; font-weight: bold; margin-bottom: 8px; color: #444;">Fichier Excel (.xlsx) :</label>
+      <input type="file" id="xls_file" name="xls_file" accept=".xls,.xlsx" required
+             style="display: block; width: 100%; padding: 10px; border: 1px dashed #bbb; border-radius: 4px; background: #fafafa; cursor: pointer;">
+    </div>
+
+    <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 15px;">
+      <a href=".." class="button" style="background: #e0e0e0; color: #333; padding: 10px 18px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+        {% trans "Annuler" %}
+      </a>
+      <input type="submit" value="{% trans 'Importer' %}"
+             style="background: #007bff; color: white; border: none; padding: 10px 22px; border-radius: 4px; font-weight: bold; cursor: pointer;">
+    </div>
+  </form>
+
+  {% if result %}
+  <div style="margin-top: 28px; border-top: 1px solid #eee; padding-top: 20px;">
+    <h2 style="font-size: 16px; color: #333; margin-bottom: 12px;">Résultat de l'importation</h2>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px;">
+      <tr style="background: #f5f5f5;">
+        <th style="text-align:left; padding: 8px 12px; border: 1px solid #ddd;">Créés</th>
+        <th style="text-align:left; padding: 8px 12px; border: 1px solid #ddd;">Mis à jour</th>
+        <th style="text-align:left; padding: 8px 12px; border: 1px solid #ddd;">Erreurs</th>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px; border: 1px solid #ddd; color: #28a745; font-weight: bold;">{{ result.created }}</td>
+        <td style="padding: 8px 12px; border: 1px solid #ddd; color: #007bff; font-weight: bold;">{{ result.updated }}</td>
+        <td style="padding: 8px 12px; border: 1px solid #ddd; color: #dc3545; font-weight: bold;">{{ result.errors|length }}</td>
+      </tr>
+    </table>
+
+    {% if result.errors %}
+    <h3 style="font-size: 14px; color: #c00; margin-bottom: 8px;">Lignes en erreur :</h3>
+    <ul style="font-size: 12px; color: #555; padding-left: 20px; line-height: 1.7;">
+      {% for err in result.errors %}
+      <li>{{ err }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

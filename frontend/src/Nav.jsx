@@ -102,7 +102,7 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
         </svg>
       </button>
       {mobileOpen && (
-        <div style={{ position:'fixed', top:64, left:0, right:0, background:'rgba(14,14,14,0.98)', borderBottom:'1px solid var(--border2)', padding:'16px 20px', zIndex:999 }}>
+        <div style={{ position:'fixed', top:64, left:0, right:0, background:'var(--gray-900)', borderBottom:'1px solid var(--gray-800)', padding:'16px 20px', zIndex:999 }}>
           {navLinks.map(link => {
             const isActive =
               link.id === 'onlyonepc'
@@ -112,7 +112,7 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
                   : page === link.id;
             return (
               <button key={link.id}
-                style={{ ...navStyles.link, display:'block', width:'100%', textAlign:'left', padding:'12px 16px', marginBottom:4, fontSize:15,
+                style={{ ...navStyles.link, display:'block', width:'100%', textAlign:'left', padding:'12px 16px', marginBottom:4, fontSize:15, color:'var(--gray-300)',
                   ...(isActive ? navStyles.linkActive : {}),
                   ...(link.highlight ? navStyles.linkHighlight : {}),
                 }}
@@ -151,7 +151,7 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
                       <div style={{ ...navStyles.searchDot, background: catColors[p.category] || 'var(--red)' }}/>
                       <div>
                         <div style={{ color:'var(--white)', fontSize:13 }}>{p.name}</div>
-                        <div style={{ color:'var(--gray)', fontSize:11 }}>{p.category?.toUpperCase()} · ${p.price}</div>
+                        <div style={{ color:'var(--gray-400)', fontSize:11 }}>{p.category?.toUpperCase()} · ${p.price}</div>
                       </div>
                     </div>
                   ))}
@@ -195,13 +195,13 @@ const Nav = ({ page, setPage, cartCount, searchQuery, setSearchQuery }) => {
           </button>
         ) : (
           <button
-            style={{ background:'none', border:'1px solid #3c3c3c', borderRadius:8, cursor:'pointer',
-              color:'#ffffff', fontFamily:"'Space Grotesk',sans-serif", fontSize:12,
+            style={{ background:'none', border:'1px solid var(--border)', borderRadius:8, cursor:'pointer',
+              color:'var(--gray-300)', fontFamily:"'Space Grotesk',sans-serif", fontSize:12,
               fontWeight:700, letterSpacing:'0.1em', padding:'7px 18px',
               transition:'all 0.15s' }}
             onClick={() => setPage('user')}
-            onMouseEnter={e=>{ e.currentTarget.style.borderColor='#e8001d'; e.currentTarget.style.color='#e8001d'; }}
-            onMouseLeave={e=>{ e.currentTarget.style.borderColor='#3c3c3c'; e.currentTarget.style.color='#ffffff'; }}
+            onMouseEnter={e=>{ e.currentTarget.style.borderColor='var(--red)'; e.currentTarget.style.color='var(--red)'; }}
+            onMouseLeave={e=>{ e.currentTarget.style.borderColor='var(--gray-700)'; e.currentTarget.style.color='var(--gray-300)'; }}
           >
             {t('sign_in')?.toUpperCase()}
           </button>
@@ -216,29 +216,29 @@ const navStyles = {
     position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
     display: 'flex', alignItems: 'center', gap: 0,
     padding: '0 32px', height: 64,
-    background: 'rgba(14,14,14,0.96)',
+    background: '#4a4a4a',
     backdropFilter: 'blur(20px)',
-    borderBottom: '1px solid var(--border2)',
+    borderBottom: '1px solid #5a5a5a',
   },
   logo: {
     display: 'flex', alignItems: 'center', gap: 10,
     cursor: 'pointer', marginRight: 40, flexShrink: 0,
   },
   logoMark: { display:'flex', alignItems:'center' },
-  logoText: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:16, color:'var(--white)', letterSpacing:'0.12em', lineHeight:1.1 },
+  logoText: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:16, color:'#ffffff', letterSpacing:'0.12em', lineHeight:1.1 },
   logoSub: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:300, fontSize:9, color:'var(--red)', letterSpacing:'0.25em', lineHeight:1.1 },
   links: { display:'flex', alignItems:'center', gap:4, flex:1 },
   link: {
     background:'none', border:'none', cursor:'pointer',
     padding:'6px 14px', borderRadius:6,
     fontFamily:"'Space Grotesk',sans-serif", fontSize:14, fontWeight:500,
-    color:'var(--offwhite)', transition:'all 0.15s', position:'relative',
+    color:'rgba(255,255,255,0.7)', transition:'all 0.15s', position:'relative',
   },
-  linkActive: { color:'var(--white)', background:'var(--metal2)' },
+  linkActive: { color:'#ffffff', background:'rgba(255,255,255,0.15)', fontWeight:600, boxShadow:'0 2px 10px rgba(0,0,0,0.1)' },
   linkHighlight: { color:'var(--red)' },
   newBadge: {
     position:'absolute', top:-6, right:2,
-    background:'var(--red)', color:'var(--dark)',
+    background:'var(--red)', color:'#ffffff',
     fontSize:8, fontWeight:700, padding:'1px 4px', borderRadius:3, letterSpacing:'0.05em',
   },
   actions: { display:'flex', alignItems:'center', gap:4, marginLeft:'auto' },
@@ -246,25 +246,25 @@ const navStyles = {
     background:'none', border:'none', cursor:'pointer',
     width:38, height:38, borderRadius:8,
     display:'flex', alignItems:'center', justifyContent:'center',
-    color:'var(--offwhite)', position:'relative', transition:'all 0.15s',
+    color:'#ffffff', position:'relative', transition:'all 0.15s',
   },
-  userBtn: { background:'var(--metal2)', border:'1px solid var(--metal)', color:'var(--offwhite)' },
-  langBtn: { fontSize:18, background:'none', border:'1px solid transparent', opacity:0.5, transition:'all 0.15s' },
-  langActive: { opacity:1, border:'1px solid var(--metal)', background:'var(--metal2)' },
+  userBtn: { background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)', color:'#ffffff' },
+  langBtn: { fontSize:18, background:'none', border:'1px solid transparent', opacity:0.6, transition:'all 0.15s' },
+  langActive: { opacity:1, border:'1px solid rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.1)' },
   badge: {
     position:'absolute', top:4, right:4,
     width:16, height:16, borderRadius:'50%',
-    background:'var(--red)', color:'var(--dark)',
+    background:'var(--red)', color:'#ffffff',
     fontSize:9, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center',
   },
   searchDropdown: {
     position:'absolute', top:'calc(100% + 8px)', right:0,
-    width:340, background:'var(--panel)', border:'1px solid var(--metal)',
-    borderRadius:10, overflow:'hidden', boxShadow:'0 20px 40px rgba(0,0,0,0.12)',
+    width:340, background:'var(--gray-900)', border:'1px solid var(--gray-800)',
+    borderRadius:10, overflow:'hidden', boxShadow:'0 20px 40px rgba(0,0,0,0.4)',
   },
   searchInput: {
-    width:'100%', padding:'12px 16px', background:'transparent',
-    border:'none', borderBottom:'1px solid var(--metal)',
+    width:'100%', padding:'12px 16px', background:'var(--gray-800)',
+    border:'none', borderBottom:'1px solid var(--gray-700)',
     color:'var(--white)', fontFamily:"'Space Grotesk',sans-serif", fontSize:14,
     outline:'none', boxSizing:'border-box',
   },

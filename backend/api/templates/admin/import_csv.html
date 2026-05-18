@@ -1,0 +1,43 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+&rsaquo; {% trans 'Importer CSV' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" style="max-width: 600px; margin: 20px auto; padding: 20px; background: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <h1 style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333;">
+        Importer des {{ opts.verbose_name_plural|capfirst }} via CSV
+    </h1>
+    
+    <p style="color: #666; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">
+        Sélectionnez un fichier CSV contenant les colonnes correspondant aux champs du modèle. 
+        Pour mettre à jour un enregistrement existant, spécifiez son identifiant dans la colonne <strong>id</strong>.
+        Si la colonne <strong>id</strong> est absente ou vide, un nouvel enregistrement sera créé.
+    </p>
+
+    <form action="." method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: 20px;">
+            <label for="csv_file" style="display: block; font-weight: bold; margin-bottom: 8px; color: #444;">Fichier CSV :</label>
+            <input type="file" id="csv_file" name="csv_file" accept=".csv" required 
+                   style="display: block; width: 100%; padding: 10px; border: 1px dashed #bbb; border-radius: 4px; background: #fafafa; cursor: pointer;">
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 15px;">
+            <a href=".." class="button" style="background: #e0e0e0; color: #333; padding: 10px 18px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                {% trans "Annuler" %}
+            </a>
+            <input type="submit" value="{% trans 'Importer' %}" 
+                   style="background: #28a745; color: white; border: none; padding: 10px 22px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+        </div>
+    </form>
+</div>
+{% endblock %}

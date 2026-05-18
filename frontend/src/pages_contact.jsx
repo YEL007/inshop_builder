@@ -2,9 +2,8 @@ import React from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// pages_contact.jsx — Contact page with Leaflet + CartoDB Dark map
+// pages_contact.jsx — Contact page with Leaflet + CartoDB Positron map (Light)
 // Coordinates come from Odoo config (map_lat / map_lng).
-// If not set, Nominatim geocodes the address automatically.
 
 // ── Map widget ────────────────────────────────────────────────────────────────
 const ContactMap = ({ lat, lng, label }) => {
@@ -14,7 +13,7 @@ const ContactMap = ({ lat, lng, label }) => {
   React.useEffect(() => {
     if (!lat || !lng || !containerRef.current) return;
 
-    // Destroy previous instance (hot-reload / coord change)
+    // Destroy previous instance
     if (mapRef.current) {
       mapRef.current.remove();
       mapRef.current = null;
@@ -28,13 +27,13 @@ const ContactMap = ({ lat, lng, label }) => {
       attributionControl: true,
     });
 
-    // CartoDB Dark Matter tiles — natively dark, no CSS hack
+    // CartoDB Dark Matter tiles — clean dark map
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
       {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright" style="color:#666">OpenStreetMap</a>' +
-          ' &copy; <a href="https://carto.com/attributions" style="color:#666">CARTO</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' +
+          ' &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: "abcd",
         maxZoom: 20,
       }
@@ -45,7 +44,7 @@ const ContactMap = ({ lat, lng, label }) => {
       html: `
         <svg width="28" height="38" viewBox="0 0 28 38" xmlns="http://www.w3.org/2000/svg">
           <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 24 14 24S28 24.5 28 14C28 6.27 21.73 0 14 0z"
-            fill="#e8001d" stroke="#fff" stroke-width="1.5"/>
+            fill="var(--accent)" stroke="#fff" stroke-width="1.5"/>
           <circle cx="14" cy="14" r="5" fill="#fff"/>
         </svg>`,
       iconSize: [28, 38],
@@ -57,10 +56,10 @@ const ContactMap = ({ lat, lng, label }) => {
     L.marker([lat, lng], { icon: pinIcon })
       .addTo(map)
       .bindPopup(
-        `<div style="font-family:'Space Grotesk',sans-serif;font-size:13px;color:#fff;
-          background:#1e1e1e;padding:8px 12px;border-radius:6px;min-width:160px;">
-          <strong style="color:#e8001d;">INSHOP BUILDER</strong><br/>
-          <span style="color:#aaa;">${label || ""}</span>
+        `<div style="font-family:'Space Grotesk',sans-serif;font-size:13px;color:var(--black);
+          background:var(--white);padding:8px 12px;border-radius:6px;min-width:160px;">
+          <strong style="color:var(--accent);">INSHOP BUILDER</strong><br/>
+          <span style="color:var(--gray-text);">${label || ""}</span>
         </div>`,
         { className: "inshop-popup" }
       )
@@ -79,7 +78,7 @@ const ContactMap = ({ lat, lng, label }) => {
   return (
     <div
       ref={containerRef}
-      style={{ width: "100%", height: "100%", background: "#0d1117" }}
+      style={{ width: "100%", height: "100%", background: "var(--gray-50)" }}
     />
   );
 };
@@ -98,20 +97,17 @@ const ContactPage = () => {
     message: "",
   });
 
-  // Resolved map coordinates
   const [mapCoords, setMapCoords] = React.useState(null);
 
   React.useEffect(() => {
     const lat = config.lat ? parseFloat(config.lat) : 0;
     const lng = config.lng ? parseFloat(config.lng) : 0;
 
-    // Admin set explicit coordinates → use directly
     if (lat && lng) {
       setMapCoords({ lat, lng });
       return;
     }
 
-    // Fallback: geocode the address via Nominatim
     const address = config.address || "Dakar, Sénégal";
     fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
@@ -192,8 +188,6 @@ const ContactPage = () => {
         <video autoPlay loop muted playsInline style={S.heroBannerImg}>
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
-        <div style={S.heroBannerGrid} />
-        <div style={S.heroBannerGlow} />
         <div style={S.heroBannerOverlay} />
         <div style={S.heroBannerContent} className="rsp-banner-content">
           <div style={S.heroEye}>CONTACTEZ-NOUS</div>
@@ -239,12 +233,12 @@ const ContactPage = () => {
             {formSent ? (
               <div style={S.sentView}>
                 <div style={S.sentCheck}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e8001d" strokeWidth="2.5">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <h3 style={{ color: "#fff", margin: "0 0 8px" }}>Message transmis !</h3>
-                <p style={{ color: "#9f9f9f", fontSize: 14 }}>
+                <h3 style={{ color: "var(--black)", margin: "0 0 8px" }}>Message transmis !</h3>
+                <p style={{ color: "var(--gray-text)", fontSize: 14 }}>
                   Votre demande a été enregistrée. Nos experts vous recontactent sous peu.
                 </p>
                 <button onClick={resetForm} style={S.resendBtn}>
@@ -288,7 +282,7 @@ const ContactPage = () => {
                 </div>
 
                 <div style={S.checkRow}>
-                  <input type="checkbox" id="consent" required style={{ accentColor: "#e8001d", marginTop: 3 }} />
+                  <input type="checkbox" id="consent" required style={{ accentColor: "var(--accent)", marginTop: 3 }} />
                   <label htmlFor="consent" style={S.checkLabel}>
                     J'accepte que mes données soient traitées pour répondre à ma demande.
                   </label>
@@ -315,7 +309,7 @@ const ContactPage = () => {
               />
             ) : (
               <div style={S.mapLoading}>
-                <p style={{ color: "#555", fontFamily: "'Space Grotesk',sans-serif" }}>
+                <p style={{ color: "var(--gray-text)", fontFamily: "'Space Grotesk',sans-serif" }}>
                   Chargement de la carte…
                 </p>
               </div>
@@ -324,20 +318,19 @@ const ContactPage = () => {
         </div>
       </div>
 
-      {/* Popup CSS override — dark background */}
       <style>{`
         .inshop-popup .leaflet-popup-content-wrapper {
-          background: #1e1e1e;
-          border: 1px solid #3c3c3c;
+          background: var(--gray-800);
+          border: 1px solid var(--gray-700);
           border-radius: 8px;
           padding: 0;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         .inshop-popup .leaflet-popup-content { margin: 0; }
-        .inshop-popup .leaflet-popup-tip { background: #1e1e1e; }
+        .inshop-popup .leaflet-popup-tip { background: var(--gray-800); }
         .leaflet-attribution-flag { display: none !important; }
-        .leaflet-control-attribution a { color: #555 !important; }
-        .leaflet-control-attribution { background: rgba(0,0,0,0.5) !important; color: #555 !important; }
+        .leaflet-control-attribution a { color: var(--gray-text) !important; }
+        .leaflet-control-attribution { background: rgba(255,255,255,0.7) !important; color: var(--gray-text) !important; }
       `}</style>
     </div>
   );
@@ -346,129 +339,117 @@ const ContactPage = () => {
 // ── Styles ────────────────────────────────────────────────────────────────────
 const S = {
   page: {
-    background: "#0d0d0d",
+    background: "var(--bg)",
     minHeight: "100vh",
-    color: "#fff",
+    color: "var(--white)",
     fontFamily: "'Space Grotesk', sans-serif",
     paddingBottom: 100,
   },
-
-  // Hero — video banner (same pattern as other pages)
-  heroBanner: { position: "relative", height: 360, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", background: "#111" },
+  heroBanner: { position: "relative", height: 360, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", background: "#0a0a0a" },
   heroBannerImg: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 25%", opacity: 0.4 },
-  heroBannerGrid: {
-    position: "absolute", inset: 0, opacity: 1, zIndex: 1,
-    backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px)",
-  },
-  heroBannerGlow: {
-    position: "absolute", top: "20%", left: "10%", width: 600, height: 600, zIndex: 1,
-    background: "radial-gradient(ellipse at 40% 50%, rgba(232,0,29,0.15) 0%, transparent 65%)",
-    pointerEvents: "none",
-  },
-  heroBannerOverlay: { position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)", zIndex: 1 },
+  heroBannerOverlay: { position: "absolute", inset: 0, background: "linear-gradient(90deg, #0a0a0a 0%, transparent 50%, #0a0a0a 100%)", zIndex: 1 },
   heroBannerContent: { position: "relative", zIndex: 2, width: "100%", padding: "0 80px" },
-  heroEye: { color: "#e8001d", fontSize: 12, fontWeight: 600, letterSpacing: "0.2em", marginBottom: 12 },
-  heroTitle: { fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 48, color: "#fff", margin: "0 0 12px", lineHeight: 1.1 },
-  heroSub: { fontSize: 16, color: "#9f9f9f", lineHeight: 1.7, margin: 0 },
+  heroEye: { color: "var(--accent)", fontSize: 12, fontWeight: 600, letterSpacing: "0.2em", marginBottom: 12 },
+  heroTitle: { fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 48, color: "#ffffff", margin: "0 0 12px", lineHeight: 1.1 },
+  heroSub: { fontSize: 16, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, margin: 0 },
 
-  // Layout
   container: { padding: "60px 80px" },
   grid: { display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 64, alignItems: "start", marginBottom: 80 },
 
-  // Left
   leftCol: {},
-  colTitle: { fontSize: 28, fontWeight: 800, margin: "0 0 12px" },
-  titleBar: { width: 48, height: 3, background: "#e8001d", marginBottom: 40 },
+  colTitle: { fontSize: 28, fontWeight: 800, margin: "0 0 12px", color: "var(--white)" },
+  titleBar: { width: 48, height: 3, background: "var(--accent)", marginBottom: 40 },
   cards: { display: "flex", flexDirection: "column", gap: 16 },
   card: {
-    background: "#141414",
-    border: "1px solid #2a2a2a",
-    borderRadius: 12,
-    padding: "20px 24px",
+    background: "#f3f4f6",
+    border: "1px solid #e5e7eb",
+    borderRadius: 16,
+    padding: "24px",
     display: "flex",
     gap: 20,
     alignItems: "flex-start",
-    transition: "border-color 0.2s",
+    transition: "all 0.3s ease",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
   },
   cardIcon: {
-    width: 44, height: 44, borderRadius: 10,
-    background: "rgba(232,0,29,0.1)",
-    border: "1px solid rgba(232,0,29,0.2)",
+    width: 44, height: 44, borderRadius: 12,
+    background: "#ffffff",
+    border: "1px solid #e5e7eb",
     display: "flex", alignItems: "center", justifyContent: "center",
-    color: "#e8001d", flexShrink: 0,
+    color: "var(--red)", flexShrink: 0,
+    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
   },
-  cardLabel: { fontSize: 10, fontWeight: 700, color: "#e8001d", letterSpacing: "0.15em", marginBottom: 4 },
-  cardValue: { fontSize: 15, fontWeight: 600, color: "#fff", marginBottom: 3 },
-  cardSub: { fontSize: 12, color: "#666" },
+  cardLabel: { fontSize: 10, fontWeight: 700, color: "var(--gray-500)", letterSpacing: "0.15em", marginBottom: 4 },
+  cardValue: { fontSize: 15, fontWeight: 600, color: "var(--gray-900)", marginBottom: 3 },
+  cardSub: { fontSize: 12, color: "var(--gray-500)" },
 
-  // Form
   formBox: {
-    background: "#111",
-    border: "1px solid #2a2a2a",
+    background: "var(--gray-800)",
+    border: "1px solid var(--gray-700)",
     borderRadius: 20,
     padding: "48px 56px",
-    boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
+    boxShadow: "0 32px 80px rgba(0,0,0,0.2)",
   },
   formHeader: { marginBottom: 40 },
-  formEye: { fontSize: 11, fontWeight: 700, color: "#e8001d", letterSpacing: "0.2em", marginBottom: 10 },
-  formIntro: { fontSize: 14, color: "#666", lineHeight: 1.6, margin: 0 },
+  formEye: { fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.2em", marginBottom: 10 },
+  formIntro: { fontSize: 14, color: "var(--gray-text)", lineHeight: 1.6, margin: 0 },
   form: { display: "flex", flexDirection: "column", gap: 28 },
   formRow: { display: "flex", gap: 20 },
   formGroup: { display: "flex", flexDirection: "column", gap: 10, flex: 1 },
-  label: { fontSize: 10, fontWeight: 700, color: "#555", letterSpacing: "0.12em" },
+  label: { fontSize: 10, fontWeight: 700, color: "var(--gray-text)", letterSpacing: "0.12em" },
   input: {
-    background: "#0a0a0a", border: "1px solid #2a2a2a", borderRadius: 8,
-    padding: "14px 16px", color: "#fff", fontSize: 14, outline: "none",
+    background: "var(--gray-700)", border: "1px solid var(--gray-600)", borderRadius: 8,
+    padding: "14px 16px", color: "var(--white)", fontSize: 14, outline: "none",
     transition: "border-color 0.2s", fontFamily: "inherit",
   },
   select: {
-    width: "100%", background: "#0a0a0a", border: "1px solid #2a2a2a",
-    borderRadius: 8, padding: "14px 40px 14px 16px", color: "#fff",
+    width: "100%", background: "var(--gray-700)", border: "1px solid var(--gray-600)",
+    borderRadius: 8, padding: "14px 40px 14px 16px", color: "var(--white)",
     fontSize: 14, appearance: "none", outline: "none", fontFamily: "inherit",
   },
   selectArrow: {
     position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
-    fontSize: 11, color: "#555", pointerEvents: "none",
+    fontSize: 11, color: "var(--gray-400)", pointerEvents: "none",
   },
   textarea: {
-    background: "#0a0a0a", border: "1px solid #2a2a2a", borderRadius: 8,
-    padding: "14px 16px", color: "#fff", fontSize: 14, minHeight: 160,
+    background: "var(--gray-700)", border: "1px solid var(--gray-600)", borderRadius: 8,
+    padding: "14px 16px", color: "var(--white)", fontSize: 14, minHeight: 160,
     resize: "none", outline: "none", fontFamily: "inherit", lineHeight: 1.6,
   },
   checkRow: { display: "flex", gap: 12, alignItems: "flex-start" },
-  checkLabel: { fontSize: 12, color: "#666", lineHeight: 1.5 },
+  checkLabel: { fontSize: 12, color: "var(--gray-text)", lineHeight: 1.5 },
   submitBtn: {
     padding: "18px", borderRadius: 8, border: "none",
-    background: "#e8001d", color: "#fff", fontSize: 13, fontWeight: 700,
+    background: "var(--black)", color: "var(--white)", fontSize: 13, fontWeight: 700,
     cursor: "pointer", letterSpacing: "0.06em", fontFamily: "inherit",
     transition: "opacity 0.2s, transform 0.1s",
   },
 
-  // Sent state
   sentView: { textAlign: "center", padding: "32px 0" },
   sentCheck: {
     width: 60, height: 60, borderRadius: "50%",
-    background: "rgba(232,0,29,0.1)", border: "1px solid rgba(232,0,29,0.3)",
+    background: "var(--gray-50)", border: "1px solid var(--border)",
     display: "flex", alignItems: "center", justifyContent: "center",
     margin: "0 auto 24px",
   },
   resendBtn: {
-    marginTop: 24, background: "none", border: "1px solid #2a2a2a",
-    color: "#666", padding: "10px 24px", borderRadius: 6,
+    marginTop: 24, background: "none", border: "1px solid var(--border)",
+    color: "var(--gray-text)", padding: "10px 24px", borderRadius: 6,
     cursor: "pointer", fontFamily: "inherit", fontSize: 13,
     transition: "border-color 0.2s, color 0.2s",
   },
 
-  // Map
   mapSection: {},
   mapWrapper: {
-    height: 520, borderRadius: 16, overflow: "hidden",
-    border: "1px solid #2a2a2a",
-    boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
+    height: 520, borderRadius: 24, overflow: "hidden",
+    border: "1px solid var(--gray-300)",
+    background: "#f3f4f6",
+    boxShadow: "0 8px 40px rgba(0,0,0,0.05)",
+    filter: "grayscale(1) contrast(1.1) brightness(1)",
   },
   mapLoading: {
     height: "100%", display: "flex", alignItems: "center",
-    justifyContent: "center", background: "#0d1117",
+    justifyContent: "center", background: "var(--gray-50)",
   },
 };
 

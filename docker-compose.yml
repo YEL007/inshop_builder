@@ -1,54 +1,74 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: pc_builder_db
+    container_name: inshop_db
     environment:
-      POSTGRES_DB: odoo
-      POSTGRES_USER: odoo
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-inshop}
+      POSTGRES_USER: ${DB_USER:-inshop}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-inshop}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  odoo:
-    image: odoo:17.0
-    container_name: pc_builder_odoo
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: inshop_backend
     depends_on:
       db:
         condition: service_healthy
     environment:
-      HOST: db
-      USER: odoo
-      PASSWORD: ${POSTGRES_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-dev-only-change-me}
+      DEBUG: ${DEBUG:-False}
+      DB_NAME: ${DB_NAME:-inshop}
+      DB_USER: ${DB_USER:-inshop}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 5432
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
       ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://localhost:8080}
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@inshop-builder.com}
     volumes:
-      - ./odoo/config/odoo.conf:/etc/odoo/odoo.conf:ro
-      - ./odoo/addons:/mnt/extra-addons
-      - odoo_data:/var/lib/odoo
-    command: -- -d odoo -u pc_builder
+      - media_data:/app/media
+      - static_data:/app/static
     networks:
       - backend
     restart: unless-stopped
-    # Port 8069 exposed only internally — Nginx is the public entry point
-    # expose:
-    #   - "8069"
+    # Run migrations then start server
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py seed_categories &&
+             python manage.py collectstatic --noinput &&
+             gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120"
 
   nginx:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pc_builder_nginx
+    container_name: inshop_nginx
     depends_on:
-      - odoo
+      - backend
     ports:
       - "8080:80"
+    environment:
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://localhost:8080}
+    volumes:
+      - media_data:/usr/share/nginx/media:ro
+      - static_data:/usr/share/nginx/static:ro
+      - ./backend/custom_admin:/usr/share/nginx/admin:ro
     networks:
       - backend
     restart: unless-stopped
@@ -59,4 +79,5 @@ networks:
 
 volumes:
   postgres_data:
-  odoo_data:
+  media_data:
+  static_data:

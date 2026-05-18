@@ -10,13 +10,13 @@ window.AppContext = AppContext;
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "accentColor": "#e8001d",
   "accentBright": "#ffffff",
-  "bgBase": "#1a1a1a",
+  "bgBase": "#ffffff",
   "fontHeading": "'Space Grotesk', sans-serif",
   "style": "white"
 }/*EDITMODE-END*/;
 
 const STYLE_PRESETS = {
-  white: { accent: '#e8001d', bright: '#ffffff', bg: '#1a1a1a' },
+  white: { accent: '#e8001d', bright: '#ffffff', bg: '#f5f5f5' },
   warm: { accent: '#e8e0d0', bright: '#f5f0e8', bg: '#0a0908' },
   cool: { accent: '#c8d8e8', bright: '#ddeeff', bg: '#080a0c' },
   dim: { accent: '#909090', bright: '#333333', bg: '#060606' },
@@ -26,7 +26,7 @@ const App = () => {
   console.log('[App] Component function executing');
   const [tweaks, setTweaks] = React.useState(TWEAK_DEFAULTS);
   const [tweakVisible, setTweakVisible] = React.useState(false);
-  const [dataLoaded, setDataLoaded] = React.useState(false);
+  const [dataLoaded, setDataLoaded] = React.useState(0);
   const [config, setConfig] = React.useState(window.SITE_CONFIG || {});
 
   // Langue & devise
@@ -79,7 +79,7 @@ const App = () => {
       setBuild(prevBuild => {
         const nextBuild = { ...prevBuild };
         let changed = false;
-        const allIds = window.ALL_PRODUCTS.map(p => p.id);
+        const allIds = (window.ALL_PRODUCTS || []).map(p => p.id);
         for (const key of Object.keys(nextBuild)) {
           if (nextBuild[key] && !allIds.includes(nextBuild[key].id)) {
             delete nextBuild[key];
@@ -100,10 +100,10 @@ const App = () => {
 
       // Clean up cached cart items that no longer exist in the backend
       if (window.SITE_CONFIG) setConfig(window.SITE_CONFIG);
-      setDataLoaded(true); // Always true after attempt, even if !ok
+      setDataLoaded(Date.now()); // Force re-render with timestamp
       if (!ok) setCatalogError(true);
 
-      cartRef.current = cartRef.current.filter(item => window.ALL_PRODUCTS.some(p => p.id === item.id));
+      cartRef.current = cartRef.current.filter(item => (window.ALL_PRODUCTS || []).some(p => p.id === item.id));
       if (!ok || cartRef.current.length !== cart.length) {
         if (!ok) {
           // Keep cart if offline? Maybe not if we can't verify prices
@@ -122,7 +122,7 @@ const App = () => {
 
     // If already loaded before mount
     if (window.ALL_PRODUCTS && window.ALL_PRODUCTS.length > 0) {
-      setDataLoaded(true);
+      setDataLoaded(Date.now());
     }
 
     window.addEventListener('catalog:loaded', handler);
@@ -176,17 +176,18 @@ const App = () => {
   // Current user session
   const [currentUser, setCurrentUser] = React.useState(null);
   React.useEffect(() => {
-    const handler = (e) => {
+    const sessionHandler = (e) => {
       if (e.detail?.authenticated) setCurrentUser(e.detail);
       else setCurrentUser(null);
     };
-    window.addEventListener('pc:session', handler);
-    window.addEventListener('pc:logout', () => setCurrentUser(null));
+    const logoutHandler = () => setCurrentUser(null);
+    window.addEventListener('pc:session', sessionHandler);
+    window.addEventListener('pc:logout', logoutHandler);
     // Check session on mount
     window.PcApi?.me().then(d => { if (d.authenticated) setCurrentUser(d); }).catch(() => { });
     return () => {
-      window.removeEventListener('pc:session', handler);
-      window.removeEventListener('pc:logout', handler);
+      window.removeEventListener('pc:session', sessionHandler);
+      window.removeEventListener('pc:logout', logoutHandler);
     };
   }, []);
 
@@ -195,6 +196,8 @@ const App = () => {
     try { return JSON.parse(localStorage.getItem('inshop_cart') || '[]'); } catch { return []; }
   });
   const cartRef = React.useRef(cart);
+
+  const isNumericId = (id) => typeof id === 'number' || (typeof id === 'string' && /^\d+$/.test(id));
 
   const addToCart = React.useCallback((product) => {
     const prev = cartRef.current;
@@ -209,8 +212,11 @@ const App = () => {
     cartRef.current = next;
     setCart(next);
     if (currentUser?.authenticated && window.PcApi) {
-      window.PcApi.cartAdd(product.odoo_id || product.id, 1)
-        .catch(e => console.warn('[Cart] cartAdd:', e.message));
+      const pid = product.odoo_id || product.id;
+      if (isNumericId(pid)) {
+        window.PcApi.cartAdd(pid, 1)
+          .catch(e => console.warn('[Cart] cartAdd:', e.message));
+      }
     }
   }, [currentUser]);
 
@@ -221,8 +227,11 @@ const App = () => {
     cartRef.current = next;
     setCart(next);
     if (currentUser?.authenticated && window.PcApi && item) {
-      window.PcApi.cartRemove(item.odoo_id || item.id)
-        .catch(e => console.warn('[Cart] cartRemove:', e.message));
+      const pid = item.odoo_id || item.id;
+      if (isNumericId(pid)) {
+        window.PcApi.cartRemove(pid)
+          .catch(e => console.warn('[Cart] cartRemove:', e.message));
+      }
     }
   }, [currentUser]);
 
@@ -233,7 +242,7 @@ const App = () => {
     cartRef.current = next;
     setCart(next);
     if (currentUser?.authenticated && window.PcApi) {
-      const items = next.map(i => ({ product_id: i.odoo_id || i.id, qty: i.qty })).filter(i => i.product_id);
+      const items = next.map(i => ({ product_id: i.odoo_id || i.id, qty: i.qty })).filter(i => isNumericId(i.product_id));
       if (items.length > 0) {
         window.PcApi.cartSync(items).catch(e => console.warn('[Cart] cartSync:', e.message));
       }
@@ -362,7 +371,13 @@ const App = () => {
       case 'product': return pageParams.product && ProductDetail ? <ProductDetail product={pageParams.product} /> : <Home />;
       case 'prebuilt-detail': return pageParams.product && PrebuiltDetail ? <PrebuiltDetail product={pageParams.product} /> : <Prebuilt />;
       case 'onlyonepc-detail': return pageParams.product && OnlyOnePcDetail ? <OnlyOnePcDetail product={pageParams.product} /> : <OnlyOnePc />;
-      case 'compare': return Compare ? <Compare /> : null;
+      case 'compare': return Compare ? <Compare /> : (
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'80vh', gap:16 }}>
+          <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:24, fontWeight:700, color:'#3c3c3c' }}>Comparateur en construction</div>
+          <div style={{ color:'#9f9f9f', fontSize:14 }}>Cette fonctionnalité sera bientôt disponible.</div>
+          <button onClick={() => setPage('home')} style={{ marginTop:8, padding:'10px 24px', background:'#202020', color:'#fff', border:'none', borderRadius:6, cursor:'pointer' }}>Retour</button>
+        </div>
+      );
       default: return (
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'80vh', gap:16 }}>
           <div style={{ fontFamily:"'Space Grotesk',sans-serif", fontSize:72, fontWeight:700, color:'#3c3c3c' }}>404</div>
@@ -379,7 +394,7 @@ const App = () => {
 
   return (
     <AppContext.Provider value={ctxValue}>
-      <div style={{ minHeight: '100vh', background: tweaks.bgBase || '#1a1a1a', fontFamily: tweaks.fontHeading, color: 'white' }}>
+      <div style={{ minHeight: '100vh', background: tweaks.bgBase || '#ffffff', fontFamily: tweaks.fontHeading, color: '#000000', fontSize: '16px' }}>
         {Nav && <Nav
           page={page} setPage={setPage}
           cartCount={cartCount}
@@ -387,7 +402,7 @@ const App = () => {
         />}
         {catalogError && (
           <div style={{ background:'#cc4444', color:'#fff', textAlign:'center', padding:'10px 16px', fontSize:13, fontFamily:"'Space Grotesk',sans-serif" }}>
-            ⚠ Impossible de joindre le serveur Odoo — le catalogue est indisponible.
+            ⚠ Impossible de joindre le serveur — le catalogue est indisponible.
           </div>
         )}
         <main>{renderPage()}</main>
@@ -403,7 +418,7 @@ const App = () => {
                 <rect x="5" y="12" width="5" height="5" fill="#e8001d" opacity="0.5" />
                 <rect x="12" y="12" width="5" height="5" fill="#e8001d" />
               </svg>
-              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: '#ffffff', letterSpacing: '0.1em' }}>INSHOP BUILDER</span>
+              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 15, color: 'var(--white)', letterSpacing: '0.1em' }}>INSHOP BUILDER</span>
             </div>
             <div style={appStyles.footerLinks} className="responsive-footer-links rsp-footer-links">
               {[
@@ -432,8 +447,8 @@ const App = () => {
                   {links.map(({ label, action }) => (
                     <div key={label} style={appStyles.footerLink}
                       onClick={action}
-                      onMouseEnter={e => e.currentTarget.style.color = '#e8001d'}
-                      onMouseLeave={e => e.currentTarget.style.color = '#d0d0d0'}
+                      onMouseEnter={e => e.currentTarget.style.color = 'var(--red)'}
+                      onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}
                     >{label}</div>
                   ))}
                 </div>
@@ -441,8 +456,8 @@ const App = () => {
             </div>
           </div>
           <div style={appStyles.footerBottom} className="responsive-footer-bottom rsp-footer-bottom">
-            <span style={{ color: '#d0d0d0' }}>{t('footer_copyright')}</span>
-            <span style={{ color: '#d0d0d0' }}>{t('footer_tagline')}</span>
+            <span>{t('footer_copyright')}</span>
+            <span>{t('footer_tagline')}</span>
           </div>
         </footer>
 
@@ -494,18 +509,18 @@ const TweaksPanel = ({ tweaks, setTweaks }) => {
 };
 
 const appStyles = {
-  footer: { background: '#1a1a1a', borderTop: '1px solid #2a2a2a', padding: '60px 80px 32px' },
+  footer: { background: '#4a4a4a', borderTop: '1px solid #5a5a5a', padding: '60px 80px 32px' },
   footerTop: { display: 'flex', justifyContent: 'space-between', marginBottom: 48 },
   footerBrand: { display: 'flex', alignItems: 'center' },
   footerLinks: { display: 'flex', gap: 64 },
-  footerColTitle: { color: '#9f9f9f', fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 16 },
-  footerLink: { color: '#d0d0d0', fontSize: 13, marginBottom: 10, cursor: 'pointer', transition: 'color 0.15s' },
-  footerBottom: { display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #2a2a2a', paddingTop: 24, fontSize: 12 },
-  tweaks: { position: 'fixed', bottom: 20, right: 20, background: '#242424', border: '1px solid #3c3c3c', borderRadius: 14, padding: '18px 20px', width: 220, zIndex: 9999, boxShadow: '0 20px 60px rgba(0,0,0,0.12)' },
-  tweaksTitle: { color: '#ffffff', fontWeight: 700, fontSize: 13, marginBottom: 16, fontFamily: "'Space Grotesk',sans-serif" },
+  footerColTitle: { color: '#ffffff', fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 16 },
+  footerLink: { color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 10, cursor: 'pointer', transition: 'all 0.15s' },
+  footerBottom: { display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 24, fontSize: 12, color: 'rgba(255,255,255,0.4)' },
+  tweaks: { position: 'fixed', bottom: 20, right: 20, background: '#ffffff', border: '1px solid #e0e0e0', borderRadius: 14, padding: '18px 20px', width: 220, zIndex: 9999, boxShadow: '0 20px 60px rgba(0,0,0,0.12)' },
+  tweaksTitle: { color: '#111111', fontWeight: 700, fontSize: 13, marginBottom: 16, fontFamily: "'Space Grotesk',sans-serif" },
   tweaksGroup: { marginBottom: 14 },
-  tweaksLabel: { color: '#9f9f9f', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 8 },
-  presetBtn: { display: 'flex', alignItems: 'center', gap: 6, background: '#2a2a2a', border: '1px solid', borderRadius: 6, padding: '5px 8px', cursor: 'pointer', transition: 'border-color 0.15s' },
+  tweaksLabel: { color: '#666666', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', marginBottom: 8 },
+  presetBtn: { display: 'flex', alignItems: 'center', gap: 6, background: '#f5f5f5', border: '1px solid', borderRadius: 6, padding: '5px 8px', cursor: 'pointer', transition: 'border-color 0.15s' },
 };
 
 const rootEl = document.getElementById('root');

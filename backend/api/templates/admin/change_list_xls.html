@@ -1,0 +1,16 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+  {{ block.super }}
+  <li>
+    <a href="import-csv/" class="addlink" style="background-color: #28a745 !important; border-color: #218838 !important; background-image: none !important; padding: 10px 15px !important; color: white !important; font-weight: bold; border-radius: 4px;">
+      {% trans "Importer CSV" %}
+    </a>
+  </li>
+  <li>
+    <a href="import-xls/" class="addlink" style="background-color: #007bff !important; border-color: #0062cc !important; background-image: none !important; padding: 10px 15px !important; color: white !important; font-weight: bold; border-radius: 4px;">
+      {% trans "Importer XLS" %}
+    </a>
+  </li>
+{% endblock %}

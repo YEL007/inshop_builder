@@ -1,13 +1,13 @@
 import React from "react";
 import { jsPDF } from "jspdf";
 
-const ProductVisual = window.ProductVisual;
+// (ProductVisual is accessed dynamically from window at render time)
 
 // pages_checkout.jsx — Full Checkout + Order Confirmation
 
 const CheckoutPage = () => {
   const { cart, setPage, t, formatPrice, currentUser, clearCart } = React.useContext(window.AppContext);
-  const [orderNum] = React.useState(() => 'ORD-2026-' + Math.floor(Math.random()*9000+1000));
+  const [orderNum, setOrderNum] = React.useState('Brouillon');
   const [step, setStep] = React.useState(0); // 0 = panier, 1 = confirmation commande
   const subtotal = cart.reduce((s,i) => s + i.price*i.qty, 0);
 
@@ -25,8 +25,8 @@ const CheckoutPage = () => {
       {/* Header */}
       <div style={ckStyles.header}>
         <div style={ckStyles.logo} onClick={() => setPage('home')}>
-          <svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="1" y="1" width="20" height="20" rx="3" stroke="#e8e8e8" strokeWidth="1.5"/><rect x="5" y="5" width="5" height="5" fill="#e8e8e8"/><rect x="12" y="5" width="5" height="5" fill="#e8e8e8" opacity="0.5"/><rect x="5" y="12" width="5" height="5" fill="#e8e8e8" opacity="0.5"/><rect x="12" y="12" width="5" height="5" fill="#e8e8e8"/></svg>
-          <span style={{ color:'#ffffff', fontWeight:700, fontSize:14, letterSpacing:'0.1em' }}>INSHOP</span>
+          <svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="1" y="1" width="20" height="20" rx="3" stroke="var(--black)" strokeWidth="1.5"/><rect x="5" y="5" width="5" height="5" fill="var(--accent)"/><rect x="12" y="5" width="5" height="5" fill="var(--black)" opacity="0.2"/><rect x="5" y="12" width="5" height="5" fill="var(--black)" opacity="0.2"/><rect x="12" y="12" width="5" height="5" fill="var(--black)"/></svg>
+          <span style={{ color:'var(--black)', fontWeight:700, fontSize:14, letterSpacing:'0.1em' }}>INSHOP</span>
         </div>
         {/* Barre 2 étapes */}
         <div style={ckStyles.stepBar}>
@@ -34,11 +34,11 @@ const CheckoutPage = () => {
             <React.Fragment key={label}>
               <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                 <div style={{ ...ckStyles.stepDot, ...(i <= step ? ckStyles.stepDotActive : {}) }}>
-                  {i < step ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#080808" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg> : i + 1}
+                  {i < step ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--white)" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg> : i + 1}
                 </div>
-                <span style={{ color: i <= step ? '#ffffff' : '#a0a0a0', fontSize:13, fontWeight: i === step ? 600 : 400 }}>{label}</span>
+                <span style={{ color: i <= step ? 'var(--black)' : 'var(--gray-text)', fontSize:13, fontWeight: i === step ? 600 : 400 }}>{label}</span>
               </div>
-              {i < 1 && <div style={{ ...ckStyles.stepLine, background: i < step ? '#e8e8e8' : '#2a2a2a' }}/>}
+              {i < 1 && <div style={{ ...ckStyles.stepLine, background: i < step ? 'var(--accent)' : 'var(--border)' }}/>}
             </React.Fragment>
           ))}
         </div>
@@ -48,7 +48,7 @@ const CheckoutPage = () => {
       <div style={ckStyles.body}>
         <div style={ckStyles.main}>
           {step === 0 && <CartReview cart={cart} setPage={setPage} subtotal={subtotal} formatPrice={formatPrice} onNext={() => setStep(1)} />}
-          {step === 1 && <OrderConfirmStep currentUser={currentUser} cart={cart} subtotal={subtotal} orderNum={orderNum} formatPrice={formatPrice} onBack={() => setStep(0)} setPage={setPage} clearCart={clearCart} />}
+          {step === 1 && <OrderConfirmStep currentUser={currentUser} cart={cart} subtotal={subtotal} orderNum={orderNum} setOrderNum={setOrderNum} formatPrice={formatPrice} onBack={() => setStep(0)} setPage={setPage} clearCart={clearCart} />}
         </div>
 
         {/* Sidebar récapitulatif */}
@@ -58,7 +58,7 @@ const CheckoutPage = () => {
             {cart.map(item => (
               <div key={item.cartId} style={ckStyles.itemRow}>
                 <div style={ckStyles.itemImgSm}>
-                  <ProductVisual category={item.category} />
+                  <ProductVisual category={item.category} imageUrl={item.image_url} />
                 </div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={ckStyles.itemName}>{item.name}</div>
@@ -70,11 +70,11 @@ const CheckoutPage = () => {
           </div>
           <div style={ckStyles.divider}/>
           <div style={ckStyles.summRow}><span>Sous-total</span><span>{formatPrice(subtotal)}</span></div>
-          <div style={ckStyles.summRow}><span>Livraison</span><span style={{ color:'#aaaaaa' }}>{t('cart_free')}</span></div>
+          <div style={ckStyles.summRow}><span>Livraison</span><span style={{ color:'var(--gray-text)' }}>{t('cart_free')}</span></div>
           <div style={ckStyles.divider}/>
-          <div style={{ ...ckStyles.summRow, color:'#ffffff', fontWeight:700 }}>
+          <div style={{ ...ckStyles.summRow, color:'var(--black)', fontWeight:700 }}>
             <span style={{ fontSize:15 }}>Total</span>
-            <span style={{ fontSize:22, fontFamily:"'Space Grotesk',sans-serif" }}>{formatPrice(subtotal)}</span>
+            <span style={{ fontSize:22, fontFamily:"'Space Grotesk',sans-serif", color:'var(--accent)' }}>{formatPrice(subtotal)}</span>
           </div>
           <div style={ckStyles.secBadge}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -155,7 +155,7 @@ const STEPS_FUTURE = ['Récapitulatif', 'Livraison', 'Paiement', 'Confirmation']
 
 =====================================================================  */
 
-const buildWhatsAppText = (cart, subtotal, orderNum, customer) => {
+const buildWhatsAppText = (cart, subtotal, orderNum, customer, formatPrice) => {
   const date = new Date().toLocaleDateString('fr-FR');
   const name = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || 'Non renseigné';
   return [
@@ -168,16 +168,16 @@ const buildWhatsAppText = (cart, subtotal, orderNum, customer) => {
     customer.address ? `📍 Adresse : ${customer.address}${customer.city ? ', ' + customer.city : ''}` : '',
     '',
     '━━━━━━━━━━━━━━━━━━━━━',
-    ...cart.map(i => `• ${i.name}  ×${i.qty}  →  $${(i.price * i.qty).toFixed(2)}`),
+    ...cart.map(i => `• ${i.name}  ×${i.qty}  →  ${formatPrice(i.price * i.qty)}`),
     '━━━━━━━━━━━━━━━━━━━━━',
-    `💰 *Total : $${subtotal.toFixed(2)}*`,
+    `💰 *Total : ${formatPrice(subtotal)}*`,
     `🚚 Livraison : Gratuite`,
     '',
     'Bonjour, je souhaite passer cette commande. Merci !',
   ].filter(l => l !== null).join('\n');
 };
 
-const buildPDFFile = (cart, subtotal, orderNum, customer = {}) => {
+const buildPDFFile = (cart, subtotal, orderNum, customer, formatPrice) => {
   const date = new Date().toLocaleDateString('fr-FR');
   const doc = new jsPDF();
 
@@ -250,8 +250,8 @@ const buildPDFFile = (cart, subtotal, orderNum, customer = {}) => {
     if (idx % 2 === 0) { doc.setFillColor(248, 248, 248); doc.rect(20, y - 5, 170, 11, 'F'); }
     doc.text(item.name.slice(0, 40), 25, y);
     doc.text(String(item.qty), 122, y, { align: 'center' });
-    doc.text(`$${item.price.toFixed(2)}`, 155, y, { align: 'right' });
-    doc.text(`$${(item.price * item.qty).toFixed(2)}`, 188, y, { align: 'right' });
+    doc.text(formatPrice(item.price), 155, y, { align: 'right' });
+    doc.text(formatPrice(item.price * item.qty), 188, y, { align: 'right' });
     y += 11;
   });
 
@@ -268,7 +268,7 @@ const buildPDFFile = (cart, subtotal, orderNum, customer = {}) => {
   doc.line(20, y, 190, y); y += 9;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(17, 17, 17);
   doc.text('Total', 25, y);
-  doc.text(`$${subtotal.toFixed(2)}`, 188, y, { align: 'right' });
+  doc.text(formatPrice(subtotal), 188, y, { align: 'right' });
 
   // Footer
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(180, 180, 180);
@@ -284,15 +284,15 @@ const CartReview = ({ cart, setPage, subtotal, formatPrice, onNext }) => (
     <h2 style={ckStyles.sectionTitle}>Récapitulatif de la commande</h2>
     {cart.map(item => (
       <div key={item.cartId} style={ckStyles.reviewItem}>
-        <div style={{ ...ckStyles.itemImgMd, background:'#141414' }}>
-          <ProductVisual category={item.category} />
+        <div style={{ ...ckStyles.itemImgMd, background:'var(--gray-50)' }}>
+          <window.ProductVisual category={item.category} imageUrl={item.image_url} />
         </div>
         <div style={{ flex:1 }}>
-          <div style={{ color:'#a0a0a0', fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:2 }}>{item.brand||item.category}</div>
-          <div style={{ color:'#ffffff', fontWeight:600, fontSize:14, marginBottom:4 }}>{item.name}</div>
-          <div style={{ color:'#a0a0a0', fontSize:12 }}>Qté : {item.qty}</div>
+          <div style={{ color:'var(--gray-text)', fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:2 }}>{item.brand||item.category}</div>
+          <div style={{ color:'var(--black)', fontWeight:600, fontSize:14, marginBottom:4 }}>{item.name}</div>
+          <div style={{ color:'var(--gray-text)', fontSize:12 }}>Qté : {item.qty}</div>
         </div>
-        <div style={{ color:'#ffffff', fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", fontSize:18 }}>{formatPrice(item.price*item.qty)}</div>
+        <div style={{ color:'var(--black)', fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", fontSize:18 }}>{formatPrice(item.price*item.qty)}</div>
       </div>
     ))}
     <div style={ckStyles.btnRow}>
@@ -303,7 +303,7 @@ const CartReview = ({ cart, setPage, subtotal, formatPrice, onNext }) => (
 );
 
 // Étape 2 — Confirmation avec infos compte (pas de formulaire)
-const OrderConfirmStep = ({ currentUser, cart, subtotal, orderNum, formatPrice, onBack, setPage, clearCart }) => {
+const OrderConfirmStep = ({ currentUser, cart, subtotal, orderNum, setOrderNum, formatPrice, onBack, setPage, clearCart }) => {
   const [status, setStatus] = React.useState(null);
 
   // Non connecté → invite à se connecter
@@ -351,15 +351,18 @@ const OrderConfirmStep = ({ currentUser, cart, subtotal, orderNum, formatPrice, 
         phone: customer.phone,
         address: customer.address,
       });
-      if (res?.order_name) finalOrderNum = res.order_name;
+      if (res?.order_name) {
+        finalOrderNum = res.order_name;
+        setOrderNum(finalOrderNum);
+      }
       clearCart();
     } catch (err) {
       console.warn('[Checkout] Odoo order failed:', err.message);
     }
 
     const pdfCustomer = { firstName: customer.name, phone: customer.phone, email: customer.email, address: customer.address };
-    const pdfFile = buildPDFFile(cart, subtotal, finalOrderNum, pdfCustomer);
-    const text    = buildWhatsAppText(cart, subtotal, finalOrderNum, pdfCustomer);
+    const pdfFile = buildPDFFile(cart, subtotal, finalOrderNum, pdfCustomer, formatPrice);
+    const text    = buildWhatsAppText(cart, subtotal, finalOrderNum, pdfCustomer, formatPrice);
 
     // Mobile : Web Share API
     if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
@@ -378,7 +381,9 @@ const OrderConfirmStep = ({ currentUser, cart, subtotal, orderNum, formatPrice, 
     a.href = url; a.download = pdfFile.name; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
     navigator.clipboard?.writeText(text).catch(() => {});
-    setTimeout(() => window.open(`https://wa.me/message/5HIURAYQNXCMB1?text=${encodeURIComponent(text)}`, '_blank'), 600);
+    const waNumber = window.SITE_CONFIG?.whatsapp?.replace(/\\D/g, '') || '';
+    const waUrl = waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(text)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    setTimeout(() => window.open(waUrl, '_blank'), 600);
     setStatus('desktop');
   };
 
@@ -387,8 +392,8 @@ const OrderConfirmStep = ({ currentUser, cart, subtotal, orderNum, formatPrice, 
       <h2 style={ckStyles.sectionTitle}>Confirmer la commande</h2>
 
       {/* Fiche compte */}
-      <div style={{ background:'#121212', border:'1px solid #1e1e1e', borderRadius:12, padding:'20px 24px', display:'flex', flexDirection:'column', gap:10 }}>
-        <div style={{ color:'#a0a0a0', fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 }}>Vos informations</div>
+      <div style={{ background:'#f8f8f8', border:'1px solid #e0e0e0', borderRadius:12, padding:'20px 24px', display:'flex', flexDirection:'column', gap:10 }}>
+        <div style={{ color:'#888888', fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:4 }}>Vos informations</div>
         {[
           { icon:'M12 12c2.7 0 5-2.2 5-5s-2.3-5-5-5-5 2.2-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z', val: customer.name },
           { icon:'M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z', val: customer.phone },
@@ -396,11 +401,11 @@ const OrderConfirmStep = ({ currentUser, cart, subtotal, orderNum, formatPrice, 
           customer.address ? { icon:'M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5c-1.4 0-2.5-1.1-2.5-2.5S10.6 6.5 12 6.5s2.5 1.1 2.5 2.5S13.4 11.5 12 11.5z', val: customer.address } : null,
         ].filter(Boolean).map((row, i) => (
           <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#606060"><path d={row.icon}/></svg>
-            <span style={{ color:'#e8e8e8', fontSize:13 }}>{row.val || <span style={{ color:'#707070', fontStyle:'italic' }}>Non renseigné</span>}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#999999"><path d={row.icon}/></svg>
+            <span style={{ color:'#111111', fontSize:13 }}>{row.val || <span style={{ color:'#aaaaaa', fontStyle:'italic' }}>Non renseigné</span>}</span>
           </div>
         ))}
-        <button style={{ alignSelf:'flex-start', marginTop:4, background:'transparent', border:'none', color:'#909090', fontSize:11, cursor:'pointer', padding:0, textDecoration:'underline' }}
+        <button style={{ alignSelf:'flex-start', marginTop:4, background:'transparent', border:'none', color:'#888888', fontSize:11, cursor:'pointer', padding:0, textDecoration:'underline' }}
           onClick={() => setPage('user', { tab:'profile' })}>
           Modifier mes informations →
         </button>
@@ -609,58 +614,58 @@ const Field = ({ label, value, onChange, error, type='text', full }) => (
 ===================================================================== */
 
 const ckStyles = {
-  page: { paddingTop:0, minHeight:'100vh', background:'#080808', display:'flex', flexDirection:'column' },
-  header: { height:60, borderBottom:'1px solid #1e1e1e', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 40px', position:'sticky', top:64, background:'rgba(8,8,8,0.95)', backdropFilter:'blur(12px)', zIndex:100 },
+  page: { paddingTop:0, minHeight:'100vh', background:'var(--bg)', display:'flex', flexDirection:'column' },
+  header: { height:60, borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 40px', position:'sticky', top:0, background:'var(--white)', zIndex:100 },
   logo: { display:'flex', alignItems:'center', gap:8, cursor:'pointer', width:100 },
   stepBar: { display:'flex', alignItems:'center', gap:8 },
-  stepDot: { width:24, height:24, borderRadius:'50%', background:'#1e1e1e', color:'#a0a0a0', fontSize:11, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
-  stepDotActive: { background:'#e8e8e8', color:'#080808' },
+  stepDot: { width:24, height:24, borderRadius:'50%', background:'var(--gray-50)', color:'var(--gray-text)', fontSize:11, fontWeight:700, border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
+  stepDotActive: { background:'var(--accent)', color:'var(--white)', borderColor:'var(--accent)' },
   stepLine: { width:32, height:1 },
   body: { display:'grid', gridTemplateColumns:'1fr 360px', gap:0, flex:1, maxWidth:1100, margin:'0 auto', width:'100%', padding:'40px 20px' },
   main: { paddingRight:40 },
-  sidebar: { borderLeft:'1px solid #1e1e1e', paddingLeft:40 },
-  sideTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:16, color:'#ffffff', marginBottom:20 },
+  sidebar: { borderLeft:'1px solid var(--border)', paddingLeft:40 },
+  sideTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:16, color:'var(--black)', marginBottom:20 },
   itemsList: { display:'flex', flexDirection:'column', gap:12, maxHeight:320, overflowY:'auto', marginBottom:16 },
   itemRow: { display:'flex', alignItems:'center', gap:10 },
-  itemImgSm: { width:40, height:40, background:'#141414', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
+  itemImgSm: { width:40, height:40, background:'var(--gray-50)', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
   itemImgMd: { width:64, height:64, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
-  itemName: { color:'#ffffff', fontSize:12, fontWeight:500, lineHeight:1.3, marginBottom:2 },
-  itemQty: { color:'#a0a0a0', fontSize:11 },
-  itemPrice: { color:'#ffffff', fontWeight:600, fontSize:13, flexShrink:0 },
-  divider: { height:1, background:'#1e1e1e', margin:'14px 0' },
-  summRow: { display:'flex', justifyContent:'space-between', color:'#999999', fontSize:13, marginBottom:8 },
-  secBadge: { display:'flex', alignItems:'center', gap:6, color:'#909090', fontSize:11, marginTop:16, padding:'10px', background:'#0d0d0d', borderRadius:8 },
+  itemName: { color:'var(--black)', fontSize:12, fontWeight:500, lineHeight:1.3, marginBottom:2 },
+  itemQty: { color:'var(--gray-text)', fontSize:11 },
+  itemPrice: { color:'var(--black)', fontWeight:600, fontSize:13, flexShrink:0 },
+  divider: { height:1, background:'var(--border)', margin:'14px 0' },
+  summRow: { display:'flex', justifyContent:'space-between', color:'var(--gray-text)', fontSize:13, marginBottom:8 },
+  secBadge: { display:'flex', alignItems:'center', gap:6, color:'var(--gray-text)', fontSize:11, marginTop:16, padding:'10px', background:'var(--gray-50)', borderRadius:8, border:'1px solid var(--border)' },
   section: { display:'flex', flexDirection:'column', gap:24 },
-  sectionTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'#ffffff', margin:0 },
-  reviewItem: { display:'flex', alignItems:'center', gap:16, padding:'16px', background:'#121212', border:'1px solid #1e1e1e', borderRadius:10 },
+  sectionTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:22, color:'var(--black)', margin:0 },
+  reviewItem: { display:'flex', alignItems:'center', gap:16, padding:'16px', background:'var(--white)', border:'1px solid var(--border)', borderRadius:10 },
   formGrid: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 },
-  fieldLabel: { color:'#999999', fontSize:11, fontWeight:700, letterSpacing:'0.1em', marginBottom:6 },
-  input: { width:'100%', background:'#121212', border:'1px solid #2a2a2a', borderRadius:8, padding:'11px 14px', color:'#ffffff', fontFamily:"'Space Grotesk',sans-serif", fontSize:14, outline:'none', boxSizing:'border-box', transition:'border-color 0.15s' },
-  inputError: { borderColor:'#cc4444' },
-  errorMsg: { color:'#cc4444', fontSize:11, marginTop:4 },
-  select: { width:'100%', background:'#121212', border:'1px solid #2a2a2a', borderRadius:8, padding:'11px 14px', color:'#ffffff', fontFamily:"'Space Grotesk',sans-serif", fontSize:14, outline:'none' },
+  fieldLabel: { color:'var(--gray-text)', fontSize:11, fontWeight:700, letterSpacing:'0.1em', marginBottom:6 },
+  input: { width:'100%', background:'var(--white)', border:'1px solid var(--border)', borderRadius:8, padding:'11px 14px', color:'var(--black)', fontFamily:"'Space Grotesk',sans-serif", fontSize:14, outline:'none', boxSizing:'border-box', transition:'border-color 0.15s' },
+  inputError: { borderColor:'var(--accent)' },
+  errorMsg: { color:'var(--accent)', fontSize:11, marginTop:4 },
+  select: { width:'100%', background:'var(--white)', border:'1px solid var(--border)', borderRadius:8, padding:'11px 14px', color:'var(--black)', fontFamily:"'Space Grotesk',sans-serif", fontSize:14, outline:'none' },
   shippingMethods: { display:'flex', flexDirection:'column', gap:8 },
-  methodCard: { display:'flex', alignItems:'center', gap:12, padding:'14px 16px', background:'#121212', border:'1px solid #2a2a2a', borderRadius:10, cursor:'pointer', transition:'all 0.15s' },
-  methodCardActive: { borderColor:'#e8e8e8' },
-  radio: { width:18, height:18, borderRadius:'50%', border:'2px solid #383838', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
-  radioActive: { borderColor:'#e8e8e8' },
-  radioDot: { width:8, height:8, borderRadius:'50%', background:'#e8e8e8' },
+  methodCard: { display:'flex', alignItems:'center', gap:12, padding:'14px 16px', background:'var(--white)', border:'1px solid var(--border)', borderRadius:10, cursor:'pointer', transition:'all 0.15s' },
+  methodCardActive: { borderColor:'var(--accent)', background:'var(--gray-50)' },
+  radio: { width:18, height:18, borderRadius:'50%', border:'2px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
+  radioActive: { borderColor:'var(--accent)' },
+  radioDot: { width:8, height:8, borderRadius:'50%', background:'var(--accent)' },
   payMethods: { display:'flex', gap:8, marginBottom:16 },
-  payMethodBtn: { flex:1, padding:'10px', background:'#121212', border:'1px solid #2a2a2a', borderRadius:8, color:'#999999', cursor:'pointer', fontFamily:"'Space Grotesk',sans-serif", fontSize:13, fontWeight:500, transition:'all 0.15s' },
-  payMethodActive: { borderColor:'#e8e8e8', color:'var(--black)', background:'#1e1e1e' },
-  altPay: { display:'flex', flexDirection:'column', alignItems:'center', gap:12, padding:'40px', background:'#121212', border:'1px solid #2a2a2a', borderRadius:12, textAlign:'center' },
+  payMethodBtn: { flex:1, padding:'10px', background:'var(--white)', border:'1px solid var(--border)', borderRadius:8, color:'var(--gray-text)', cursor:'pointer', fontFamily:"'Space Grotesk',sans-serif", fontSize:13, fontWeight:500, transition:'all 0.15s' },
+  payMethodActive: { borderColor:'var(--accent)', color:'var(--black)', background:'var(--gray-50)' },
+  altPay: { display:'flex', flexDirection:'column', alignItems:'center', gap:12, padding:'40px', background:'var(--white)', border:'1px solid var(--border)', borderRadius:12, textAlign:'center' },
   btnRow: { display:'flex', gap:12, justifyContent:'space-between', marginTop:8 },
-  btnPrimary: { display:'flex', alignItems:'center', gap:8, background:'#e8e8e8', color:'#080808', border:'none', cursor:'pointer', padding:'12px 28px', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, transition:'background 0.2s' },
-  btnSecondary: { background:'transparent', border:'1px solid #3c3c3c', color:'#b0b0b0', cursor:'pointer', padding:'12px 24px', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontSize:14, transition:'all 0.15s' },
+  btnPrimary: { display:'flex', alignItems:'center', gap:8, background:'var(--black)', color:'var(--white)', border:'none', cursor:'pointer', padding:'12px 28px', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, transition:'background 0.2s' },
+  btnSecondary: { background:'transparent', border:'1px solid var(--border)', color:'var(--gray-text)', cursor:'pointer', padding:'12px 24px', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontSize:14, transition:'all 0.15s' },
   btnWhatsApp: { display:'flex', alignItems:'center', gap:10, background:'#25D366', color:'#ffffff', border:'none', cursor:'pointer', padding:'12px 28px', borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:14, transition:'background 0.2s' },
-  notifGreen: { display:'flex', alignItems:'flex-start', gap:12, background:'#0d2e1a', border:'1px solid #1a5c30', borderRadius:10, padding:'14px 16px', color:'#4caf80', fontSize:13, lineHeight:1.6 },
+  notifGreen: { display:'flex', alignItems:'flex-start', gap:12, background:'#e6fffa', border:'1px solid #b2f5ea', borderRadius:10, padding:'14px 16px', color:'#2c7a7b', fontSize:13, lineHeight:1.6 },
   confirmPage: { display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', padding:'60px 40px', gap:16, gridColumn:'1/-1' },
-  confirmIcon: { width:80, height:80, borderRadius:'50%', background:'#e8e8e8', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:8 },
+  confirmIcon: { width:80, height:80, borderRadius:'50%', background:'var(--gray-50)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:8 },
   confirmTitle: { fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:32, color:'var(--black)', margin:0 },
-  confirmNum: { color:'#606060', fontSize:14, fontFamily:"'DM Mono',monospace", background:'#121212', padding:'6px 16px', borderRadius:6, border:'1px solid #2a2a2a' },
-  confirmDesc: { color:'#999999', fontSize:15, lineHeight:1.6, maxWidth:440 },
-  confirmSummary: { background:'#121212', border:'1px solid #1e1e1e', borderRadius:12, padding:'20px 24px', width:'100%', maxWidth:400, textAlign:'left' },
-  confirmItem: { display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid var(--red)', fontSize:13 },
+  confirmNum: { color:'var(--gray-text)', fontSize:14, fontFamily:"'DM Mono',monospace", background:'var(--gray-50)', padding:'6px 16px', borderRadius:6, border:'1px solid var(--border)' },
+  confirmDesc: { color:'var(--gray-text)', fontSize:15, lineHeight:1.6, maxWidth:440 },
+  confirmSummary: { background:'var(--white)', border:'1px solid var(--border)', borderRadius:12, padding:'20px 24px', width:'100%', maxWidth:400, textAlign:'left' },
+  confirmItem: { display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid var(--border)', fontSize:13 },
 };
 
 Object.assign(window, { CheckoutPage });

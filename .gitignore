@@ -32,3 +32,6 @@ Thumbs.db
 test.js
 test.cjs
 puppeteer_out.txt
+
+# Python venv
+backend/.venv/
